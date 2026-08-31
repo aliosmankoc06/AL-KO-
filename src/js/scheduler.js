@@ -382,7 +382,11 @@ function scheduleQualityScore() {
     }
   });
   const spreadPenalty = spread <= 3 ? spread : (spread - 3) * 120 + 3;
-  const koordSpreadPenalty = koordSpread <= 4 ? koordSpread * 2 : (koordSpread - 4) * 100 + 8;
+  // Kullanıcının gerçek programında koordinatörlük saatleri öğretmenler
+  // arasında eşit değil (14-21 saat arası doğal bir fark var) — önemli olan
+  // MÜMKÜN OLDUĞUNCA ÇOK koordinatörlüğün yerleşmesi, birebir eşitlik değil.
+  // Bu yüzden eşitlik cezası eskisinden çok daha gevşek.
+  const koordSpreadPenalty = koordSpread <= 8 ? koordSpread : (koordSpread - 8) * 100 + 8;
   const workingDays = totalTeacherWorkingDays();
   const workingDayExcess = totalTeacherWorkingDayExcess();
   return { unplaced, spread, koordSpread, under20, capPenalty, gaps: totalGapCount(), workingDays, workingDayExcess, score: unplaced * 1000 + totalGapCount() * 300 + workingDayExcess * 200 + under20 * 40 + totalClassGapCount() * 15 + totalLateStartSum() * 3 + spreadPenalty + koordSpreadPenalty + capPenalty };
@@ -496,7 +500,7 @@ function distributeAllBestAsync(attempts, onDone, onProgress) {
     // yerleştirdiği için eşit sayılıyor ama koordinatörlüğü gereksiz yere
     // az yerleştirmiş olabiliyordu. Yine de ders saati eksikliğinden
     // (unplaced*1000) daha hafif tutulur — öncelik her zaman derste kalır.
-    const combinedScore = q.score + koordFailed.length * 400;
+    const combinedScore = q.score + koordFailed.length * 600;
     const snapshot = JSON.parse(JSON.stringify(S.schedule));
     if (bestScoreValue === null || combinedScore < bestScoreValue) {
       bestScoreValue = combinedScore;
