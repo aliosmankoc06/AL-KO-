@@ -71,39 +71,36 @@ function defaultState() {
       { id: "c11mbo-2", code: "OKS", name: "Otomatik Kontrol Sistemleri", dal: "MBO", grade: 11, hours: 6, blocks: [3, 3] },
       { id: "c11mbo-3", code: "MKZ", name: "Mekanizmalar", dal: "MBO", grade: 11, hours: 3, blocks: [3] },
       { id: "c11mbo-4", code: "TEL", name: "Temel Elektrik", dal: "MBO", grade: 11, hours: 2, blocks: [2] },
-      { id: "sert-1", code: "MKE", name: "Seçmeli Makine Elemanları", dal: "SERT", grade: 12, hours: 2, blocks: [2] },
-      { id: "sert-2", code: "HPN", name: "Seçmeli Hidrolik-Pnömatik", dal: "SERT", grade: 12, hours: 2, blocks: [2] },
-      { id: "sert-3", code: "MKÇ", name: "Seçmeli Mekanizma Çizimleri", dal: "SERT", grade: 12, hours: 3, blocks: [3] },
+      { id: "sec-3", code: "SEÇ3", name: "Seçmeli Dersler (3 Saat)", dal: "SERT", grade: 12, hours: 3, blocks: [3] },
+      { id: "sec-4", code: "SEÇ4", name: "Seçmeli Dersler (4 Saat)", dal: "SERT", grade: 12, hours: 4, blocks: [4] },
       { id: "pbo-10", code: "PBO", name: "Planlama Bakım Onarım (Alan Şefi)", dal: "IDARI", grade: 0, hours: 10, blocks: [10] },
       { id: "pbo-6", code: "PBO", name: "Planlama Bakım Onarım (Atölye Şefi)", dal: "IDARI", grade: 0, hours: 6, blocks: [6] }
     ],
     classes: [
       { id: "cl-9a", name: "9-A", grade: 9, dal: "ORTAK9", maxTeachersPerCourse: 2, assignments: [
-        { id: "a-9a-1", courseId: "c9-2", eligibleTeacherIds: ["t1", "t2", "t3", "t4", "t5", "t6"], teacherCount: 2, roomIds: [] },
-        { id: "a-9a-2", courseId: "c9-3", eligibleTeacherIds: ["t1", "t2", "t3", "t4", "t5", "t6"], teacherCount: 2, roomIds: [] },
-        { id: "a-9a-3", courseId: "c9-1", eligibleTeacherIds: ["t1", "t2", "t3", "t4", "t5", "t6"], teacherCount: 2, roomIds: [] }
+        { id: "a-9a-1", courseId: "c9-2", eligibleTeacherIds: ["t1", "t5"], teacherCount: 2, roomIds: [] },
+        { id: "a-9a-2", courseId: "c9-3", eligibleTeacherIds: ["t1", "t5"], teacherCount: 2, roomIds: [] },
+        { id: "a-9a-3", courseId: "c9-1", eligibleTeacherIds: ["t1", "t5"], teacherCount: 2, roomIds: [] }
       ] },
       { id: "cl-10a", name: "10-A", grade: 10, dal: "MBO", maxTeachersPerCourse: 3, assignments: [
-        { id: "a-10a-1", courseId: "c10mbo-1", eligibleTeacherIds: ["t1", "t2", "t3", "t4", "t5", "t6"], teacherCount: 3, roomIds: [] },
-        { id: "a-10a-2", courseId: "c10mbo-2", eligibleTeacherIds: ["t1", "t2", "t3", "t4", "t5", "t6"], teacherCount: 3, roomIds: [] },
-        { id: "a-10a-3", courseId: "c10mbo-3", eligibleTeacherIds: ["t1", "t2", "t3", "t4", "t5", "t6"], teacherCount: 3, roomIds: [] },
-        { id: "a-10a-4", courseId: "c10mbo-4", eligibleTeacherIds: ["t1", "t2", "t3", "t4", "t5", "t6"], teacherCount: 3, roomIds: [] }
+        { id: "a-10a-1", courseId: "c10mbo-1", eligibleTeacherIds: ["t3", "t2", "t4"], teacherCount: 3, roomIds: [] },
+        { id: "a-10a-2", courseId: "c10mbo-2", eligibleTeacherIds: ["t3", "t6"], teacherCount: 2, roomIds: [] },
+        { id: "a-10a-3", courseId: "c10mbo-3", eligibleTeacherIds: ["t3", "t2", "t4"], teacherCount: 3, roomIds: [] },
+        { id: "a-10a-4", courseId: "c10mbo-4", eligibleTeacherIds: ["t3", "t2", "t4"], teacherCount: 3, roomIds: [] }
       ] },
       { id: "cl-11a", name: "11-A", grade: 11, dal: "MBO", maxTeachersPerCourse: 2, assignments: [
-        { id: "a-11a-1", courseId: "c11mbo-1", eligibleTeacherIds: ["t1", "t2", "t3", "t4", "t5", "t6"], teacherCount: 2, roomIds: [] },
-        { id: "a-11a-2", courseId: "c11mbo-2", eligibleTeacherIds: ["t1", "t2", "t3", "t4", "t5", "t6"], teacherCount: 3, roomIds: [] },
-        { id: "a-11a-3", courseId: "c11mbo-3", eligibleTeacherIds: ["t1", "t2", "t3", "t4", "t5", "t6"], teacherCount: 2, roomIds: [] },
-        { id: "a-11a-4", courseId: "c11mbo-4", eligibleTeacherIds: ["t1", "t2", "t3", "t4", "t5", "t6"], teacherCount: 2, roomIds: [] }
+        { id: "a-11a-1", courseId: "c11mbo-1", eligibleTeacherIds: ["t1", "t5"], teacherCount: 2, roomIds: [] },
+        { id: "a-11a-2", courseId: "c11mbo-2", eligibleTeacherIds: ["t2", "t4"], teacherCount: 2, roomIds: [] },
+        { id: "a-11a-3", courseId: "c11mbo-3", eligibleTeacherIds: ["t5", "t6"], teacherCount: 2, roomIds: [] },
+        { id: "a-11a-4", courseId: "c11mbo-4", eligibleTeacherIds: ["t1", "t5"], teacherCount: 2, roomIds: [] }
       ] },
       { id: "cl-12a", name: "12-A", grade: 12, dal: "MBO", schoolDays: [], maxTeachersPerCourse: 2, assignments: [
-        { id: "a-12a-1", courseId: "sert-1", eligibleTeacherIds: ["t1", "t2", "t3", "t4", "t5", "t6"], teacherCount: 2, roomIds: [] },
-        { id: "a-12a-2", courseId: "sert-2", eligibleTeacherIds: ["t1", "t2", "t3", "t4", "t5", "t6"], teacherCount: 2, roomIds: [] },
-        { id: "a-12a-3", courseId: "sert-3", eligibleTeacherIds: ["t1", "t2", "t3", "t4", "t5", "t6"], teacherCount: 2, roomIds: [] }
+        { id: "a-12a-1", courseId: "sec-3", eligibleTeacherIds: ["t3", "t2"], teacherCount: 2, roomIds: [] },
+        { id: "a-12a-2", courseId: "sec-4", eligibleTeacherIds: ["t2", "t4"], teacherCount: 2, roomIds: [] }
       ] },
       { id: "cl-12b", name: "12-B", grade: 12, dal: "BMI", schoolDays: [], maxTeachersPerCourse: 1, assignments: [
-        { id: "a-12b-1", courseId: "sert-1", eligibleTeacherIds: ["t1", "t2", "t3", "t4", "t5", "t6"], teacherCount: 1, roomIds: [] },
-        { id: "a-12b-2", courseId: "sert-2", eligibleTeacherIds: ["t1", "t2", "t3", "t4", "t5", "t6"], teacherCount: 1, roomIds: [] },
-        { id: "a-12b-3", courseId: "sert-3", eligibleTeacherIds: ["t1", "t2", "t3", "t4", "t5", "t6"], teacherCount: 1, roomIds: [] }
+        { id: "a-12b-1", courseId: "sec-3", eligibleTeacherIds: ["t3"], teacherCount: 1, roomIds: [] },
+        { id: "a-12b-2", courseId: "sec-4", eligibleTeacherIds: ["t3"], teacherCount: 1, roomIds: [] }
       ] },
       { id: "cl-idari", name: "İdari Görevler (Alan/Atölye Şefliği)", grade: 0, dal: "IDARI", schoolDays: [0, 1, 2, 3, 4], assignments: [
         { id: "a-idari-1", courseId: "pbo-10", eligibleTeacherIds: ["t1"], teacherCount: 1, roomIds: [] },

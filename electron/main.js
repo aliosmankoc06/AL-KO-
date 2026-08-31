@@ -35,6 +35,8 @@ function buildMenu() {
         { label: "Yedek Dosyasından Yükle", click: () => mainWindow.webContents.send("menu:import-backup") },
         { label: "Kayıtlı Programlarım", click: () => mainWindow.webContents.send("menu:saved-programs") },
         { type: "separator" },
+        { label: "Okulun Ders Havuzu/Öğretmen Listesiyle Başla (Sıfırla)", click: () => mainWindow.webContents.send("menu:restore-defaults") },
+        { type: "separator" },
         { label: "Yazdır", click: () => mainWindow.webContents.print() },
         { type: "separator" },
         { role: "quit", label: "Çıkış" }
