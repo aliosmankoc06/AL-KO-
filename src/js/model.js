@@ -123,7 +123,9 @@ function defaultState() {
     yillikPlanlar: [],
     gunlukPlanlar: [],
     normKadro: { ogrenciSayilari: {}, koordinatorlukSatirlari: [] },
-    toplantilar: []
+    toplantilar: [],
+    envanter: { makineler: [] },
+    durumTespitFormlari: []
   };
 }
 
@@ -145,7 +147,9 @@ function emptyState() {
     yillikPlanlar: [],
     gunlukPlanlar: [],
     normKadro: { ogrenciSayilari: {}, koordinatorlukSatirlari: [] },
-    toplantilar: []
+    toplantilar: [],
+    envanter: { makineler: [] },
+    durumTespitFormlari: []
   };
 }
 
@@ -172,6 +176,25 @@ function normalizeState(s) {
     if (!Array.isArray(top.katilimcilar)) top.katilimcilar = [];
     if (!Array.isArray(top.gorevDagilimi)) top.gorevDagilimi = [];
     if (!Array.isArray(top.gundemMaddeleri)) top.gundemMaddeleri = [];
+  });
+  if (!s.envanter || typeof s.envanter !== "object") s.envanter = {};
+  if (!Array.isArray(s.envanter.makineler)) s.envanter.makineler = [];
+  s.envanter.makineler.forEach(m => {
+    if (!m.id) m.id = uid("mk");
+    if (!Array.isArray(m.arizaKayitlari)) m.arizaKayitlari = [];
+    if (!Array.isArray(m.onarimKayitlari)) m.onarimKayitlari = [];
+    if (!Array.isArray(m.bakimKayitlari)) m.bakimKayitlari = [];
+    if (!Array.isArray(m.yedekParcalar)) m.yedekParcalar = [];
+    if (!m.talimat || typeof m.talimat !== "object") m.talimat = {};
+    ["teknik", "hazirlik", "calistirma", "guvenlik", "bakim", "sikSorular", "acilDurum"].forEach(f => {
+      if (typeof m.talimat[f] !== "string") m.talimat[f] = "";
+    });
+  });
+  if (!Array.isArray(s.durumTespitFormlari)) s.durumTespitFormlari = [];
+  s.durumTespitFormlari.forEach(f => {
+    if (!f.id) f.id = uid("dtf");
+    if (!Array.isArray(f.satirlar)) f.satirlar = [];
+    f.satirlar.forEach(r => { if (!r.id) r.id = uid("dtr"); });
   });
   if (!s.seededIsletmeler2026) {
     s.seededIsletmeler2026 = true;

@@ -3,6 +3,7 @@ const path = require("path");
 const fs = require("fs");
 const XLSX = require("xlsx");
 const { parsePlanWorkbook } = require("./xlsx-plan-parser");
+const { parseEnvanterWorkbook } = require("./xlsx-envanter-parser");
 
 let mainWindow;
 
@@ -100,6 +101,10 @@ ipcMain.handle("dialog:open-xlsx", async () => {
 
 ipcMain.handle("import:plan-xlsx", async (evt, filePath) => {
   return parsePlanWorkbook(filePath, XLSX);
+});
+
+ipcMain.handle("import:envanter-xlsx", async (evt, filePath) => {
+  return parseEnvanterWorkbook(filePath, XLSX);
 });
 
 ipcMain.handle("export:excel", async (evt, defaultName, sheets) => {

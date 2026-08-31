@@ -10,7 +10,8 @@ const MODULES = [
   { id: "norm-kadro", label: "Norm Kadro", icon: "chart" },
   { id: "okul-zumresi", label: "Okul Zümresi", icon: "users" },
   { id: "il-zumresi", label: "İl Zümresi", icon: "building" },
-  { id: "staj-yerlestirme", label: "Staj Yerleştirme", icon: "briefcase" }
+  { id: "staj-yerlestirme", label: "Staj Yerleştirme", icon: "briefcase" },
+  { id: "atolye-envanter", label: "Atölye / Envanter", icon: "tool" }
 ];
 const DERS_PROGRAMI_TABS = [
   { id: "havuz", label: "Ders Havuzu", icon: "book" },
@@ -66,6 +67,7 @@ function renderMain() {
   if (activeModule === "okul-zumresi") { el.innerHTML = viewOkulZumresi(); return; }
   if (activeModule === "il-zumresi") { el.innerHTML = viewPlaceholderModule("İl Zümresi", "İl zümre toplantı tutanaklarınızı buraya birlikte kuracağız."); return; }
   if (activeModule === "staj-yerlestirme") { el.innerHTML = viewStajYerlestirme(); return; }
+  if (activeModule === "atolye-envanter") { el.innerHTML = viewAtolyeEnvanter(); return; }
   if (activeTab === "havuz") el.innerHTML = viewHavuz();
   else if (activeTab === "ogretmen") el.innerHTML = viewOgretmen();
   else if (activeTab === "sinif") el.innerHTML = viewSinif();
@@ -1163,6 +1165,517 @@ function viewOkulZumresi() {
     ${belgeYazdirmaBasligi(dosyaAdi)}
     ${content}
   </div>`;
+}
+
+/* ---- Atölye / Envanter ---- */
+let activeEnvanterTab = "makineler";
+let activeMakineId = "__ALL__";
+let activeDurumTespitId = null;
+
+function makineById(id) { return S.envanter.makineler.find(x => x.id === id); }
+function durumTespitById(id) { return S.durumTespitFormlari.find(x => x.id === id); }
+
+function readMakineForm() {
+  return {
+    lab: document.getElementById("mk-lab").value.trim(),
+    ad: document.getElementById("mk-ad").value.trim(),
+    marka: document.getElementById("mk-marka").value.trim(),
+    model: document.getElementById("mk-model").value.trim(),
+    seriNo: document.getElementById("mk-serino").value.trim(),
+    durum: document.getElementById("mk-durum").value.trim(),
+    satinAlmaTarihi: document.getElementById("mk-satinalma").value.trim(),
+    tedarikci: document.getElementById("mk-tedarikci").value.trim(),
+    garantiSuresi: document.getElementById("mk-garanti").value.trim(),
+    motorGucu: document.getElementById("mk-motorgucu").value.trim(),
+    calismaGerilimi: document.getElementById("mk-gerilim").value.trim(),
+    agirlik: document.getElementById("mk-agirlik").value.trim(),
+    sorumluPersonel: document.getElementById("mk-sorumlu").value.trim(),
+    notlar: document.getElementById("mk-notlar").value.trim()
+  };
+}
+function makineFormAlanlari(m) {
+  const v = f => escHtml(m ? m[f] || "" : "");
+  return `
+    <label class="small">Laboratuvar / Atölye</label><input type="text" id="mk-lab" value="${v('lab')}" placeholder="örn. B3 - İmalat İşlemleri Atölyesi" style="width:100%">
+    <label class="small">Makine Adı</label><input type="text" id="mk-ad" value="${v('ad')}" style="width:100%">
+    <label class="small">Marka</label><input type="text" id="mk-marka" value="${v('marka')}" style="width:100%">
+    <label class="small">Model</label><input type="text" id="mk-model" value="${v('model')}" style="width:100%">
+    <label class="small">Seri No</label><input type="text" id="mk-serino" value="${v('seriNo')}" style="width:100%">
+    <label class="small">Durum</label><input type="text" id="mk-durum" value="${v('durum')}" placeholder="Çalışıyor / Arızalı" style="width:100%">
+    <label class="small">Satın Alma Tarihi</label><input type="text" id="mk-satinalma" value="${v('satinAlmaTarihi')}" style="width:100%">
+    <label class="small">Tedarikçi Firma</label><input type="text" id="mk-tedarikci" value="${v('tedarikci')}" style="width:100%">
+    <label class="small">Garanti Süresi</label><input type="text" id="mk-garanti" value="${v('garantiSuresi')}" style="width:100%">
+    <label class="small">Motor Gücü</label><input type="text" id="mk-motorgucu" value="${v('motorGucu')}" style="width:100%">
+    <label class="small">Çalışma Gerilimi</label><input type="text" id="mk-gerilim" value="${v('calismaGerilimi')}" style="width:100%">
+    <label class="small">Ağırlık</label><input type="text" id="mk-agirlik" value="${v('agirlik')}" style="width:100%">
+    <label class="small">Sorumlu Personel</label><input type="text" id="mk-sorumlu" value="${v('sorumluPersonel')}" style="width:100%">
+    <label class="small">Özel Notlar</label><textarea id="mk-notlar" rows="3" style="width:100%">${v('notlar')}</textarea>`;
+}
+function addMakine() {
+  const root = document.getElementById("modal-root");
+  root.innerHTML = `
+    <div class="modal-bg" onclick="if(event.target===this) closeModal()">
+      <div class="modal" style="width:460px;">
+        <h3>Yeni Makine Ekle</h3>
+        ${makineFormAlanlari(null)}
+        <div class="row">
+          <button class="btn primary" onclick="saveNewMakine()">Ekle</button>
+          <button class="btn" onclick="closeModal()">İptal</button>
+        </div>
+      </div>
+    </div>`;
+}
+function saveNewMakine() {
+  const data = readMakineForm();
+  if (!data.ad) { alert("Makine adı girin."); return; }
+  const m = Object.assign({ id: uid("mk"), arizaKayitlari: [], onarimKayitlari: [], bakimKayitlari: [], yedekParcalar: [],
+    talimat: { teknik: "", hazirlik: "", calistirma: "", guvenlik: "", bakim: "", sikSorular: "", acilDurum: "" } }, data);
+  S.envanter.makineler.push(m);
+  activeMakineId = m.id;
+  save(); closeModal(); renderMain();
+}
+function editMakineGenel(id) {
+  const m = makineById(id);
+  if (!m) return;
+  const root = document.getElementById("modal-root");
+  root.innerHTML = `
+    <div class="modal-bg" onclick="if(event.target===this) closeModal()">
+      <div class="modal" style="width:460px;">
+        <h3>Makine Bilgilerini Düzenle</h3>
+        ${makineFormAlanlari(m)}
+        <div class="row">
+          <button class="btn primary" onclick="saveMakineGenel('${id}')">Kaydet</button>
+          <button class="btn" onclick="closeModal()">İptal</button>
+        </div>
+      </div>
+    </div>`;
+}
+function saveMakineGenel(id) {
+  const m = makineById(id);
+  if (!m) return;
+  const data = readMakineForm();
+  if (!data.ad) { alert("Makine adı girin."); return; }
+  Object.assign(m, data);
+  save(); closeModal(); renderMain();
+}
+function deleteMakine(id) {
+  if (!confirm("Bu makine ve tüm arıza/bakım/talimat kayıtları silinsin mi? Bu işlem geri alınamaz.")) return;
+  S.envanter.makineler = S.envanter.makineler.filter(x => x.id !== id);
+  if (activeMakineId === id) activeMakineId = "__ALL__";
+  save(); renderMain();
+}
+function selectMakine(id) { activeMakineId = id; renderMain(); }
+function setEnvanterTab(id) { activeEnvanterTab = id; renderMain(); }
+function updateMakineField(id, field, value) {
+  const m = makineById(id);
+  if (m) m[field] = value;
+  save();
+}
+function updateMakineTalimat(makineId, field, value) {
+  const m = makineById(makineId);
+  if (m) m.talimat[field] = value;
+  save();
+}
+function makineLogAdd(makineId, listName, blank) {
+  const m = makineById(makineId);
+  if (!m) return;
+  m[listName].push(Object.assign({ id: uid("log") }, blank));
+  save(); renderMain();
+}
+function makineLogUpdate(makineId, listName, id, field, value) {
+  const m = makineById(makineId);
+  const row = m && m[listName].find(x => x.id === id);
+  if (row) row[field] = value;
+  save();
+}
+function makineLogRemove(makineId, listName, id) {
+  if (!confirm("Bu kayıt silinsin mi?")) return;
+  const m = makineById(makineId);
+  if (!m) return;
+  m[listName] = m[listName].filter(x => x.id !== id);
+  save(); renderMain();
+}
+function addAriza(makineId) { makineLogAdd(makineId, "arizaKayitlari", { tarih: "", tanim: "", tespitEden: "", aciliyet: "", durum: "" }); }
+function addOnarim(makineId) { makineLogAdd(makineId, "onarimKayitlari", { tarih: "", islem: "", degisenParca: "", ucret: "", yapan: "" }); }
+function addBakim(makineId) { makineLogAdd(makineId, "bakimKayitlari", { tarih: "", tip: "", islemler: "", sonuc: "", yapan: "" }); }
+function addParca(makineId) { makineLogAdd(makineId, "yedekParcalar", { parcaAdi: "", parcaKodu: "", miktar: "", minStok: "", tedarikci: "" }); }
+function renderMakineLogTablosu(makineId, listName, columns, rows, title, ekleFn) {
+  const body = rows.map(r => `
+    <tr>
+      ${columns.map(c => `
+      <td class="no-print">${c.type === "textarea"
+        ? `<textarea rows="2" style="width:100%;" onchange="makineLogUpdate('${makineId}','${listName}','${r.id}','${c.key}',this.value)">${escHtml(r[c.key])}</textarea>`
+        : `<input type="text" value="${escHtml(r[c.key])}" style="width:100%" onchange="makineLogUpdate('${makineId}','${listName}','${r.id}','${c.key}',this.value)">`}</td>
+      <td class="print-only-cell">${escHtml(r[c.key])}</td>`).join("")}
+      <td class="no-print"><button class="btn danger" onclick="makineLogRemove('${makineId}','${listName}','${r.id}')">Sil</button></td>
+    </tr>`).join("");
+  return `
+  <div class="card">
+    <h2>${escHtml(title)}</h2>
+    <div style="overflow-x:auto;">
+    <table><thead><tr>${columns.map(c => `<th>${escHtml(c.label)}</th>`).join("")}<th class="no-print"></th></tr></thead>
+    <tbody>${body || `<tr><td colspan="${columns.length + 1}" class="small">Henüz kayıt eklenmedi.</td></tr>`}</tbody></table>
+    </div>
+    <div class="row no-print"><button class="btn" onclick="${ekleFn}('${makineId}')">Kayıt Ekle</button></div>
+  </div>`;
+}
+function talimatBlok(m, field, label) {
+  return `
+  <div class="card" style="page-break-inside:avoid;">
+    <div class="small no-print" style="font-weight:600;">${escHtml(label)}</div>
+    <b class="print-only-inline">${escHtml(label)}</b>
+    <textarea class="no-print" rows="5" style="width:100%;margin-top:4px;border:1px solid var(--line);border-radius:4px;padding:6px;resize:vertical;font-family:inherit;font-size:11.5px;" oninput="updateMakineTalimat('${m.id}','${field}',this.value)" onblur="save()">${escHtml(m.talimat[field])}</textarea>
+    <div class="print-only" style="margin-top:4px;">${nlToBr(m.talimat[field]) || '<span class="small">—</span>'}</div>
+  </div>`;
+}
+function renderMakineDetay(m) {
+  const genel = `
+  <div class="card">
+    <div class="row" style="justify-content:space-between;align-items:flex-start;flex-wrap:wrap;">
+      <table style="flex:1;min-width:260px;">
+        <tbody>
+          <tr><th style="width:180px;text-align:left;">Laboratuvar/Atölye</th><td>${escHtml(m.lab) || "-"}</td></tr>
+          <tr><th style="text-align:left;">Marka</th><td>${escHtml(m.marka) || "-"}</td></tr>
+          <tr><th style="text-align:left;">Model</th><td>${escHtml(m.model) || "-"}</td></tr>
+          <tr><th style="text-align:left;">Seri No</th><td>${escHtml(m.seriNo) || "-"}</td></tr>
+          <tr><th style="text-align:left;">Durum</th><td>${escHtml(m.durum) || "-"}</td></tr>
+          <tr><th style="text-align:left;">Satın Alma Tarihi</th><td>${escHtml(m.satinAlmaTarihi) || "-"}</td></tr>
+          <tr><th style="text-align:left;">Tedarikçi Firma</th><td>${escHtml(m.tedarikci) || "-"}</td></tr>
+          <tr><th style="text-align:left;">Garanti Süresi</th><td>${escHtml(m.garantiSuresi) || "-"}</td></tr>
+          <tr><th style="text-align:left;">Motor Gücü</th><td>${escHtml(m.motorGucu) || "-"}</td></tr>
+          <tr><th style="text-align:left;">Çalışma Gerilimi</th><td>${escHtml(m.calismaGerilimi) || "-"}</td></tr>
+          <tr><th style="text-align:left;">Ağırlık</th><td>${escHtml(m.agirlik) || "-"}</td></tr>
+          <tr><th style="text-align:left;">Sorumlu Personel</th><td>${escHtml(m.sorumluPersonel) || "-"}</td></tr>
+        </tbody>
+      </table>
+      <button class="btn no-print" onclick="editMakineGenel('${m.id}')">Bilgileri Düzenle</button>
+    </div>
+    <div style="margin-top:10px;"><b>Özel Notlar:</b><div>${nlToBr(m.notlar) || '<span class="small">—</span>'}</div></div>
+  </div>`;
+
+  const arizaTablo = renderMakineLogTablosu(m.id, "arizaKayitlari",
+    [{ key: "tarih", label: "Tarih" }, { key: "tanim", label: "Arıza Tanımı", type: "textarea" }, { key: "tespitEden", label: "Tespit Eden" }, { key: "aciliyet", label: "Aciliyet" }, { key: "durum", label: "Durum" }],
+    m.arizaKayitlari, "Arıza Kayıtları", "addAriza");
+  const onarimTablo = renderMakineLogTablosu(m.id, "onarimKayitlari",
+    [{ key: "tarih", label: "Tarih" }, { key: "islem", label: "Yapılan İşlem", type: "textarea" }, { key: "degisenParca", label: "Değişen Parça" }, { key: "ucret", label: "Ücret" }, { key: "yapan", label: "Yapan" }],
+    m.onarimKayitlari, "Onarım ve Değişim Kayıtları", "addOnarim");
+  const bakimTablo = renderMakineLogTablosu(m.id, "bakimKayitlari",
+    [{ key: "tarih", label: "Tarih" }, { key: "tip", label: "Bakım Tipi" }, { key: "islemler", label: "Yapılan İşlemler", type: "textarea" }, { key: "sonuc", label: "Sonuç" }, { key: "yapan", label: "Yapan" }],
+    m.bakimKayitlari, "Periyodik Bakım Kayıtları", "addBakim");
+  const parcaTablo = renderMakineLogTablosu(m.id, "yedekParcalar",
+    [{ key: "parcaAdi", label: "Parça Adı" }, { key: "parcaKodu", label: "Parça Kodu" }, { key: "miktar", label: "Miktar" }, { key: "minStok", label: "Min. Stok" }, { key: "tedarikci", label: "Tedarikçi" }],
+    m.yedekParcalar, "Yedek Parça Listesi", "addParca");
+
+  const talimatBaslik = `<div class="card no-print" style="text-align:center;"><h2 style="margin:0;">Kullanım Talimatı</h2></div>`;
+  const talimatIcerik = [
+    ["teknik", "Teknik Bilgiler"], ["hazirlik", "Hazırlık Adımları"], ["calistirma", "Çalıştırma Adımları"],
+    ["guvenlik", "Güvenlik Uyarıları"], ["bakim", "Bakım ve Temizlik"], ["sikSorular", "Sıkça Karşılaşılan Sorunlar"],
+    ["acilDurum", "Acil Durum İletişim Bilgileri"]
+  ].map(([field, label]) => talimatBlok(m, field, label)).join("");
+
+  return genel + arizaTablo + onarimTablo + bakimTablo + parcaTablo + talimatBaslik + talimatIcerik;
+}
+function renderMakineOzetTablosu(list) {
+  const rows = list.map((m, i) => `
+    <tr>
+      <td>${i + 1}</td>
+      <td class="no-print"><input type="text" value="${escHtml(m.lab)}" style="width:100%" onchange="updateMakineField('${m.id}','lab',this.value)"></td>
+      <td class="print-only-cell">${escHtml(m.lab)}</td>
+      <td class="no-print"><input type="text" value="${escHtml(m.ad)}" style="width:100%" onchange="updateMakineField('${m.id}','ad',this.value)"></td>
+      <td class="print-only-cell">${escHtml(m.ad)}</td>
+      <td class="no-print"><input type="text" value="${escHtml(m.marka)}" style="width:100%" onchange="updateMakineField('${m.id}','marka',this.value)"></td>
+      <td class="print-only-cell">${escHtml(m.marka)}</td>
+      <td class="no-print"><input type="text" value="${escHtml(m.model)}" style="width:100%" onchange="updateMakineField('${m.id}','model',this.value)"></td>
+      <td class="print-only-cell">${escHtml(m.model)}</td>
+      <td class="no-print"><input type="text" value="${escHtml(m.seriNo)}" style="width:100%" onchange="updateMakineField('${m.id}','seriNo',this.value)"></td>
+      <td class="print-only-cell">${escHtml(m.seriNo)}</td>
+      <td class="no-print"><input type="text" value="${escHtml(m.durum)}" style="width:100%" onchange="updateMakineField('${m.id}','durum',this.value)"></td>
+      <td class="print-only-cell">${escHtml(m.durum)}</td>
+      <td class="no-print"><input type="text" value="${escHtml(m.notlar)}" style="width:100%" onchange="updateMakineField('${m.id}','notlar',this.value)"></td>
+      <td class="print-only-cell">${escHtml(m.notlar)}</td>
+      <td class="no-print"><button class="btn" onclick="selectMakine('${m.id}')">Detay</button> <button class="btn danger" onclick="deleteMakine('${m.id}')">Sil</button></td>
+    </tr>`).join("");
+  return `
+  <div class="card">
+    <h2>Tüm Makine Listesi</h2>
+    <div style="overflow-x:auto;">
+    <table><thead><tr><th>S.N</th><th>Laboratuvar/Atölye</th><th>Makine Adı</th><th>Marka</th><th>Model</th><th>Seri No</th><th>Durum</th><th>Notlar</th><th class="no-print"></th></tr></thead>
+    <tbody>${rows || `<tr><td colspan="9" class="small">Henüz makine eklenmedi.</td></tr>`}</tbody></table>
+    </div>
+  </div>`;
+}
+function importEnvanterFromExcel() {
+  if (!window.desktop || !window.desktop.isElectron) { alert("Excel'den içe aktarma sadece masaüstü uygulamasında çalışır."); return; }
+  window.desktop.openXlsxDialog().then(filePath => {
+    if (!filePath) return;
+    window.desktop.importEnvanterXlsx(filePath).then(result => {
+      const makineler = result.makineler || [];
+      if (!makineler.length) { alert("Bu dosyada tanıdığım bir makine envanteri tablosu bulunamadı."); return; }
+      let eklenen = 0, guncellenen = 0;
+      makineler.forEach(data => {
+        const existing = S.envanter.makineler.find(x => x.ad.toLowerCase() === data.ad.toLowerCase() && (x.lab || "").toLowerCase() === (data.lab || "").toLowerCase());
+        if (existing) { Object.assign(existing, data); guncellenen++; }
+        else {
+          S.envanter.makineler.push(Object.assign({ id: uid("mk"), arizaKayitlari: [], onarimKayitlari: [], bakimKayitlari: [], yedekParcalar: [],
+            talimat: { teknik: "", hazirlik: "", calistirma: "", guvenlik: "", bakim: "", sikSorular: "", acilDurum: "" } }, data));
+          eklenen++;
+        }
+      });
+      save(); renderMain();
+      alert("İçe aktarıldı: " + eklenen + " yeni makine, " + guncellenen + " güncellenen makine.");
+    }).catch(e => alert("İçe aktarma hatası: " + e.message));
+  });
+}
+function viewMakinelerBolumu() {
+  const list = S.envanter.makineler.slice().sort((a, b) => (a.lab || "").localeCompare(b.lab || "", "tr") || (a.ad || "").localeCompare(b.ad || "", "tr"));
+  if (activeMakineId !== "__ALL__" && list.length && !list.some(m => m.id === activeMakineId)) activeMakineId = "__ALL__";
+  if (!list.length) activeMakineId = "__ALL__";
+  const active = activeMakineId === "__ALL__" ? null : makineById(activeMakineId);
+
+  const listHtml = list.length === 0 ? "" : `
+    <div class="card no-print">
+      <div class="row" style="flex-wrap:wrap;">
+        <button class="btn ${activeMakineId === '__ALL__' ? 'primary' : ''}" onclick="selectMakine('__ALL__')">📋 Tüm Liste</button>
+        ${list.map(m => `<button class="btn ${m.id === activeMakineId ? 'primary' : ''}" onclick="selectMakine('${m.id}')">${escHtml(m.ad)}</button>`).join("")}
+      </div>
+    </div>`;
+
+  const dosyaAdi = active ? active.ad : "Makine Envanteri";
+  const content = active ? renderMakineDetay(active) : renderMakineOzetTablosu(list);
+
+  return `
+  <div class="card no-print">
+    <h2>Makine Envanteri</h2>
+    <p class="small">Atölye/laboratuvar makinelerinizi burada tutun — genel bilgiler, arıza/onarım/bakım kayıtları, yedek parça listesi ve kullanım talimatı. Elle ekleyebilir ya da mevcut Excel envanter listenizi içe aktarabilirsiniz.</p>
+    <div class="row">
+      <button class="btn primary" onclick="addMakine()">Makine Ekle</button>
+      <button class="btn" onclick="importEnvanterFromExcel()">Excel'den İçe Aktar</button>
+      ${active ? `<button class="btn danger" onclick="deleteMakine('${active.id}')">Bu Makineyi Sil</button>` : ""}
+    </div>
+    ${belgeAracCubugu(dosyaAdi)}
+  </div>
+  ${listHtml}
+  <div class="print-area">
+    ${belgeYazdirmaBasligi(dosyaAdi)}
+    ${content}
+  </div>`;
+}
+
+const DURUM_TESPIT_KONTROL_ALANLARI = [
+  ["talimat", "Kullanma Talimatı Mevcut mu?"], ["stop", "Acil STOP Butonu Çalışıyor mu?"],
+  ["siperlik", "Koruyucu Siperlikleri Takılı mı?"], ["topraklama", "Topraklama Bağlantısı Var mı?"],
+  ["kablo", "Elektrik Kabloları Sağlam mı?"], ["temizlik", "Makine Temizliği Uygun mu?"], ["bakim", "Genel Bakım Yapıldı mı?"]
+];
+function addDurumTespit() {
+  const root = document.getElementById("modal-root");
+  root.innerHTML = `
+    <div class="modal-bg" onclick="if(event.target===this) closeModal()">
+      <div class="modal" style="width:420px;">
+        <h3>Yeni Durum Tespit Formu</h3>
+        <label class="small">Atölye / Laboratuvar</label><input type="text" id="dt-atolye" placeholder="örn. B3 - İmalat İşlemleri Atölyesi" style="width:100%">
+        <label class="small">Tarih</label><input type="text" id="dt-tarih" style="width:100%">
+        <label class="small">Atölye/Lab. Şefi</label><input type="text" id="dt-atolyesefi" style="width:100%">
+        <label class="small">Okul Müdürü</label><input type="text" id="dt-okulmuduru" style="width:100%">
+        <label class="small">Alan Şefi</label><input type="text" id="dt-alansefi" value="Ali Osman Koç" style="width:100%">
+        <div class="row">
+          <button class="btn primary" onclick="saveNewDurumTespit()">Ekle</button>
+          <button class="btn" onclick="closeModal()">İptal</button>
+        </div>
+      </div>
+    </div>`;
+}
+function saveNewDurumTespit() {
+  const atolye = document.getElementById("dt-atolye").value.trim();
+  if (!atolye) { alert("Atölye/Laboratuvar adı girin."); return; }
+  const f = {
+    id: uid("dtf"), atolye,
+    tarih: document.getElementById("dt-tarih").value.trim(),
+    atolyeSefi: document.getElementById("dt-atolyesefi").value.trim(),
+    okulMuduru: document.getElementById("dt-okulmuduru").value.trim(),
+    alanSefi: document.getElementById("dt-alansefi").value.trim(),
+    satirlar: [], aciklamaGorus: ""
+  };
+  S.durumTespitFormlari.push(f);
+  activeDurumTespitId = f.id;
+  save(); closeModal(); renderMain();
+}
+function editDurumTespitMeta(id) {
+  const f = durumTespitById(id);
+  if (!f) return;
+  const root = document.getElementById("modal-root");
+  root.innerHTML = `
+    <div class="modal-bg" onclick="if(event.target===this) closeModal()">
+      <div class="modal" style="width:420px;">
+        <h3>Form Bilgilerini Düzenle</h3>
+        <label class="small">Atölye / Laboratuvar</label><input type="text" id="dt-atolye" value="${escHtml(f.atolye)}" style="width:100%">
+        <label class="small">Tarih</label><input type="text" id="dt-tarih" value="${escHtml(f.tarih)}" style="width:100%">
+        <label class="small">Atölye/Lab. Şefi</label><input type="text" id="dt-atolyesefi" value="${escHtml(f.atolyeSefi)}" style="width:100%">
+        <label class="small">Okul Müdürü</label><input type="text" id="dt-okulmuduru" value="${escHtml(f.okulMuduru)}" style="width:100%">
+        <label class="small">Alan Şefi</label><input type="text" id="dt-alansefi" value="${escHtml(f.alanSefi)}" style="width:100%">
+        <div class="row">
+          <button class="btn primary" onclick="saveDurumTespitMeta('${id}')">Kaydet</button>
+          <button class="btn" onclick="closeModal()">İptal</button>
+        </div>
+      </div>
+    </div>`;
+}
+function saveDurumTespitMeta(id) {
+  const f = durumTespitById(id);
+  if (!f) return;
+  const atolye = document.getElementById("dt-atolye").value.trim();
+  if (!atolye) { alert("Atölye/Laboratuvar adı girin."); return; }
+  f.atolye = atolye;
+  f.tarih = document.getElementById("dt-tarih").value.trim();
+  f.atolyeSefi = document.getElementById("dt-atolyesefi").value.trim();
+  f.okulMuduru = document.getElementById("dt-okulmuduru").value.trim();
+  f.alanSefi = document.getElementById("dt-alansefi").value.trim();
+  save(); closeModal(); renderMain();
+}
+function deleteDurumTespit(id) {
+  if (!confirm("Bu durum tespit formu silinsin mi? Bu işlem geri alınamaz.")) return;
+  S.durumTespitFormlari = S.durumTespitFormlari.filter(x => x.id !== id);
+  if (activeDurumTespitId === id) activeDurumTespitId = null;
+  save(); renderMain();
+}
+function selectDurumTespit(id) { activeDurumTespitId = id; renderMain(); }
+function addDurumSatir(formId, makineId) {
+  const f = durumTespitById(formId);
+  if (!f) return;
+  const m = makineId ? makineById(makineId) : null;
+  f.satirlar.push({
+    id: uid("dtr"),
+    makineAdi: m ? m.ad : "", marka: m ? m.marka : "", model: m ? m.model : "", seriNo: m ? m.seriNo : "",
+    talimat: "", stop: "", siperlik: "", topraklama: "", kablo: "", temizlik: "", bakim: "",
+    genelDurum: "", notlar: ""
+  });
+  save(); renderMain();
+}
+function updateDurumSatir(formId, id, field, value) {
+  const f = durumTespitById(formId);
+  const r = f && f.satirlar.find(x => x.id === id);
+  if (r) r[field] = value;
+  save();
+}
+function removeDurumSatir(formId, id) {
+  if (!confirm("Bu satır silinsin mi?")) return;
+  const f = durumTespitById(formId);
+  if (!f) return;
+  f.satirlar = f.satirlar.filter(x => x.id !== id);
+  save(); renderMain();
+}
+function updateDurumTespitAciklama(formId, value) {
+  const f = durumTespitById(formId);
+  if (f) f.aciklamaGorus = value;
+  save();
+}
+function renderDurumTespitDetay(f) {
+  const kontrolAlanlari = DURUM_TESPIT_KONTROL_ALANLARI;
+  const rows = f.satirlar.map((r, i) => `
+    <tr>
+      <td>${i + 1}</td>
+      <td class="no-print"><input type="text" value="${escHtml(r.makineAdi)}" style="width:120px" onchange="updateDurumSatir('${f.id}','${r.id}','makineAdi',this.value)"></td>
+      <td class="print-only-cell">${escHtml(r.makineAdi)}</td>
+      <td class="no-print"><input type="text" value="${escHtml(r.marka)}" style="width:90px" onchange="updateDurumSatir('${f.id}','${r.id}','marka',this.value)"></td>
+      <td class="print-only-cell">${escHtml(r.marka)}</td>
+      <td class="no-print"><input type="text" value="${escHtml(r.model)}" style="width:80px" onchange="updateDurumSatir('${f.id}','${r.id}','model',this.value)"></td>
+      <td class="print-only-cell">${escHtml(r.model)}</td>
+      <td class="no-print"><input type="text" value="${escHtml(r.seriNo)}" style="width:80px" onchange="updateDurumSatir('${f.id}','${r.id}','seriNo',this.value)"></td>
+      <td class="print-only-cell">${escHtml(r.seriNo)}</td>
+      ${kontrolAlanlari.map(([key]) => `
+      <td class="no-print"><input type="text" value="${escHtml(r[key])}" placeholder="Evet/Hayır" style="width:70px" onchange="updateDurumSatir('${f.id}','${r.id}','${key}',this.value)"></td>
+      <td class="print-only-cell">${escHtml(r[key])}</td>`).join("")}
+      <td class="no-print"><input type="text" value="${escHtml(r.genelDurum)}" placeholder="İyi/Orta/Kötü" style="width:70px" onchange="updateDurumSatir('${f.id}','${r.id}','genelDurum',this.value)"></td>
+      <td class="print-only-cell">${escHtml(r.genelDurum)}</td>
+      <td class="no-print"><input type="text" value="${escHtml(r.notlar)}" style="width:120px" onchange="updateDurumSatir('${f.id}','${r.id}','notlar',this.value)"></td>
+      <td class="print-only-cell">${escHtml(r.notlar)}</td>
+      <td class="no-print"><button class="btn danger" onclick="removeDurumSatir('${f.id}','${r.id}')">Sil</button></td>
+    </tr>`).join("");
+
+  const toplam = f.satirlar.length;
+  const eksik = f.satirlar.filter(r => /ariz|eksik|k[öo]t[üu]|hay[iı]r|yok/i.test(r.genelDurum || "")).length;
+  const makineOptions = S.envanter.makineler.map(m => `<option value="${m.id}">${escHtml(m.ad)}</option>`).join("");
+
+  return `
+  <div class="card no-print">
+    <div class="row small" style="flex-wrap:wrap;gap:14px;align-items:center;">
+      <span><b>Atölye/Lab:</b> ${escHtml(f.atolye)}</span>
+      <span><b>Tarih:</b> ${escHtml(f.tarih || '-')}</span>
+      <span><b>Atölye/Lab. Şefi:</b> ${escHtml(f.atolyeSefi || '-')}</span>
+      <span><b>Okul Müdürü:</b> ${escHtml(f.okulMuduru || '-')}</span>
+      <span><b>Alan Şefi:</b> ${escHtml(f.alanSefi || '-')}</span>
+      <button class="btn" onclick="editDurumTespitMeta('${f.id}')">Bilgileri Düzenle</button>
+    </div>
+  </div>
+  <div class="print-only" style="margin-bottom:10px;">
+    <b>${escHtml(f.atolye)}</b> · Tarih: ${escHtml(f.tarih || '-')} · Atölye/Lab. Şefi: ${escHtml(f.atolyeSefi || '-')} ·
+    Okul Müdürü: ${escHtml(f.okulMuduru || '-')} · Alan Şefi: ${escHtml(f.alanSefi || '-')}
+  </div>
+  <div class="card">
+    <p class="small">VAR / YOK — EVET / HAYIR — TAMAM / EKSİK şeklinde doldurunuz. Eksiklik veya arıza varsa NOTLAR sütununa açıklama yazınız.</p>
+    <div style="overflow-x:auto;">
+    <table><thead><tr>
+      <th>S.N</th><th>Makine Adı</th><th>Marka</th><th>Model</th><th>Seri No</th>
+      ${kontrolAlanlari.map(([, label]) => `<th>${escHtml(label)}</th>`).join("")}
+      <th>Genel Durum</th><th>Notlar/Açıklama</th><th class="no-print"></th>
+    </tr></thead>
+    <tbody>${rows || `<tr><td colspan="15" class="small">Henüz satır eklenmedi.</td></tr>`}</tbody></table>
+    </div>
+    <div class="row no-print" style="align-items:center;">
+      <select onchange="if(this.value){addDurumSatir('${f.id}', this.value); this.value='';}">
+        <option value="">Makineden Satır Ekle...</option>
+        ${makineOptions}
+      </select>
+      <button class="btn" onclick="addDurumSatir('${f.id}')">Boş Satır Ekle</button>
+    </div>
+    <div class="small" style="margin-top:8px;">Toplam Makine Sayısı: ${toplam} &nbsp;·&nbsp; Eksiklik/Arıza Tespit Edilen Makine Sayısı: ${eksik}</div>
+  </div>
+  <div class="card">
+    <h2 class="no-print">Açıklama ve Görüş</h2>
+    <b class="print-only-inline">Açıklama ve Görüş</b>
+    <textarea class="no-print" rows="4" style="width:100%;margin-top:6px;border:1px solid var(--line);border-radius:4px;padding:6px;resize:vertical;font-family:inherit;font-size:11.5px;" oninput="updateDurumTespitAciklama('${f.id}',this.value)" onblur="save()">${escHtml(f.aciklamaGorus)}</textarea>
+    <div class="print-only" style="margin-top:4px;">${nlToBr(f.aciklamaGorus) || '<span class="small">—</span>'}</div>
+  </div>`;
+}
+function viewDurumTespitBolumu() {
+  const entries = S.durumTespitFormlari.slice().sort((a, b) => (a.atolye || "").localeCompare(b.atolye || "", "tr"));
+  if (entries.length && !entries.some(e => e.id === activeDurumTespitId)) activeDurumTespitId = entries[0].id;
+  if (!entries.length) activeDurumTespitId = null;
+  const active = durumTespitById(activeDurumTespitId);
+
+  const listHtml = entries.length === 0 ? "" : `
+    <div class="card no-print">
+      <div class="row" style="flex-wrap:wrap;">
+        ${entries.map(e => `<button class="btn ${e.id === activeDurumTespitId ? 'primary' : ''}" onclick="selectDurumTespit('${e.id}')">${escHtml(e.atolye)}${e.tarih ? ' · ' + escHtml(e.tarih) : ''}</button>`).join("")}
+      </div>
+    </div>`;
+
+  const dosyaAdi = active ? "Durum Tespit Formu - " + active.atolye : "Makine Durum Tespit Formu";
+  const content = active ? renderDurumTespitDetay(active) : `<div class="card small" style="text-align:center;padding:30px 20px;">Henüz bir durum tespit formu eklenmedi. "Yeni Form Ekle" ile atölye/laboratuvar bazında makine durum tespit ve eksiklik belirleme formu oluşturabilirsiniz.</div>`;
+
+  return `
+  <div class="card no-print">
+    <h2>Makine Durum Tespit ve Eksiklik Belirleme Formu</h2>
+    <p class="small">Atölye/laboratuvar bazında periyodik makine durum tespit formlarınızı burada tutun.</p>
+    <div class="row">
+      <button class="btn primary" onclick="addDurumTespit()">Yeni Form Ekle</button>
+      ${active ? `<button class="btn danger" onclick="deleteDurumTespit('${active.id}')">Bu Formu Sil</button>` : ""}
+    </div>
+    ${belgeAracCubugu(dosyaAdi)}
+  </div>
+  ${listHtml}
+  <div class="print-area">
+    ${belgeYazdirmaBasligi(dosyaAdi)}
+    ${content}
+  </div>`;
+}
+function viewAtolyeEnvanter() {
+  const tabs = [
+    { id: "makineler", label: "Makine Envanteri" },
+    { id: "durum-tespit", label: "Durum Tespit Formları" }
+  ];
+  const tabBar = `<div class="row no-print" style="flex-wrap:wrap;">${tabs.map(t => `<button class="btn ${t.id === activeEnvanterTab ? 'primary' : ''}" onclick="setEnvanterTab('${t.id}')">${escHtml(t.label)}</button>`).join("")}</div>`;
+  const body = activeEnvanterTab === "durum-tespit" ? viewDurumTespitBolumu() : viewMakinelerBolumu();
+  return tabBar + body;
 }
 
 /* ---- Ana Sayfa ---- */
