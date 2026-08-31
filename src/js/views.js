@@ -1681,30 +1681,100 @@ function viewAtolyeEnvanter() {
 }
 
 /* ---- Performans Kriterleri ---- */
-const DERSICI_KRITERLERI = [
-  ["Derse gerekli hazırlıkları yaparak gelme", 10],
-  ["Ders araç ve gereçlerini yanında bulundurma", 10],
-  ["Ders içi etkinliklere katılım", 10],
-  ["Sorumluluk almada istekli olma", 10],
-  ["Verilen görevleri zamanında yapma", 10],
-  ["Öğretmenlerine karşı davranış ve tutumları", 30],
-  ["Arkadaşlarına karşı davranış ve tutumlar", 10],
-  ["Ders giriş çıkış saatlerine özen gösterme", 10]
+const DERSICI_ETIKETLERI = [
+  "Derse gerekli hazırlıkları yaparak gelme",
+  "Ders araç ve gereçlerini yanında bulundurma",
+  "Ders içi etkinliklere katılım",
+  "Sorumluluk almada istekli olma",
+  "Verilen görevleri zamanında yapma",
+  "Öğretmenlerine karşı davranış ve tutumları",
+  "Arkadaşlarına karşı davranış ve tutumlar",
+  "Ders giriş çıkış saatlerine özen gösterme"
 ];
-const ODEV_KRITERLERI = [
-  ["Ödeve uygun çalışma planı", 10],
-  ["Farklı kaynaklardan bilgi toplama", 10],
-  ["Ödevdeki bilgilerin doğruluğu ve özgünlüğü", 10],
-  ["Ödevi anlaşılır biçimde yazma, yazım ve dilbilgisi kurallarına uyma", 10],
-  ["Ödevi yeterince materyalle (grafik, fotoğraf, karikatür, sunum) destekleme", 10],
-  ["Performans çalışmasını sınıfta anlatma", 30],
-  ["Ödevi zamanında teslim etme", 10],
-  ["Ders öğretmeni ile işbirliği", 10]
+const ODEV_ETIKETLERI = [
+  "Ödeve uygun çalışma planı",
+  "Farklı kaynaklardan bilgi toplama",
+  "Ödevdeki bilgilerin doğruluğu ve özgünlüğü",
+  "Ödevi anlaşılır biçimde yazma, yazım ve dilbilgisi kurallarına uyma",
+  "Ödevi yeterince materyalle (grafik, fotoğraf, karikatür, sunum) destekleme",
+  "Performans çalışmasını sınıfta anlatma",
+  "Ödevi zamanında teslim etme",
+  "Ders öğretmeni ile işbirliği"
 ];
 let activePerformansTab = "dersici";
 let activePerformansId = { dersici: null, odev: null };
+let activePerformansSinif = null;
+let activePerformansDonem = null;
 
-function performansKriterleri(tur) { return tur === "odev" ? ODEV_KRITERLERI : DERSICI_KRITERLERI; }
+function jsq(s) { return String(s === null || s === undefined ? "" : s).replace(/\\/g, "\\\\").replace(/'/g, "\\'"); }
+function performansEtiketleri(tur) { return tur === "odev" ? ODEV_ETIKETLERI : DERSICI_ETIKETLERI; }
+function performansKriterleri(tur) {
+  const etiketler = performansEtiketleri(tur);
+  const agirliklar = S.performansAgirliklari[tur];
+  return etiketler.map((label, i) => [label, agirliklar[i]]);
+}
+function performansSinifListesi(tur) {
+  const gercekSiniflar = S.classes.filter(c => c.grade > 0).map(c => c.name);
+  const kayitSiniflari = S.performansKayitlari.filter(x => x.tur === tur).map(x => x.sinif);
+  return Array.from(new Set(gercekSiniflar.concat(kayitSiniflari))).sort((a, b) => a.localeCompare(b, "tr", { numeric: true }));
+}
+function donemEtiketi(d) {
+  const s = String(d || "");
+  if (/2/.test(s)) return "2. Dönem";
+  if (/1/.test(s)) return "1. Dönem";
+  return "";
+}
+function selectPerformansSinif(sinif) {
+  activePerformansSinif = sinif;
+  activePerformansDonem = null;
+  activePerformansId[activePerformansTab] = null;
+  renderMain();
+}
+function selectPerformansDonem(donem) {
+  activePerformansDonem = donem;
+  activePerformansId[activePerformansTab] = null;
+  renderMain();
+}
+function editPerformansAgirliklari(tur) {
+  const etiketler = performansEtiketleri(tur);
+  const agirliklar = S.performansAgirliklari[tur];
+  const root = document.getElementById("modal-root");
+  root.innerHTML = `
+    <div class="modal-bg" onclick="if(event.target===this) closeModal()">
+      <div class="modal" style="width:480px;">
+        <h3>Kriter Ağırlıklarını Düzenle</h3>
+        <p class="small">Öğrenciye girdiğiniz toplam puan, bu ağırlıklar oranında kriterlere dağıtılır. Öğrencinin daha kolay/başarılı olabileceği kriterlere daha yüksek, zor olanlara daha düşük ağırlık verebilirsiniz — toplam mutlaka 100 olmalı.</p>
+        ${etiketler.map((label, i) => `
+          <div class="row" style="align-items:center;gap:8px;margin-top:4px;">
+            <label class="small" style="flex:1;">${escHtml(label)}</label>
+            <input type="number" min="0" max="100" id="pa-w${i}" value="${agirliklar[i]}" style="width:70px" oninput="performansAgirlikToplamGuncelle()">
+          </div>`).join("")}
+        <div class="small" id="pa-toplam" style="margin-top:8px;font-weight:600;">Toplam: ${agirliklar.reduce((a, b) => a + b, 0)} / 100</div>
+        <div class="row">
+          <button class="btn primary" onclick="savePerformansAgirliklari('${tur}')">Kaydet</button>
+          <button class="btn" onclick="closeModal()">İptal</button>
+        </div>
+      </div>
+    </div>`;
+}
+function performansAgirlikToplamGuncelle() {
+  let toplam = 0;
+  for (let i = 0; i < 8; i++) toplam += Number(document.getElementById("pa-w" + i).value) || 0;
+  const el = document.getElementById("pa-toplam");
+  el.textContent = "Toplam: " + toplam + " / 100";
+  el.style.color = toplam === 100 ? "" : "#B23A3A";
+}
+function savePerformansAgirliklari(tur) {
+  const vals = [];
+  let toplam = 0;
+  for (let i = 0; i < 8; i++) {
+    const v = Math.max(0, Math.round(Number(document.getElementById("pa-w" + i).value) || 0));
+    vals.push(v); toplam += v;
+  }
+  if (toplam !== 100) { alert("Ağırlıkların toplamı 100 olmalı (şu an " + toplam + "). Lütfen düzeltin."); return; }
+  S.performansAgirliklari[tur] = vals;
+  save(); closeModal(); renderMain();
+}
 /* Okulun resmi Excel şablonundaki formülle birebir aynı: öğrenci için
    girilen TEK bir Toplam Puan (0-100), en büyük ağırlıklı kriter en sona
    bırakılıp kalanı alacak şekilde, diğer kriterlere ağırlıklarıyla
@@ -1727,16 +1797,15 @@ function performansPuanlariDagit(toplam, weights) {
 }
 function kayitById(id) { return S.performansKayitlari.find(x => x.id === id); }
 function addPerformansKayit(tur) {
+  if (!activePerformansSinif || !activePerformansDonem) { alert("Önce sınıf ve dönem seçin."); return; }
   const root = document.getElementById("modal-root");
   root.innerHTML = `
     <div class="modal-bg" onclick="if(event.target===this) closeModal()">
-      <div class="modal" style="width:420px;">
-        <h3>${tur === 'odev' ? 'Yeni Performans Ödevi Kaydı' : 'Yeni Ders İçi Performans Kaydı'}</h3>
+      <div class="modal" style="width:380px;">
+        <h3>${tur === 'odev' ? 'Yeni Performans Ödevi Dersi' : 'Yeni Ders İçi Performans Dersi'}</h3>
+        <p class="small">${escHtml(activePerformansSinif)} · ${escHtml(activePerformansDonem)}</p>
         <input type="hidden" id="pf-tur" value="${tur}">
-        <label class="small">Ders</label><input type="text" id="pf-ders" style="width:100%">
-        <label class="small">Sınıf / Şube</label><input type="text" id="pf-sinif" placeholder="örn. 9-A" style="width:100%">
-        <label class="small">Dönem</label><input type="text" id="pf-donem" placeholder="örn. 2. Dönem" style="width:100%">
-        <label class="small">Öğretim Yılı</label><input type="text" id="pf-yil" value="${S.akademikTakvim ? escHtml(S.akademikTakvim.ogretimYili) : ''}" style="width:100%">
+        <label class="small">Ders</label><input type="text" id="pf-ders" placeholder="örn. Temel İmalat İşlemleri" style="width:100%">
         <div class="row">
           <button class="btn primary" onclick="saveNewPerformansKayit()">Ekle</button>
           <button class="btn" onclick="closeModal()">İptal</button>
@@ -1746,13 +1815,11 @@ function addPerformansKayit(tur) {
 }
 function saveNewPerformansKayit() {
   const ders = document.getElementById("pf-ders").value.trim();
-  const sinif = document.getElementById("pf-sinif").value.trim();
-  if (!ders || !sinif) { alert("Ders ve sınıf/şube girin."); return; }
+  if (!ders) { alert("Ders adı girin."); return; }
   const tur = document.getElementById("pf-tur").value;
   const k = {
-    id: uid("pf"), tur, ders, sinif,
-    donem: document.getElementById("pf-donem").value.trim(),
-    ogretimYili: document.getElementById("pf-yil").value.trim(),
+    id: uid("pf"), tur, ders, sinif: activePerformansSinif, donem: activePerformansDonem,
+    ogretimYili: S.akademikTakvim ? S.akademikTakvim.ogretimYili : "",
     ogrenciler: []
   };
   S.performansKayitlari.push(k);
@@ -1767,9 +1834,14 @@ function editPerformansKayitMeta(id) {
     <div class="modal-bg" onclick="if(event.target===this) closeModal()">
       <div class="modal" style="width:420px;">
         <h3>Kayıt Bilgilerini Düzenle</h3>
+        <p class="small">Sınıf/dönem yanlış geldiyse (örn. Excel'de yazım hatası varsa) burada düzeltebilirsiniz.</p>
         <label class="small">Ders</label><input type="text" id="pf-ders" value="${escHtml(k.ders)}" style="width:100%">
         <label class="small">Sınıf / Şube</label><input type="text" id="pf-sinif" value="${escHtml(k.sinif)}" style="width:100%">
-        <label class="small">Dönem</label><input type="text" id="pf-donem" value="${escHtml(k.donem || '')}" style="width:100%">
+        <label class="small">Dönem</label>
+        <select id="pf-donem" style="width:100%">
+          <option value="1. Dönem" ${k.donem === '1. Dönem' ? 'selected' : ''}>1. Dönem</option>
+          <option value="2. Dönem" ${k.donem === '2. Dönem' ? 'selected' : ''}>2. Dönem</option>
+        </select>
         <label class="small">Öğretim Yılı</label><input type="text" id="pf-yil" value="${escHtml(k.ogretimYili || '')}" style="width:100%">
         <div class="row">
           <button class="btn primary" onclick="savePerformansKayitMeta('${id}')">Kaydet</button>
@@ -1785,8 +1857,12 @@ function savePerformansKayitMeta(id) {
   const sinif = document.getElementById("pf-sinif").value.trim();
   if (!ders || !sinif) { alert("Ders ve sınıf/şube girin."); return; }
   k.ders = ders; k.sinif = sinif;
-  k.donem = document.getElementById("pf-donem").value.trim();
+  k.donem = document.getElementById("pf-donem").value;
   k.ogretimYili = document.getElementById("pf-yil").value.trim();
+  if (activePerformansSinif !== sinif || activePerformansDonem !== k.donem) {
+    activePerformansSinif = sinif;
+    activePerformansDonem = k.donem;
+  }
   save(); closeModal(); renderMain();
 }
 function deletePerformansKayit(id) {
@@ -1832,14 +1908,15 @@ function importPerformansFromExcel() {
       if (!kayitlar.length) { alert("Bu dosyada tanıdığım bir performans değerlendirme tablosu bulunamadı."); return; }
       let eklenen = 0, guncellenen = 0;
       kayitlar.forEach(data => {
+        const donem = donemEtiketi(data.donem) || data.donem;
         const existing = S.performansKayitlari.find(x => x.tur === data.tur && x.ders.toLowerCase() === data.ders.toLowerCase() && x.sinif.toLowerCase() === data.sinif.toLowerCase());
         const ogrenciler = data.ogrenciler.map(o => Object.assign({ id: uid("og") }, o));
         if (existing) {
-          existing.donem = data.donem || existing.donem;
+          existing.donem = donem || existing.donem;
           existing.ogrenciler = ogrenciler;
           guncellenen++;
         } else {
-          S.performansKayitlari.push({ id: uid("pf"), tur: data.tur, ders: data.ders, sinif: data.sinif, donem: data.donem, ogretimYili: S.akademikTakvim ? S.akademikTakvim.ogretimYili : "", ogrenciler });
+          S.performansKayitlari.push({ id: uid("pf"), tur: data.tur, ders: data.ders, sinif: data.sinif, donem, ogretimYili: S.akademikTakvim ? S.akademikTakvim.ogretimYili : "", ogrenciler });
           eklenen++;
         }
       });
@@ -1894,36 +1971,68 @@ function renderPerformansKayitDetay(k) {
   </div>`;
 }
 function viewPerformansBolum(tur) {
-  const entries = S.performansKayitlari.filter(x => x.tur === tur).slice().sort((a, b) => (a.sinif || "").localeCompare(b.sinif || "", "tr") || (a.ders || "").localeCompare(b.ders || "", "tr"));
-  if (entries.length && !entries.some(e => e.id === activePerformansId[tur])) activePerformansId[tur] = entries[0].id;
-  if (!entries.length) activePerformansId[tur] = null;
-  const active = kayitById(activePerformansId[tur]);
-
-  const listHtml = entries.length === 0 ? "" : `
-    <div class="card no-print">
-      <div class="row" style="flex-wrap:wrap;">
-        ${entries.map(e => `<button class="btn ${e.id === activePerformansId[tur] ? 'primary' : ''}" onclick="selectPerformansKayit('${tur}','${e.id}')">${escHtml(e.sinif)} · ${escHtml(e.ders)}</button>`).join("")}
-      </div>
-    </div>`;
-
   const baslik = tur === "odev" ? "Performans Ödevi Değerlendirme Ölçeği" : "Ders İçi Performans Değerlendirme Ölçeği";
-  const dosyaAdi = active ? baslik + " - " + active.sinif + " " + active.ders : baslik;
-  const content = active ? renderPerformansKayitDetay(active) : `<div class="card small" style="text-align:center;padding:30px 20px;">Henüz kayıt eklenmedi. "Yeni Kayıt Ekle" ile elle oluşturabilir ya da mevcut Excel dosyanızı içe aktarabilirsiniz.</div>`;
+  const siniflar = performansSinifListesi(tur);
+  if (activePerformansSinif && !siniflar.includes(activePerformansSinif)) { activePerformansSinif = null; activePerformansDonem = null; }
 
-  return `
+  const ustBar = `
   <div class="card no-print">
     <h2>${escHtml(baslik)}</h2>
+    <p class="small">Önce sınıf, sonra dönem, sonra ders seçin — her ders için öğrenci listesi ve puan çizelgesi açılır.</p>
     <div class="row">
-      <button class="btn primary" onclick="addPerformansKayit('${tur}')">Yeni Kayıt Ekle</button>
+      <button class="btn" onclick="editPerformansAgirliklari('${tur}')">Kriter Ağırlıklarını Düzenle</button>
       <button class="btn" onclick="importPerformansFromExcel()">Excel'den İçe Aktar</button>
-      ${active ? `<button class="btn danger" onclick="deletePerformansKayit('${active.id}')">Bu Kaydı Sil</button>` : ""}
     </div>
-    ${belgeAracCubugu(dosyaAdi)}
-  </div>
-  ${listHtml}
+  </div>`;
+
+  const sinifBar = `
+  <div class="card no-print">
+    <div class="small" style="margin-bottom:6px;font-weight:600;">1) Sınıf</div>
+    <div class="row" style="flex-wrap:wrap;">
+      ${siniflar.length ? siniflar.map(s => `<button class="btn ${s === activePerformansSinif ? 'primary' : ''}" onclick="selectPerformansSinif('${jsq(s)}')">${escHtml(s)}</button>`).join("")
+        : '<span class="small">Henüz tanımlı sınıf yok — Ders Programı &gt; Sınıflar bölümünden sınıf ekleyebilirsiniz.</span>'}
+    </div>
+  </div>`;
+
+  if (!activePerformansSinif) return ustBar + sinifBar;
+
+  const donemBar = `
+  <div class="card no-print">
+    <div class="small" style="margin-bottom:6px;font-weight:600;">2) Dönem — ${escHtml(activePerformansSinif)}</div>
+    <div class="row">
+      <button class="btn ${activePerformansDonem === '1. Dönem' ? 'primary' : ''}" onclick="selectPerformansDonem('1. Dönem')">1. Dönem</button>
+      <button class="btn ${activePerformansDonem === '2. Dönem' ? 'primary' : ''}" onclick="selectPerformansDonem('2. Dönem')">2. Dönem</button>
+    </div>
+  </div>`;
+
+  if (!activePerformansDonem) return ustBar + sinifBar + donemBar;
+
+  const dersEntries = S.performansKayitlari.filter(x => x.tur === tur && x.sinif === activePerformansSinif && x.donem === activePerformansDonem)
+    .slice().sort((a, b) => (a.ders || "").localeCompare(b.ders || "", "tr"));
+  if (dersEntries.length && !dersEntries.some(e => e.id === activePerformansId[tur])) activePerformansId[tur] = dersEntries[0].id;
+  if (!dersEntries.length) activePerformansId[tur] = null;
+  const active = kayitById(activePerformansId[tur]);
+
+  const dersBar = `
+  <div class="card no-print">
+    <div class="small" style="margin-bottom:6px;font-weight:600;">3) Ders — ${escHtml(activePerformansSinif)} · ${escHtml(activePerformansDonem)}</div>
+    <div class="row" style="flex-wrap:wrap;">
+      ${dersEntries.map(e => `<button class="btn ${e.id === activePerformansId[tur] ? 'primary' : ''}" onclick="selectPerformansKayit('${tur}','${e.id}')">${escHtml(e.ders)}</button>`).join("")}
+      <button class="btn" onclick="addPerformansKayit('${tur}')">+ Ders Ekle</button>
+      ${active ? `<button class="btn danger" onclick="deletePerformansKayit('${active.id}')">Bu Dersi Sil</button>` : ""}
+    </div>
+  </div>`;
+
+  if (!active) {
+    return ustBar + sinifBar + donemBar + dersBar + `<div class="card small" style="text-align:center;padding:30px 20px;">Bu sınıf ve dönem için henüz ders eklenmedi. "+ Ders Ekle" ile elle oluşturabilir ya da yukarıdan Excel dosyanızı içe aktarabilirsiniz.</div>`;
+  }
+
+  const dosyaAdi = baslik + " - " + active.sinif + " " + active.donem + " " + active.ders;
+  return ustBar + sinifBar + donemBar + dersBar + `
+  <div class="card no-print">${belgeAracCubugu(dosyaAdi)}</div>
   <div class="print-area">
     ${belgeYazdirmaBasligi(dosyaAdi)}
-    ${content}
+    ${renderPerformansKayitDetay(active)}
   </div>`;
 }
 function setPerformansTab(id) { activePerformansTab = id; renderMain(); }

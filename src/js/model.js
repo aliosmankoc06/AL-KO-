@@ -126,7 +126,8 @@ function defaultState() {
     toplantilar: [],
     envanter: { makineler: [] },
     durumTespitFormlari: [],
-    performansKayitlari: []
+    performansKayitlari: [],
+    performansAgirliklari: { dersici: [10, 10, 10, 10, 10, 30, 10, 10], odev: [10, 10, 10, 10, 10, 30, 10, 10] }
   };
 }
 
@@ -151,7 +152,8 @@ function emptyState() {
     toplantilar: [],
     envanter: { makineler: [] },
     durumTespitFormlari: [],
-    performansKayitlari: []
+    performansKayitlari: [],
+    performansAgirliklari: { dersici: [10, 10, 10, 10, 10, 30, 10, 10], odev: [10, 10, 10, 10, 10, 30, 10, 10] }
   };
 }
 
@@ -207,6 +209,13 @@ function normalizeState(s) {
       if (!o.id) o.id = uid("og");
       if (typeof o.toplamPuan !== "number") o.toplamPuan = Number(o.toplamPuan) || 0;
     });
+  });
+  if (!s.performansAgirliklari || typeof s.performansAgirliklari !== "object") s.performansAgirliklari = {};
+  ["dersici", "odev"].forEach(tur => {
+    const arr = s.performansAgirliklari[tur];
+    if (!Array.isArray(arr) || arr.length !== 8 || arr.some(v => typeof v !== "number")) {
+      s.performansAgirliklari[tur] = [10, 10, 10, 10, 10, 30, 10, 10];
+    }
   });
   if (!s.seededIsletmeler2026) {
     s.seededIsletmeler2026 = true;
