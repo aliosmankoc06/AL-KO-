@@ -8,7 +8,7 @@ const MODULES = [
   { id: "yillik-plan", label: "Yıllık Plan", icon: "note" },
   { id: "gunluk-plan", label: "Günlük Plan", icon: "book" },
   { id: "norm-kadro", label: "Norm Kadro", icon: "chart" },
-  { id: "okul-zumresi", label: "Okul Zümresi", icon: "users" },
+  { id: "okul-zumresi", label: "Toplantı Tutanakları", icon: "users" },
   { id: "il-zumresi", label: "İl Zümresi", icon: "building" },
   { id: "staj-yerlestirme", label: "Staj Yerleştirme", icon: "briefcase" },
   { id: "atolye-envanter", label: "Atölye / Envanter", icon: "tool" },
@@ -425,12 +425,37 @@ async function exportCurrentViewAsWord(dosyaAdi) {
   const path = await window.desktop.exportWord(guvenliDosyaAdi(dosyaAdi) + ".doc", html);
   if (path) alert("Word olarak kaydedildi:\n" + path);
 }
+let indirMenuDosyaAdi = "";
+function toggleIndirMenu(dosyaAdi) {
+  indirMenuDosyaAdi = dosyaAdi;
+  const menu = document.getElementById("indir-menu");
+  if (!menu) return;
+  const willOpen = menu.style.display !== "block";
+  document.querySelectorAll(".indir-menu").forEach(m => { m.style.display = "none"; });
+  menu.style.display = willOpen ? "block" : "none";
+}
+function runIndirOption(format) {
+  document.querySelectorAll(".indir-menu").forEach(m => { m.style.display = "none"; });
+  if (format === "pdf") exportCurrentViewAsPdf(indirMenuDosyaAdi);
+  else if (format === "excel") exportCurrentViewAsExcel(indirMenuDosyaAdi);
+  else if (format === "word") exportCurrentViewAsWord(indirMenuDosyaAdi);
+}
+document.addEventListener("click", (e) => {
+  if (!e.target.closest(".indir-dropdown")) {
+    document.querySelectorAll(".indir-menu").forEach(m => { m.style.display = "none"; });
+  }
+});
 function belgeAracCubugu(dosyaAdi) {
   return `<div class="row no-print" style="margin-top:10px;">
     <button class="btn primary" onclick="printCurrentView()">Yazdır</button>
-    <button class="btn" onclick="exportCurrentViewAsPdf('${dosyaAdi}')">PDF Olarak Kaydet</button>
-    <button class="btn" onclick="exportCurrentViewAsExcel('${dosyaAdi}')">Excel Olarak İndir</button>
-    <button class="btn" onclick="exportCurrentViewAsWord('${dosyaAdi}')">Word Olarak İndir</button>
+    <div class="indir-dropdown">
+      <button class="btn" onclick="toggleIndirMenu('${jsq(dosyaAdi)}')">İndir ▾</button>
+      <div id="indir-menu" class="indir-menu">
+        <div onclick="runIndirOption('pdf')">PDF Olarak Kaydet</div>
+        <div onclick="runIndirOption('excel')">Excel Olarak İndir</div>
+        <div onclick="runIndirOption('word')">Word Olarak İndir</div>
+      </div>
+    </div>
   </div>`;
 }
 function belgeYazdirmaBasligi(altBaslik) {
@@ -940,6 +965,22 @@ const ZUMRE_GUNDEM_STANDART = [
   "Başarılı ve özendirici öğrenci çalışmalarının değerlendirilmesi",
   "Dilek, temenniler ve kapanış"
 ];
+const VELI_GUNDEM_STANDART = [
+  "Açılış ve yoklama",
+  "Sınıf/alan öğretmeninin ve okul idaresinin tanıtılması",
+  "Okulun ve alanın fiziki imkanları, atölye/laboratuvar olanakları hakkında bilgilendirme",
+  "Eğitim-öğretim yılı akademik takvimi, ders programı ve haftalık ders saatleri hakkında bilgilendirme",
+  "Ölçme-değerlendirme sistemi, sınav ve performans değerlendirme kriterleri hakkında bilgilendirme",
+  "Öğrencilerin genel akademik ve davranışsal durumu hakkında bilgilendirme",
+  "Devam-devamsızlık kuralları ve önemi",
+  "Okul kuralları, kılık-kıyafet ve disiplin yönetmeliği hakkında bilgilendirme",
+  "İş sağlığı ve güvenliği, atölye çalışma kuralları ve kişisel koruyucu donanım kullanımı hakkında bilgilendirme",
+  "Staj / işletmede mesleki eğitim süreci hakkında bilgilendirme (varsa)",
+  "Veli-öğretmen iletişim yöntemleri (e-Okul, görüşme saatleri, telefon/e-posta)",
+  "Ders dışı etkinlikler, sosyal kulüpler ve geziler hakkında bilgilendirme",
+  "Veli görüş, öneri ve talepleri",
+  "Dilek, temenniler ve kapanış"
+];
 function toplantiById(id) { return S.toplantilar.find(x => x.id === id); }
 function addToplanti() {
   const root = document.getElementById("modal-root");
@@ -951,12 +992,13 @@ function addToplanti() {
         <select id="at-tur" style="width:100%">
           <option value="sube">Şube Öğretmenler Kurulu</option>
           <option value="zumre">Zümre Toplantısı</option>
+          <option value="veli">Veli Toplantısı</option>
         </select>
         <label class="small">Başlık</label><input type="text" id="at-baslik" placeholder="örn. 10-A Sınıfı 1. Dönem Şube Öğretmenler Kurulu" style="width:100%">
         <label class="small">Sınıf / Ders (opsiyonel)</label><input type="text" id="at-sinifders" style="width:100%">
         <label class="small">Öğretim Yılı</label><input type="text" id="at-yil" value="${S.akademikTakvim ? S.akademikTakvim.ogretimYili : ''}" style="width:100%">
         <label class="small">Dönem</label><input type="text" id="at-donem" placeholder="örn. 1. Dönem" style="width:100%">
-        <label class="small">Kurul/Zümre Başkanı</label><input type="text" id="at-baskan" style="width:100%">
+        <label class="small">Toplantıyı Yöneten (Başkan / Sınıf Öğretmeni)</label><input type="text" id="at-baskan" style="width:100%">
         <div class="row">
           <button class="btn primary" onclick="saveNewToplanti()">Ekle</button>
           <button class="btn" onclick="closeModal()">İptal</button>
@@ -968,7 +1010,7 @@ function saveNewToplanti() {
   const baslik = document.getElementById("at-baslik").value.trim();
   if (!baslik) { alert("Başlık girin."); return; }
   const tur = document.getElementById("at-tur").value;
-  const standart = tur === "sube" ? SUBE_GUNDEM_STANDART : ZUMRE_GUNDEM_STANDART;
+  const standart = tur === "sube" ? SUBE_GUNDEM_STANDART : tur === "veli" ? VELI_GUNDEM_STANDART : ZUMRE_GUNDEM_STANDART;
   const top = {
     id: uid("top"), tur, baslik,
     sinifVeyaDers: document.getElementById("at-sinifders").value.trim(),
@@ -1035,6 +1077,13 @@ function addKatilimci(topId) {
   top.katilimcilar.push({ id: uid("kt"), ad: "", brans: "" });
   save(); renderMain();
 }
+function addKatilimciFromSirku(topId, imzaId) {
+  const top = toplantiById(topId);
+  const im = S.imzaSirkuleri.find(x => x.id === imzaId);
+  if (!top || !im) return;
+  top.katilimcilar.push({ id: uid("kt"), ad: im.adSoyad, brans: im.unvan });
+  save(); renderMain();
+}
 function updateKatilimci(topId, id, field, value) {
   const top = toplantiById(topId);
   const k = top && top.katilimcilar.find(x => x.id === id);
@@ -1088,11 +1137,14 @@ function removeGundemMaddesi(topId, id) {
 }
 function selectToplanti(id) { activeToplantiId = id; renderMain(); }
 function renderToplantiDetay(top) {
+  const isVeli = top.tur === "veli";
+  const katilimciAdPlaceholder = isVeli ? "Veli Adı Soyadı" : "Ad Soyad";
+  const katilimciIkinciPlaceholder = isVeli ? "Öğrencinin Adı Soyadı / Sınıfı" : "Branş/Görev";
   const katilimciRows = top.katilimcilar.map(k => `
     <tr>
-      <td class="no-print"><input type="text" value="${escHtml(k.ad)}" placeholder="Ad Soyad" style="width:100%" onchange="updateKatilimci('${top.id}','${k.id}','ad',this.value)"></td>
+      <td class="no-print"><input type="text" value="${escHtml(k.ad)}" placeholder="${katilimciAdPlaceholder}" style="width:100%" onchange="updateKatilimci('${top.id}','${k.id}','ad',this.value)"></td>
       <td class="print-only-cell">${escHtml(k.ad)}</td>
-      <td class="no-print"><input type="text" value="${escHtml(k.brans)}" placeholder="Branş/Görev" style="width:100%" onchange="updateKatilimci('${top.id}','${k.id}','brans',this.value)"></td>
+      <td class="no-print"><input type="text" value="${escHtml(k.brans)}" placeholder="${katilimciIkinciPlaceholder}" style="width:100%" onchange="updateKatilimci('${top.id}','${k.id}','brans',this.value)"></td>
       <td class="print-only-cell">${escHtml(k.brans)}</td>
       <td class="print-only" style="width:80px;"></td>
       <td class="no-print"><button class="btn danger" onclick="removeKatilimci('${top.id}','${k.id}')">Sil</button></td>
@@ -1119,14 +1171,16 @@ function renderToplantiDetay(top) {
       <div class="print-only" style="margin-top:4px;">${nlToBr(g.notlar) || '<span class="small">—</span>'}</div>
     </div>`).join("");
 
+  const turEtiket = top.tur === 'sube' ? 'Şube Öğretmenler Kurulu' : top.tur === 'veli' ? 'Veli Toplantısı' : 'Zümre Toplantısı';
+  const sirkuOptions = S.imzaSirkuleri.map(im => `<option value="${im.id}">${escHtml(im.adSoyad)} — ${escHtml(im.unvan)}</option>`).join("");
   return `
   <div class="card no-print">
     <div class="row small" style="flex-wrap:wrap;gap:14px;align-items:center;">
-      <span><b>Tür:</b> ${top.tur === 'sube' ? 'Şube Öğretmenler Kurulu' : 'Zümre Toplantısı'}</span>
+      <span><b>Tür:</b> ${turEtiket}</span>
       <span><b>Sınıf/Ders:</b> ${escHtml(top.sinifVeyaDers || '-')}</span>
       <span><b>Öğretim Yılı:</b> ${escHtml(top.ogretimYili || '-')}</span>
       <span><b>Dönem:</b> ${escHtml(top.donem || '-')}</span>
-      <span><b>Başkan:</b> ${escHtml(top.baskan || '-')}</span>
+      <span><b>${isVeli ? 'Sınıf Öğretmeni' : 'Başkan'}:</b> ${escHtml(top.baskan || '-')}</span>
       <span><b>Tarih:</b> ${escHtml(top.tarih || '-')}</span>
       <span><b>Yer:</b> ${escHtml(top.yer || '-')}</span>
       <span><b>Saat:</b> ${escHtml(top.saat || '-')}</span>
@@ -1134,14 +1188,22 @@ function renderToplantiDetay(top) {
     </div>
   </div>
   <div class="print-only" style="margin-bottom:10px;">
-    <b>Öğretim Yılı:</b> ${escHtml(top.ogretimYili || '-')} · <b>Dönem:</b> ${escHtml(top.donem || '-')} · <b>Başkan:</b> ${escHtml(top.baskan || '-')} ·
+    <b>Öğretim Yılı:</b> ${escHtml(top.ogretimYili || '-')} · <b>Dönem:</b> ${escHtml(top.donem || '-')} · <b>${isVeli ? 'Sınıf Öğretmeni' : 'Başkan'}:</b> ${escHtml(top.baskan || '-')} ·
     <b>Zümre No:</b> ${escHtml(top.zumreNo || '-')} · <b>Tarih:</b> ${escHtml(top.tarih || '-')} · <b>Yer:</b> ${escHtml(top.yer || '-')} · <b>Saat:</b> ${escHtml(top.saat || '-')}
   </div>
   <div class="card">
-    <h2>Toplantıya Katılanlar</h2>
-    <table><thead><tr><th>Ad Soyad</th><th>Branş/Görev</th><th class="print-only">İmza</th><th class="no-print"></th></tr></thead>
+    <h2>${isVeli ? 'Toplantıya Katılan Veliler' : 'Toplantıya Katılanlar'}</h2>
+    <table><thead><tr><th>${katilimciAdPlaceholder}</th><th>${katilimciIkinciPlaceholder}</th><th class="print-only">İmza</th><th class="no-print"></th></tr></thead>
     <tbody>${katilimciRows || `<tr><td colspan="4" class="small">Henüz katılımcı eklenmedi.</td></tr>`}</tbody></table>
-    <div class="row no-print"><button class="btn" onclick="addKatilimci('${top.id}')">Katılımcı Ekle</button></div>
+    <div class="row no-print" style="align-items:center;">
+      <button class="btn" onclick="addKatilimci('${top.id}')">Katılımcı Ekle</button>
+      ${!isVeli && S.imzaSirkuleri.length ? `
+      <select onchange="if(this.value){addKatilimciFromSirku('${top.id}', this.value); this.value='';}">
+        <option value="">İmza Sirkülerinden Ekle...</option>
+        ${sirkuOptions}
+      </select>` : ''}
+    </div>
+    <p class="small print-only" style="margin-top:8px;">Toplam Katılımcı: ${top.katilimcilar.length}</p>
   </div>
   ${top.tur === 'zumre' ? `
   <div class="card">
@@ -1165,17 +1227,17 @@ function viewOkulZumresi() {
   const listHtml = entries.length === 0 ? "" : `
     <div class="card no-print">
       <div class="row" style="flex-wrap:wrap;">
-        ${entries.map(e => `<button class="btn ${e.id === activeToplantiId ? 'primary' : ''}" onclick="selectToplanti('${e.id}')">${e.tur === 'sube' ? '📋 ' : '🏭 '}${escHtml(e.baslik)}</button>`).join("")}
+        ${entries.map(e => `<button class="btn ${e.id === activeToplantiId ? 'primary' : ''}" onclick="selectToplanti('${e.id}')">${e.tur === 'sube' ? '📋 ' : e.tur === 'veli' ? '👪 ' : '🏭 '}${escHtml(e.baslik)}</button>`).join("")}
       </div>
     </div>`;
 
-  const dosyaAdi = active ? active.baslik : "Okul Zümresi";
-  const content = active ? renderToplantiDetay(active) : `<div class="card small" style="text-align:center;padding:30px 20px;">Henüz bir toplantı tutanağı eklenmedi. "Yeni Toplantı Ekle" ile Şube Öğretmenler Kurulu ya da Zümre Toplantısı tutanağı oluşturabilirsiniz — standart gündem maddeleri otomatik hazırlanır.</div>`;
+  const dosyaAdi = active ? active.baslik : "Toplantı Tutanağı";
+  const content = active ? renderToplantiDetay(active) : `<div class="card small" style="text-align:center;padding:30px 20px;">Henüz bir toplantı tutanağı eklenmedi. "Yeni Toplantı Ekle" ile Şube Öğretmenler Kurulu, Zümre Toplantısı ya da Veli Toplantısı tutanağı oluşturabilirsiniz — standart gündem maddeleri otomatik hazırlanır.</div>`;
 
   return `
   <div class="card no-print">
-    <h2>Okul Zümresi</h2>
-    <p class="small">Şube Öğretmenler Kurulu ve Zümre Toplantısı tutanaklarınızı burada tutun — katılımcılar, gündem maddeleri, görüşmeler ve kararlar. Yeni bir toplantı eklediğinizde standart gündem maddeleri otomatik geliyor, dilediğiniz gibi düzenleyip Yazdır/PDF/Excel alabilirsiniz.</p>
+    <h2>Toplantı Tutanakları</h2>
+    <p class="small">Şube Öğretmenler Kurulu, Zümre Toplantısı ve Veli Toplantısı tutanaklarınızı burada tutun — katılımcılar, gündem maddeleri, görüşmeler ve kararlar. Yeni bir toplantı eklediğinizde standart gündem maddeleri otomatik geliyor, dilediğiniz gibi düzenleyip Yazdır/PDF/Word/Excel alabilirsiniz.</p>
     <div class="row"><button class="btn primary" onclick="addToplanti()">Yeni Toplantı Ekle</button>
       ${active ? `<button class="btn danger" onclick="deleteToplanti('${active.id}')">Bu Toplantıyı Sil</button>` : ""}
     </div>
@@ -2892,7 +2954,38 @@ function viewAyarlar() {
         ${k.logo ? `<button class="btn danger" onclick="logoKaldir()">Logoyu Kaldır</button>` : ""}
       </div>
     </div>
+  </div>
+  ${renderImzaSirkuleriKarti()}`;
+}
+function renderImzaSirkuleriKarti() {
+  const rows = S.imzaSirkuleri.map(k => `
+    <tr>
+      <td><input type="text" placeholder="Ad Soyad" value="${escHtml(k.adSoyad)}" style="width:100%" onchange="updateImzaSirku('${k.id}','adSoyad',this.value)"></td>
+      <td><input type="text" placeholder="Unvan" value="${escHtml(k.unvan)}" style="width:100%" onchange="updateImzaSirku('${k.id}','unvan',this.value)"></td>
+      <td><button class="btn danger" onclick="deleteImzaSirku('${k.id}')">Sil</button></td>
+    </tr>`).join("");
+  return `
+  <div class="card">
+    <h2>İmza Sirküsü</h2>
+    <p class="small">Belgelerde imza bloklarına ve katılımcı listelerine hızlıca eklemek için sık kullandığınız imza sahiplerini (okul müdürü, müdür yardımcısı, alan şefi, atölye şefi, zümre başkanı vb.) burada tutun.</p>
+    <table><thead><tr><th>Ad Soyad</th><th>Unvan</th><th></th></tr></thead>
+    <tbody>${rows || `<tr><td colspan="3" class="small">Henüz imza sahibi eklenmedi.</td></tr>`}</tbody></table>
+    <div class="row"><button class="btn" onclick="addImzaSirku()">İmza Sahibi Ekle</button></div>
   </div>`;
+}
+function addImzaSirku() {
+  S.imzaSirkuleri.push({ id: uid("imza"), adSoyad: "", unvan: "" });
+  save(); renderMain();
+}
+function updateImzaSirku(id, field, value) {
+  const k = S.imzaSirkuleri.find(x => x.id === id);
+  if (k) k[field] = value;
+  save();
+}
+function deleteImzaSirku(id) {
+  if (!confirm("Bu imza sahibi silinsin mi?")) return;
+  S.imzaSirkuleri = S.imzaSirkuleri.filter(x => x.id !== id);
+  save(); renderMain();
 }
 
 /* ---- Ana Sayfa ---- */

@@ -131,6 +131,7 @@ function defaultState() {
     donemRaporlari: { dersKesim: [], yaziliTeslim: [] },
     sinavHavuzu: { sorular: [] },
     sinavKagitlari: [],
+    imzaSirkuleri: [],
     kurumBilgileri: {
       okulAdi: "Soma Mesleki ve Teknik Anadolu Lisesi",
       sehir: "SOMA",
@@ -169,6 +170,7 @@ function emptyState() {
     donemRaporlari: { dersKesim: [], yaziliTeslim: [] },
     sinavHavuzu: { sorular: [] },
     sinavKagitlari: [],
+    imzaSirkuleri: [],
     kurumBilgileri: {
       okulAdi: "Soma Mesleki ve Teknik Anadolu Lisesi",
       sehir: "SOMA",
@@ -267,6 +269,8 @@ function normalizeState(s) {
     if (!k.id) k.id = uid("sk");
     if (!Array.isArray(k.soruIdleri)) k.soruIdleri = [];
   });
+  if (!Array.isArray(s.imzaSirkuleri)) s.imzaSirkuleri = [];
+  s.imzaSirkuleri.forEach(k => { if (!k.id) k.id = uid("imza"); });
   if (!s.kurumBilgileri || typeof s.kurumBilgileri !== "object") s.kurumBilgileri = {};
   {
     const kb = s.kurumBilgileri;
