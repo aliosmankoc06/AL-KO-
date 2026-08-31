@@ -1775,24 +1775,20 @@ function savePerformansAgirliklari(tur) {
   S.performansAgirliklari[tur] = vals;
   save(); closeModal(); renderMain();
 }
-/* Okulun resmi Excel şablonundaki formülle birebir aynı: öğrenci için
-   girilen TEK bir Toplam Puan (0-100), en büyük ağırlıklı kriter en sona
-   bırakılıp kalanı alacak şekilde, diğer kriterlere ağırlıklarıyla
-   orantılı olarak (tam sayıya yuvarlanarak) dağıtılır. */
+/* Öğrenci için girilen TEK bir Toplam Puan (0-100), "en büyük kalan"
+   yöntemiyle kriterlere dağıtılır: önce her kriterin tam orantılı payı
+   hesaplanıp aşağı yuvarlanır, sonra yuvarlamadan kalan puanlar,
+   küsuratı en büyük olan kriterlerden başlanarak birer birer dağıtılır.
+   Böylece hangi kriterin "fazladan" alacağı öğrenciden öğrenciye
+   değişir — tek bir kriter sürekli avantajlı çıkmaz. */
 function performansPuanlariDagit(toplam, weights) {
   const total = Math.max(0, Math.min(100, Math.round(Number(toplam) || 0)));
-  const bigIndex = weights.indexOf(Math.max.apply(null, weights));
-  const order = weights.map((w, i) => i).filter(i => i !== bigIndex).concat([bigIndex]);
-  let remaining = total;
-  let remainingWeight = weights.reduce((a, b) => a + b, 0);
-  const result = new Array(weights.length).fill(0);
-  order.forEach((idx, pos) => {
-    if (pos === order.length - 1) { result[idx] = remaining; return; }
-    const v = Math.floor(remaining * weights[idx] / remainingWeight);
-    result[idx] = v;
-    remaining -= v;
-    remainingWeight -= weights[idx];
-  });
+  const totalWeight = weights.reduce((a, b) => a + b, 0) || 1;
+  const exact = weights.map(w => total * w / totalWeight);
+  const result = exact.map(Math.floor);
+  let kalan = total - result.reduce((a, b) => a + b, 0);
+  const siraliIndeksler = weights.map((w, i) => i).sort((a, b) => (exact[b] - result[b]) - (exact[a] - result[a]));
+  for (let i = 0; i < kalan; i++) result[siraliIndeksler[i % siraliIndeksler.length]] += 1;
   return result;
 }
 function kayitById(id) { return S.performansKayitlari.find(x => x.id === id); }
@@ -1958,7 +1954,7 @@ function renderPerformansKayitDetay(k) {
     <b>Ders:</b> ${escHtml(k.ders)} · <b>Sınıf/Şube:</b> ${escHtml(k.sinif)} · <b>Dönem:</b> ${escHtml(k.donem || '-')} · <b>Öğretim Yılı:</b> ${escHtml(k.ogretimYili || '-')}
   </div>
   <div class="card">
-    <p class="small">Her öğrenci için TEK bir Toplam Puan (0-100) girin — aşağıdaki kriter kutuları, okulun resmi Excel şablonundaki aynı formülle otomatik hesaplanır.</p>
+    <p class="small">Her öğrenci için TEK bir Toplam Puan (0-100) girin — aşağıdaki kriter kutuları, ağırlıklarına oranlı olarak otomatik hesaplanır.</p>
     <div style="overflow-x:auto;">
     <table><thead><tr>
       <th>S.N</th><th>Okul No</th><th>Adı ve Soyadı</th>
