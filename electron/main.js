@@ -129,6 +129,57 @@ ipcMain.handle("export:excel", async (evt, defaultName, sheets) => {
   return result.filePath;
 });
 
+function buildWordHtml(innerHtml) {
+  return `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+<head>
+<meta charset="utf-8">
+<!--[if gte mso 9]>
+<xml>
+<w:WordDocument>
+<w:View>Print</w:View>
+<w:Zoom>100</w:Zoom>
+<w:DoNotOptimizeForBrowser/>
+</w:WordDocument>
+</xml>
+<![endif]-->
+<style>
+  @page { size: 21cm 29.7cm; margin: 2cm 1.8cm; }
+  body { font-family: Calibri, Arial, sans-serif; font-size: 11pt; color:#000; }
+  h2 { font-family: Georgia, 'Times New Roman', serif; font-size: 15pt; color:#0E1B33; margin: 0 0 8pt; }
+  h3 { font-family: Georgia, 'Times New Roman', serif; font-size: 12.5pt; color:#0E1B33; margin: 0 0 6pt; }
+  table { border-collapse: collapse; width: 100%; font-size: 10.5pt; margin-bottom: 8pt; }
+  th, td { border: 1px solid #666; padding: 4pt 6pt; text-align: left; vertical-align: top; }
+  th { background: #EEF0F4; font-weight: 700; }
+  .card { border: 1px solid #999; padding: 10pt; margin-bottom: 10pt; }
+  .small { font-size: 9.5pt; color:#333; }
+  .print-doc-header { border-bottom: 2pt solid #000; padding-bottom: 8pt; margin-bottom: 14pt; }
+  .print-doc-header .okul { font-weight: 700; font-size: 12.5pt; }
+  .print-doc-header .alan { font-size: 10.5pt; color:#333; }
+  .print-doc-header .tarih { font-size: 10pt; color:#333; }
+  .no-print { display: none; }
+  .print-only { display: block; }
+  .print-only-cell { display: table-cell; }
+  .print-only-inline { display: inline; }
+  input, textarea, select, button { display: none; }
+</style>
+</head>
+<body>
+${innerHtml}
+</body>
+</html>`;
+}
+
+ipcMain.handle("export:word", async (evt, defaultName, innerHtml) => {
+  const result = await dialog.showSaveDialog(mainWindow, {
+    title: "Word Olarak Kaydet",
+    defaultPath: defaultName,
+    filters: [{ name: "Word Belgesi", extensions: ["doc"] }]
+  });
+  if (result.canceled || !result.filePath) return null;
+  fs.writeFileSync(result.filePath, buildWordHtml(innerHtml), "utf-8");
+  return result.filePath;
+});
+
 ipcMain.handle("export:pdf", async (evt, defaultName) => {
   const result = await dialog.showSaveDialog(mainWindow, {
     title: "PDF Olarak Kaydet",

@@ -12,6 +12,7 @@ contextBridge.exposeInMainWorld("desktop", {
   readFile: (filePath) => ipcRenderer.invoke("fs:read-file", filePath),
   exportPdf: (defaultName) => ipcRenderer.invoke("export:pdf", defaultName),
   exportExcel: (defaultName, sheets) => ipcRenderer.invoke("export:excel", defaultName, sheets),
+  exportWord: (defaultName, innerHtml) => ipcRenderer.invoke("export:word", defaultName, innerHtml),
   openXlsxDialog: () => ipcRenderer.invoke("dialog:open-xlsx"),
   importPlanXlsx: (filePath) => ipcRenderer.invoke("import:plan-xlsx", filePath),
   importEnvanterXlsx: (filePath) => ipcRenderer.invoke("import:envanter-xlsx", filePath),

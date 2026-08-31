@@ -415,11 +415,20 @@ async function exportCurrentViewAsExcel(dosyaAdi) {
   const path = await window.desktop.exportExcel(guvenliDosyaAdi(dosyaAdi) + ".xlsx", sheets);
   if (path) alert("Excel olarak kaydedildi:\n" + path);
 }
+async function exportCurrentViewAsWord(dosyaAdi) {
+  if (!window.desktop || !window.desktop.isElectron) { alert("Word olarak indirme sadece masaüstü uygulamasında çalışır."); return; }
+  const area = document.querySelector(".print-area");
+  const html = area ? area.innerHTML : "";
+  if (!html.trim()) { alert("Bu sayfada indirilecek bir belge içeriği bulunamadı."); return; }
+  const path = await window.desktop.exportWord(guvenliDosyaAdi(dosyaAdi) + ".doc", html);
+  if (path) alert("Word olarak kaydedildi:\n" + path);
+}
 function belgeAracCubugu(dosyaAdi) {
   return `<div class="row no-print" style="margin-top:10px;">
     <button class="btn primary" onclick="printCurrentView()">Yazdır</button>
     <button class="btn" onclick="exportCurrentViewAsPdf('${dosyaAdi}')">PDF Olarak Kaydet</button>
     <button class="btn" onclick="exportCurrentViewAsExcel('${dosyaAdi}')">Excel Olarak İndir</button>
+    <button class="btn" onclick="exportCurrentViewAsWord('${dosyaAdi}')">Word Olarak İndir</button>
   </div>`;
 }
 function belgeYazdirmaBasligi(altBaslik) {
