@@ -121,7 +121,8 @@ function defaultState() {
     students: [],
     akademikTakvim: null,
     yillikPlanlar: [],
-    gunlukPlanlar: []
+    gunlukPlanlar: [],
+    normKadro: { ogrenciSayilari: {}, koordinatorlukSatirlari: [] }
   };
 }
 
@@ -141,7 +142,8 @@ function emptyState() {
     students: [],
     akademikTakvim: null,
     yillikPlanlar: [],
-    gunlukPlanlar: []
+    gunlukPlanlar: [],
+    normKadro: { ogrenciSayilari: {}, koordinatorlukSatirlari: [] }
   };
 }
 
@@ -159,6 +161,9 @@ function normalizeState(s) {
   if (!Array.isArray(s.gunlukPlanlar)) s.gunlukPlanlar = [];
   s.yillikPlanlar.forEach(p => { if (!p.id) p.id = uid("yp"); });
   s.gunlukPlanlar.forEach(p => { if (!p.id) p.id = uid("gp"); });
+  if (!s.normKadro || typeof s.normKadro !== "object") s.normKadro = {};
+  if (!s.normKadro.ogrenciSayilari || typeof s.normKadro.ogrenciSayilari !== "object") s.normKadro.ogrenciSayilari = {};
+  if (!Array.isArray(s.normKadro.koordinatorlukSatirlari)) s.normKadro.koordinatorlukSatirlari = [];
   if (!s.seededIsletmeler2026) {
     s.seededIsletmeler2026 = true;
     const seed = [

@@ -156,6 +156,7 @@ tbody tr:nth-child(even){background:rgba(20,30,50,0.015);}
 /* ---- Belge/Yazdırma alanı (ekranda görünmez, sadece yazdır/PDF'te kullanılır) ---- */
 .print-doc-header{display:none;}
 .print-only{display:none;}
+.print-only-cell{display:none;}
 
 @media print{
   .sidebar,.no-print{display:none !important;}
@@ -165,6 +166,7 @@ tbody tr:nth-child(even){background:rgba(20,30,50,0.015);}
   .content main{padding:0;max-width:100%;}
   .print-area{display:block;}
   .print-only{display:block;}
+  .print-only-cell{display:table-cell;}
   .card{box-shadow:none;border:1px solid #999;border-radius:0;page-break-inside:avoid;margin-bottom:10px;}
   .print-doc-header{
     display:flex;justify-content:space-between;align-items:flex-start;gap:10px;

@@ -7,6 +7,7 @@ const MODULES = [
   { id: "ders-programi", label: "Ders Programı", icon: "calendar" },
   { id: "yillik-plan", label: "Yıllık Plan", icon: "note" },
   { id: "gunluk-plan", label: "Günlük Plan", icon: "book" },
+  { id: "norm-kadro", label: "Norm Kadro", icon: "chart" },
   { id: "okul-zumresi", label: "Okul Zümresi", icon: "users" },
   { id: "il-zumresi", label: "İl Zümresi", icon: "building" },
   { id: "staj-yerlestirme", label: "Staj Yerleştirme", icon: "briefcase" }
@@ -61,6 +62,7 @@ function renderMain() {
   if (activeModule === "ders-programi-secim") { el.innerHTML = viewDersProgramiChooser(); return; }
   if (activeModule === "yillik-plan") { el.innerHTML = viewPlanModule("yillik"); return; }
   if (activeModule === "gunluk-plan") { el.innerHTML = viewPlanModule("gunluk"); return; }
+  if (activeModule === "norm-kadro") { el.innerHTML = viewNormKadro(); return; }
   if (activeModule === "okul-zumresi") { el.innerHTML = viewPlaceholderModule("Okul Zümresi", "Okul zümre toplantı tutanaklarınızı buraya birlikte kuracağız."); return; }
   if (activeModule === "il-zumresi") { el.innerHTML = viewPlaceholderModule("İl Zümresi", "İl zümre toplantı tutanaklarınızı buraya birlikte kuracağız."); return; }
   if (activeModule === "staj-yerlestirme") { el.innerHTML = viewStajYerlestirme(); return; }
@@ -577,6 +579,129 @@ function viewPlanModule(kind) {
   <div class="print-area">
     ${belgeYazdirmaBasligi(dosyaAdi)}
     ${contentHtml}
+  </div>`;
+}
+
+/* ---- Norm Kadro ---- */
+function setNormKadroOgrenciSayisi(classId, value) {
+  const n = parseInt(value);
+  if (Number.isFinite(n) && n >= 0) S.normKadro.ogrenciSayilari[classId] = n;
+  else delete S.normKadro.ogrenciSayilari[classId];
+  save();
+}
+function addKoordSatir() {
+  S.normKadro.koordinatorlukSatirlari.push({ id: uid("nk"), dal: "", sinif: "", ogrenciSayisi: "", haftalikSaat: 24, grupSayisi: 1 });
+  save(); renderMain();
+}
+function updateKoordSatir(id, field, value) {
+  const row = S.normKadro.koordinatorlukSatirlari.find(r => r.id === id);
+  if (!row) return;
+  row[field] = (field === "dal" || field === "sinif") ? value : (parseInt(value) || 0);
+  save();
+}
+function deleteKoordSatir(id) {
+  if (!confirm("Bu koordinatörlük satırı silinsin mi?")) return;
+  S.normKadro.koordinatorlukSatirlari = S.normKadro.koordinatorlukSatirlari.filter(r => r.id !== id);
+  save(); renderMain();
+}
+function viewNormKadro() {
+  const relevantClasses = S.classes.filter(c => c.id !== "cl-idari" && c.assignments.length > 0 && !c.id.startsWith("isletme-"));
+  let siraNo = 0;
+  let ampToplam = 0;
+
+  const sinifBlocks = relevantClasses.map(cls => {
+    const ogrenciSayisi = S.normKadro.ogrenciSayilari[cls.id];
+    const rows = cls.assignments.map(a => {
+      const course = courseById(a.courseId);
+      if (!course) return "";
+      siraNo++;
+      const grup = a.teacherCount || 1;
+      const toplam = course.hours * grup;
+      ampToplam += toplam;
+      return `<tr>
+        <td>${siraNo}</td><td>${escHtml(cls.name)}</td><td>${escHtml(course.name)}</td>
+        <td>${course.hours}</td><td>${grup}</td><td><b>${toplam}</b></td>
+      </tr>`;
+    }).join("");
+    return `
+    <div style="margin-bottom:14px;">
+      <div class="row no-print" style="align-items:center;margin-top:0;">
+        <h3 style="margin:0;">${escHtml(cls.name)} Sınıfı</h3>
+        <label class="small" style="margin-left:10px;">Öğrenci Sayısı:</label>
+        <input type="number" min="0" value="${ogrenciSayisi !== undefined ? ogrenciSayisi : ''}" style="width:70px" onchange="setNormKadroOgrenciSayisi('${cls.id}',this.value)">
+      </div>
+      <p class="print-only" style="font-weight:700;margin:10px 0 4px;">${escHtml(cls.name)} Sınıfı — Öğrenci Sayısı: ${ogrenciSayisi !== undefined ? ogrenciSayisi : '—'}</p>
+      <table><thead><tr><th>No</th><th>Sınıf</th><th>Ders Adı</th><th>Haftalık Saat</th><th>Grup Sayısı</th><th>Toplam Ders Saati</th></tr></thead>
+      <tbody>${rows}</tbody></table>
+    </div>`;
+  }).join("") || `<p class="small">Ders Programı → Sınıflar ve Ders Atama'dan sınıflara ders atadıkça burada otomatik listelenecek.</p>`;
+
+  let koordToplam = 0;
+  const koordRows = S.normKadro.koordinatorlukSatirlari.map(r => {
+    const toplam = (r.haftalikSaat || 0) * (r.grupSayisi || 0);
+    koordToplam += toplam;
+    return `<tr>
+      <td class="no-print"><input type="text" value="${escHtml(r.sinif)}" style="width:70px" onchange="updateKoordSatir('${r.id}','sinif',this.value)"></td>
+      <td class="print-only-cell">${escHtml(r.sinif)}</td>
+      <td class="no-print"><input type="number" min="0" value="${r.ogrenciSayisi}" style="width:60px" onchange="updateKoordSatir('${r.id}','ogrenciSayisi',this.value)"></td>
+      <td class="print-only-cell">${r.ogrenciSayisi}</td>
+      <td class="no-print"><input type="text" value="${escHtml(r.dal)}" placeholder="örn. Koordinatörlük – Makine Bakım Onarım Dalı" style="width:100%" onchange="updateKoordSatir('${r.id}','dal',this.value)"></td>
+      <td class="print-only-cell">${escHtml(r.dal)}</td>
+      <td class="no-print"><input type="number" min="0" value="${r.haftalikSaat}" style="width:60px" onchange="updateKoordSatir('${r.id}','haftalikSaat',this.value)"></td>
+      <td class="print-only-cell">${r.haftalikSaat}</td>
+      <td class="no-print"><input type="number" min="0" value="${r.grupSayisi}" style="width:60px" onchange="updateKoordSatir('${r.id}','grupSayisi',this.value)"></td>
+      <td class="print-only-cell">${r.grupSayisi}</td>
+      <td><b>${toplam}</b></td>
+      <td class="no-print"><button class="btn danger" onclick="deleteKoordSatir('${r.id}')">Sil</button></td>
+    </tr>`;
+  }).join("");
+
+  const idari = classById("cl-idari");
+  let seflikToplam = 0;
+  const seflikRows = (idari ? idari.assignments : []).map(a => {
+    const course = courseById(a.courseId);
+    if (!course) return "";
+    const teacherNames = (a.eligibleTeacherIds || []).map(id => { const t = S.teachers.find(x => x.id === id); return t ? t.name : ""; }).filter(Boolean).join(", ");
+    const grup = a.teacherCount || 1;
+    const toplam = course.hours * grup;
+    seflikToplam += toplam;
+    return `<tr><td>${escHtml(course.name)}</td><td>${escHtml(teacherNames || "—")}</td><td>${course.hours}</td><td><b>${toplam}</b></td></tr>`;
+  }).join("");
+
+  const genelToplam = ampToplam + koordToplam + seflikToplam;
+  const alanSefi = S.teachers.find(t => (idari ? idari.assignments : []).some(a => a.courseId === "pbo-10" && (a.eligibleTeacherIds || []).includes(t.id)));
+
+  return `
+  <div class="card no-print">
+    <h2>Norm Kadro Hesabı</h2>
+    <p class="small">Ders Programı'ndaki güncel ders atamalarınızdan otomatik hesaplanır — sınıflara ders/öğretmen ekledikçe/çıkardıkça burası da güncellenir. Öğrenci sayılarını ve koordinatörlük satırlarını elle girin.</p>
+    ${belgeAracCubugu("Norm Kadro " + (S.akademikTakvim ? S.akademikTakvim.ogretimYili : ""))}
+  </div>
+  <div class="print-area">
+    ${belgeYazdirmaBasligi("Norm Kadro Hesabı" + (S.akademikTakvim ? " · " + S.akademikTakvim.ogretimYili : ""))}
+    <div class="card">
+      <h2 class="print-only">AMP Mesleki Alan Dersleri</h2>
+      ${sinifBlocks}
+      <p class="small" style="text-align:right;"><b>AMP Mesleki Alan Dersleri Toplamı: ${ampToplam} saat</b></p>
+    </div>
+    <div class="card">
+      <h2>Koordinatörlük Dersleri</h2>
+      <p class="small no-print">12. sınıfların işletmede mesleki eğitim (staj) koordinatörlüğü buraya elle eklenir — dal adı, sınıf, öğrenci sayısı, haftalık saat (genelde 24), grup sayısı.</p>
+      <table><thead><tr><th>Sınıf</th><th>Öğrenci Sayısı</th><th>Dal</th><th>Haftalık Saat</th><th>Grup Sayısı</th><th>Toplam</th><th class="no-print"></th></tr></thead>
+      <tbody>${koordRows || `<tr><td colspan="7" class="small">Henüz satır eklenmedi.</td></tr>`}</tbody></table>
+      <div class="row no-print"><button class="btn" onclick="addKoordSatir()">Satır Ekle</button></div>
+      <p class="small" style="text-align:right;"><b>Koordinatörlük Toplamı: ${koordToplam} saat</b></p>
+    </div>
+    <div class="card">
+      <h2>Şeflik Ders Yükleri</h2>
+      <table><thead><tr><th>Görev</th><th>Öğretmen</th><th>Haftalık Saat</th><th>Toplam</th></tr></thead>
+      <tbody>${seflikRows || `<tr><td colspan="4" class="small">Ders Programı → Sınıflar ve Ders Atama → İdari Görevler'den ekleyin.</td></tr>`}</tbody></table>
+      <p class="small" style="text-align:right;"><b>Şeflik Ders Yükleri Toplamı: ${seflikToplam} saat</b></p>
+    </div>
+    <div class="card" style="text-align:center;">
+      <h2 style="margin:0;">GENEL TOPLAM DERS YÜKÜ: ${genelToplam} SAAT</h2>
+      <p class="small print-only" style="margin-top:16px;">Makine ve Tasarım Teknolojisi Alan Şefi<br><b>${alanSefi ? escHtml(alanSefi.name) : ''}</b></p>
+    </div>
   </div>`;
 }
 

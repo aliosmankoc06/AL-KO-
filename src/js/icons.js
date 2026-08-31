@@ -13,7 +13,8 @@ const ICONS = {
   play: '<path d="M6 4.5v15l14-7.5-14-7.5Z"/>',
   new: '<path d="M12 4v16M4 12h16"/>',
   briefcase: '<rect x="2.5" y="7" width="19" height="13" rx="2"/><path d="M8 7V5.5A1.5 1.5 0 0 1 9.5 4h5A1.5 1.5 0 0 1 16 5.5V7"/><path d="M2.5 12.5h19"/>',
-  note: '<path d="M6 3h9l5 5v13a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z"/><path d="M15 3v5h5"/><path d="M8 12h8M8 15.5h8M8 8.5h4"/>'
+  note: '<path d="M6 3h9l5 5v13a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z"/><path d="M15 3v5h5"/><path d="M8 12h8M8 15.5h8M8 8.5h4"/>',
+  chart: '<path d="M4 20V10M11 20V4M18 20v-7"/><path d="M2.5 20h19"/>'
 };
 function icon(name) {
   const body = ICONS[name] || "";
