@@ -215,7 +215,12 @@ function tryPlaceAssignmentWithTeam(cls, assignment, blocks, team, commit) {
     if (rooms.length === 0) return true;
     return !reservations.some(r => r.type === 'room' && rooms.includes(r.id) && r.day === day && r.hour === hour);
   }
-  const schoolDays = (cls.schoolDays && cls.schoolDays.length) ? cls.schoolDays : [0, 1, 2, 3, 4];
+  // Gün sırası her seferinde karıştırılır — sabit 0..4 sırası olsaydı dersler
+  // sistematik olarak haftanın erken günlerine yığılır, Perşembe/Cuma hep boş
+  // kalırdı. Bu da Pazartesi-Salı-Çarşamba grubu koordinatörlük görevlerinin
+  // (aynı erken günlere ihtiyaç duyduğu için) sürekli boş gün bulamamasına
+  // yol açıyordu.
+  const schoolDays = shuffle((cls.schoolDays && cls.schoolDays.length) ? cls.schoolDays : [0, 1, 2, 3, 4]);
   const placements = [];
   for (const len of blocks) {
     let placed = false;
