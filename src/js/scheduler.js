@@ -315,6 +315,24 @@ function totalClassGapCount() {
   return S.classes.reduce((s, c) => s + classGapCount(c.id), 0);
 }
 
+// Bir öğretmenin ders saatleri kaç FARKLI güne yayılmış (koordinatörlük hariç).
+// Aynı toplam saat, ne kadar az güne sığarsa o kadar iyi: hem o günün içinde
+// boşluk kalma ihtimali azalır, hem de geriye tamamen boş kalan gün(ler)
+// artar — bu da o öğretmene koordinatörlük (tam gün gerektirir) atanabilmesini
+// kolaylaştırır. Yani "ders saatlerini yoğunlaştır" ile "daha çok
+// koordinatörlük/genel toplam saat alsın" isteği aynı şeyin iki yüzü.
+function teacherWorkingDayCount(teacherId) {
+  let days = 0;
+  for (let day = 0; day < DAYS.length; day++) {
+    const busy = Object.values(S.schedule).some(c => c.day === day && c.courseId !== KOORD_COURSE_ID && c.teacherIds.includes(teacherId));
+    if (busy) days++;
+  }
+  return days;
+}
+function totalTeacherWorkingDays() {
+  return S.teachers.reduce((s, t) => s + teacherWorkingDayCount(t.id), 0);
+}
+
 function scheduleQualityScore() {
   let unplaced = 0;
   S.classes.forEach(cls => {
@@ -346,7 +364,8 @@ function scheduleQualityScore() {
   });
   const spreadPenalty = spread <= 3 ? spread : (spread - 3) * 120 + 3;
   const koordSpreadPenalty = koordSpread <= 4 ? koordSpread * 2 : (koordSpread - 4) * 100 + 8;
-  return { unplaced, spread, koordSpread, under20, capPenalty, gaps: totalGapCount(), score: unplaced * 1000 + totalGapCount() * 300 + under20 * 40 + totalClassGapCount() * 15 + totalLateStartSum() * 3 + spreadPenalty + koordSpreadPenalty + capPenalty };
+  const workingDays = totalTeacherWorkingDays();
+  return { unplaced, spread, koordSpread, under20, capPenalty, gaps: totalGapCount(), workingDays, score: unplaced * 1000 + totalGapCount() * 300 + under20 * 40 + workingDays * 25 + totalClassGapCount() * 15 + totalLateStartSum() * 3 + spreadPenalty + koordSpreadPenalty + capPenalty };
 }
 
 function taskDifficulty(t) {
