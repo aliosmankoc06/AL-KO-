@@ -1,0 +1,207 @@
+{
+  "kaynak": {
+    "belge": "Makine ve Tasarım Teknolojisi Alanı Çerçeve Öğretim Programı",
+    "surum": "Türkiye Yüzyılı Maarif Modeli, 2026",
+    "kapsam": "Bu dosya 206 sayfalık tam çerçeve programdan sadece 9. sınıfla (alan ortak, dal seçiminden önce) ilgili kısımların çıkarılmış/yapılandırılmış halidir.",
+    "not": "Bu belge sadece 9. sınıfı değil alanın tüm dallarını (Bilgisayarlı Makine İmalatı, Endüstriyel Kalıp, Makine Bakım Onarım, Bilgisayar Destekli Endüstriyel Modelleme, Endüstriyel Makine Tasarımı, Tıbbi Cihaz Üretimi, Savunma Mekanik Sistemleri) ve tüm sınıf seviyelerini (9-12) kapsıyor; 10-12. sınıf ve dal-bazlı içerikler ayrı dosyalarda işlenecek."
+  },
+  "haftalikDersCizelgesi_9Sinif": {
+    "not": "9. sınıfta tüm dallar için ortak çizelge (dal seçimi 10. sınıfta yapılıyor).",
+    "ortakDersler": {
+      "TÜRK DİLİ VE EDEBİYATI": 5,
+      "DİN KÜLTÜRÜ VE AHLAK BİLGİSİ": 2,
+      "TARİH": 2,
+      "COĞRAFYA": 2,
+      "MATEMATİK": 5,
+      "FİZİK": 2,
+      "KİMYA": 2,
+      "BİYOLOJİ": 2,
+      "YABANCI DİL": 4,
+      "BEDEN EĞİTİMİ VE SPOR/GÖRSEL SANATLAR/MÜZİK": 2,
+      "TOPLAM": 28
+    },
+    "meslekDersleri": {
+      "MESLEKİ GELİŞİM ATÖLYESİ": 2,
+      "TEKNİK RESİM": 2,
+      "TEMEL İMALAT İŞLEMLERİ": 8,
+      "MESLEK_DERS_SAATI_TOPLAMI": 12
+    },
+    "seciliDersSaatiToplami": 4,
+    "rehberlikVeYonlendirme": 1,
+    "toplamDersSaati": 45,
+    "notlar": [
+      "(*) Temel İmalat İşlemleri: MEB Ortaöğretim Kurumları Yönetmeliği uyarınca yılsonu başarı puanı ile başarılı sayılamayacak derslerdendir (yani atölye/uygulama sınavı ile ayrıca değerlendirilir)."
+    ]
+  },
+  "meslekDersleri_9Sinif": [
+    {
+      "dersAdi": "Temel İmalat İşlemleri",
+      "dal": "ALAN ORTAK",
+      "dersSaati": 8,
+      "amac": "Bu derste öğrenciye iş sağlığı ve güvenliği tedbirlerini alarak tesviyecilik el aletleri ile kesme, eğeleme ve markalama işlemlerini yapma, kumpas ve mikrometre gibi ölçme aletlerini TS ve ISO standartlarına uygun kullanma, matkap tezgâhında delme işlemi ile torna ve freze tezgâhlarında temel talaşlı imalat operasyonlarını gerçekleştirme ile ilgili bilgi ve becerilerin kazandırılması amaçlanmaktadır.",
+      "alaninTemelBecerisi": "Temel imalat işlemlerini yapma",
+      "ogrenmeBirimleri": [
+        {
+          "adi": "İş Sağlığı ve Güvenliği",
+          "ogrenmeCiktisiGrubu": "İş sağlığı ve güvenliği önlemlerini alabilme",
+          "ogrenmeCiktilari": [
+            "İş yeri güvenliği kavramını açıklar.",
+            "Meslek hastalıklarını açıklar.",
+            "Kaza ve yangın önlemlerini alma işlemini yapar."
+          ],
+          "icerikCercevesi": ["İş yeri güvenliği", "Meslek hastalıkları", "Kaza ve yangın"]
+        },
+        {
+          "adi": "Ölçme ve Kontrol",
+          "ogrenmeCiktisiGrubu": "Temel ölçme ve kontrol işlemlerini yapabilme",
+          "ogrenmeCiktilari": [
+            "Kumpasın temel kavramlarını ve kısımlarını açıklar.",
+            "Kumpas çeşitlerini açıklar.",
+            "Farklı hassasiyetlerdeki kumpas değerlerini okur.",
+            "Farklı geometrik parçalarda kumpas ile ölçüm yapar.",
+            "Gönye ile temel yüzey kontrollerini yapar."
+          ],
+          "icerikCercevesi": ["Kumpasın kısımları", "Kumpas çeşitleri", "Kumpas değeri okuma", "Farklı geometrilerde kumpas kullanımı", "Gönye ile yüzey kontrolü"]
+        },
+        {
+          "adi": "El İşlemleri",
+          "ogrenmeCiktisiGrubu": "El işlemleri yapabilme",
+          "ogrenmeCiktilari": [
+            "Verilen resme uygun olarak düzlem yüzey eğeleme yapar.",
+            "Markalama ekipmanları ile verilen resme uygun olarak iş parçasını markalar.",
+            "Verilen resme uygun olarak profil yüzey eğeleme işlemleri yapar.",
+            "Verilen resme uygun olarak kesme işlemlerini yapar."
+          ],
+          "icerikCercevesi": ["Düzlem yüzey eğeleme", "Markalama", "Profil yüzey eğeleme", "Kesme"]
+        },
+        {
+          "adi": "Malzeme Bilgisi",
+          "ogrenmeCiktisiGrubu": "Malzeme bilgisi kavramını test edebilme",
+          "ogrenmeCiktilari": [
+            "Malzeme kavramını ifade eder.",
+            "Malzeme çeşitlerini listeler.",
+            "Malzemenin özelliklerini test eder."
+          ],
+          "icerikCercevesi": ["Malzeme", "Malzeme çeşitleri", "Malzemenin özellikleri"]
+        },
+        {
+          "adi": "Delme Operasyonları",
+          "ogrenmeCiktisiGrubu": "Delme Operasyonları yapabilme",
+          "ogrenmeCiktilari": [
+            "Bileme açılarına uygun olarak matkap ucunu biler.",
+            "Matkap tezgâhında verilen resme uygun olarak delme işlemi yapar.",
+            "Verilen resme uygun olarak raybalama yapar."
+          ],
+          "icerikCercevesi": ["Matkap bileme", "Delme işlemi", "Rayba çekme"]
+        },
+        {
+          "adi": "Vida Açma İşlemleri",
+          "ogrenmeCiktisiGrubu": "Vida açma işlemi yapabilme",
+          "ogrenmeCiktilari": [
+            "Vida kavramını ifade eder.",
+            "Kılavuz ile vida açma işlemi yapar.",
+            "Pafta ile vida açma işlemi yapar."
+          ],
+          "icerikCercevesi": ["Vida Kavramı", "Kılavuz ile vida açma", "Pafta ile vida açma"]
+        },
+        {
+          "adi": "Temel Tornalama İşlemleri",
+          "ogrenmeCiktisiGrubu": "Temel tornalama işlemlerini yapabilme",
+          "ogrenmeCiktilari": [
+            "Torna tezgâhını ifade eder.",
+            "Torna tezgâhının bakımını yapar.",
+            "Kesici takımlarını hazırlayıp bağlar.",
+            "İş parçalarını tezgâha bağlar.",
+            "İş parçası üzerinde tornalama işlemleri yapar."
+          ],
+          "icerikCercevesi": ["Torna tezgâhı", "Torna tezgâhının bakımı", "Kesici takımlar", "İş parçasını bağlama", "Tornalama"]
+        },
+        {
+          "adi": "Temel Frezeleme İşlemleri",
+          "ogrenmeCiktisiGrubu": "Temel frezeleme işlemlerini yapabilme",
+          "ogrenmeCiktilari": [
+            "Freze tezgâhını ifade eder.",
+            "Freze tezgâhının bakımını yapar.",
+            "Kesicileri bağlar.",
+            "İş parçalarını tezgâha bağlar.",
+            "Frezeleme işlemlerini yapar."
+          ],
+          "icerikCercevesi": ["Freze tezgâhı", "Freze tezgâhının bakımı", "Kesici bağlama", "İş parçası bağlama", "Frezeleme"]
+        }
+      ]
+    },
+    {
+      "dersAdi": "Teknik Resim",
+      "dal": "ALAN ORTAK",
+      "dersSaati": 2,
+      "amac": "Bu derste öğrenciye geometrik çizimler yapma, görünüş çıkarma, kesit alma, ölçülendirme ve yüzey işlemleri, kroki, perspektif ve çizim uygulamaları ile ilgili bilgi ve becerilerin kazandırılması amaçlanmaktadır.",
+      "alaninTemelBecerisi": "Teknik resim çizim uygulamalarını yapma",
+      "ogrenmeBirimleri": [
+        {
+          "adi": "Teknik Resim Temel Kavramları",
+          "ogrenmeCiktisiGrubu": "Teknik resim temel kavramlarını açıklayabilme",
+          "ogrenmeCiktilari": [
+            "Teknik resmi ve önemini açıklar.",
+            "Teknik resimde kullanılan kalemleri ve silgileri açıklar.",
+            "Teknik resimde kullanılan cetvelleri açıklar.",
+            "Teknik resimde kullanılan gönyeleri açıklar.",
+            "Teknik resimde kullanılan pergel ve şablonları açıklar.",
+            "Teknik resimde kullanılan resim kâğıtlarını açıklar.",
+            "Teknik resimde kullanılan çizim araçlarının saklanması ve bakımını açıklar."
+          ],
+          "icerikCercevesi": ["Teknik resim ve önemi", "Teknik resimde kullanılan kalem ve silgiler", "Teknik resimde kullanılan cetveller", "Teknik resimde kullanılan gönyeler", "Teknik resimde kullanılan pergel ve şablonlar", "Teknik resimde kullanılan resim kâğıtları", "Teknik resimde kullanılan çizim araçlarının saklanması ve bakımı"]
+        },
+        {
+          "adi": "Geometrik Çizimler",
+          "ogrenmeCiktisiGrubu": "Geometrik çizimler yapabilme",
+          "ogrenmeCiktilari": [
+            "Teknik resim kurallarına (TS EN ISO 3098) uygun olarak eğik ve dik standart yazı yazar.",
+            "Teknik resim kurallarına uygun olarak serbest elle ve çizim takımlarıyla çizgi çalışmaları yapar.",
+            "Teknik resim kurallarına uygun olarak geometrik şekiller çizer."
+          ],
+          "icerikCercevesi": ["Eğik ve dik standart yazı", "Çizgi çalışmaları", "Geometrik şekiller"]
+        },
+        {
+          "adi": "Görünüş Çıkarma ve Kesit Görünüşler",
+          "ogrenmeCiktisiGrubu": "Görünüş çıkarma ve kesit işlemini yapabilme",
+          "ogrenmeCiktilari": [
+            "Teknik resim kurallarına uygun olarak serbest el ve çizim takımlarıyla çeşitli iş parçalarına ait görünüşleri çizer.",
+            "Teknik resim kurallarına uygun olarak serbest el ve çizim takımlarıyla çeşitli iş parçalarına ait kesit görünüşleri çizer."
+          ],
+          "icerikCercevesi": ["Görünüş çıkartma", "Kesit görünüşler"]
+        },
+        {
+          "adi": "Ölçülendirme, Yüzey İşlemleri ve Tolerans",
+          "ogrenmeCiktisiGrubu": "Ölçülendirme, yüzey ve tolerans işlemlerini yapabilme",
+          "ogrenmeCiktilari": [
+            "Teknik resim kurallarına uygun olarak çizdiği iş parçalarının ölçülendirmesini yapar.",
+            "Teknik resim kurallarına uygun olarak resmini çizdiği iş parçalarına ait yüzey pürüzlülük değerlerini sembollerle resim üzerinde gösterir.",
+            "Teknik resim kurallarına uygun olarak resmini çizdiği iş parçalarına ait tolerans değerlerini sembollerle resim üzerinde gösterir."
+          ],
+          "icerikCercevesi": ["Ölçülendirme", "Yüzey işlemleri", "Tolerans"]
+        },
+        {
+          "adi": "Kroki, Perspektif ve Yapım Resmi",
+          "ogrenmeCiktisiGrubu": "Kroki, perspektif ve yapım resmi çizebilme",
+          "ogrenmeCiktilari": [
+            "Teknik resim kurallarına uygun olarak standart resim kâğıtlarına çeşitli iş parçalarının kroki resimlerini çizer.",
+            "Teknik resim kurallarına uygun olarak standart resim kâğıtlarına çeşitli iş parçalarının perspektif resimlerini çizer.",
+            "Teknik resim kurallarına uygun olarak standart resim kâğıtlarına çeşitli iş parçalarının imalat resimlerini çizer."
+          ],
+          "icerikCercevesi": ["Kroki çizimi", "Perspektif çizimi", "İmalat resmi çizimi"]
+        }
+      ]
+    },
+    {
+      "dersAdi": "Mesleki Gelişim Atölyesi",
+      "dal": "ALAN ORTAK",
+      "dersSaati": 2,
+      "not": "Bu ders alan-özel çerçeve programında modül/öğrenme çıktısı detayıyla verilmemiş; muhtemelen alan-bağımsız (tüm meslek alanları için ortak) ayrı bir genel belgede tanımlı. Öğrenme birimi detayı elde edilirse buraya eklenecek."
+    }
+  ],
+  "modelJsIleKarsilastirma": {
+    "durum": "UYUMLU",
+    "aciklama": "src/js/model.js içindeki c9-1 (Mesleki Gelişim Atölyesi, 2sa), c9-2 (Teknik Resim, 2sa), c9-3 (Temel İmalat İşlemleri, 8sa) kayıtları resmi çerçeve programdaki 9. sınıf meslek ders saatleriyle (toplam 12 saat) birebir uyuşuyor. Ders programı (haftalık dağıtım) tarafında değişiklik gerekmiyor.",
+    "kullanimAlani": "Bu dosyadaki ogrenmeBirimleri / ogrenmeCiktilari / icerikCercevesi verileri, ileride Yıllık Plan ve Günlük Plan modülleri kurulurken 9. sınıf için ünite/konu/kazanım kaynağı olarak kullanılacak. Kullanıcının ayrıca göndereceği 'ders bilgi formları' ile birleştirilip haftalık dağılım (kaç hafta hangi ünite işlenecek) ve ölçme-değerlendirme detayları tamamlanacak."
+  }
+}
