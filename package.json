@@ -23,7 +23,7 @@
       "src/**/*",
       "package.json"
     ],
-    "win": { "target": "nsis" },
+    "win": { "target": "portable", "signAndEditExecutable": false },
     "linux": { "target": "AppImage" },
     "mac": { "target": "dmg" }
   }
