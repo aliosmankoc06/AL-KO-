@@ -538,12 +538,50 @@ function addIsletme(groupKey, name) {
 function removeIsletmeGroup(id, groupKey) {
   const isl = isletmeById(id);
   if (!isl) return;
+  const willDeleteWhole = isl.groups.length <= 1;
+  const msg = willDeleteWhole
+    ? `"${isl.name}" işletmesi tamamen silinsin mi? (Son grubu kaldırıyorsunuz)`
+    : `"${isl.name}" işletmesi ${GROUP_LABELS[groupKey]} grubundan kaldırılsın mı?`;
+  if (!confirm(msg)) return;
   isl.groups = isl.groups.filter(g => g !== groupKey);
   if (isl.groups.length === 0) {
     S.isletmeler = S.isletmeler.filter(i => i.id !== id);
     delete S.isletmeTeacherAssign[id];
   }
   save(); renderMain();
+}
+function editIsletme(id) {
+  const isl = isletmeById(id);
+  if (!isl) return;
+  const root = document.getElementById("modal-root");
+  const groupCheck = (key) => `
+    <label style="display:block;margin:4px 0;">
+      <input type="checkbox" id="ei-g-${key}" ${isl.groups.includes(key) ? 'checked' : ''}> ${GROUP_LABELS[key]}
+    </label>`;
+  root.innerHTML = `
+    <div class="modal-bg" onclick="if(event.target===this) closeModal()">
+      <div class="modal" style="width:400px;">
+        <h3>İşletmeyi Düzenle</h3>
+        <label class="small">İşletme Adı</label><input type="text" id="ei-name" value="${escHtml(isl.name)}" style="width:100%">
+        <label class="small" style="margin-top:10px;">Gün Grupları</label>
+        ${groupCheck('psc')}${groupCheck('cpc')}${groupCheck('mesem')}
+        <div class="row">
+          <button class="btn primary" onclick="saveIsletmeEdit('${id}')">Kaydet</button>
+          <button class="btn" onclick="closeModal()">İptal</button>
+        </div>
+      </div>
+    </div>`;
+}
+function saveIsletmeEdit(id) {
+  const isl = isletmeById(id);
+  if (!isl) return;
+  const name = document.getElementById("ei-name").value.trim();
+  if (!name) { alert("İşletme adı girin."); return; }
+  const groups = ["psc", "cpc", "mesem"].filter(k => document.getElementById("ei-g-" + k).checked);
+  if (groups.length === 0) { alert("En az bir gün grubu seçili olmalı."); return; }
+  isl.name = name;
+  isl.groups = groups;
+  save(); closeModal(); renderMain();
 }
 function setIsletmeTeacher(isletmeId, teacherId) {
   if (teacherId) S.isletmeTeacherAssign[isletmeId] = teacherId;

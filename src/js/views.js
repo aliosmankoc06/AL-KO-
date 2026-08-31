@@ -262,7 +262,7 @@ function viewStajYerlestirme() {
         <td>${st.ad}</td>
         <td>${st.dal || ''}</td>
         <td><select onchange="setStudentIsletme('${st.id}', this.value)">${studentIsletmeOptions(st.isletme)}</select></td>
-        <td><button class="btn danger" onclick="deleteStudent('${st.id}')">Sil</button></td>
+        <td><div class="row" style="margin:0;"><button class="btn" onclick="editStudent('${st.id}')">Düzenle</button><button class="btn danger" onclick="deleteStudent('${st.id}')">Sil</button></div></td>
       </tr>`).join("");
     return `<h2 style="margin-top:16px;">${sinif}</h2><table><tr><th>Okul No</th><th>Ad Soyad</th><th>Dal</th><th>İşletme</th><th></th></tr>${rows}</table>`;
   }).join("") || `<p class="small">Henüz öğrenci eklenmedi.</p>`;
@@ -305,6 +305,36 @@ function deleteStudent(id) {
   if (!confirm("Bu öğrenciyi listeden silmek istiyor musunuz?")) return;
   S.students = S.students.filter(s => s.id !== id);
   save(); renderMain();
+}
+function editStudent(id) {
+  const st = S.students.find(s => s.id === id);
+  if (!st) return;
+  const root = document.getElementById("modal-root");
+  root.innerHTML = `
+    <div class="modal-bg" onclick="if(event.target===this) closeModal()">
+      <div class="modal" style="width:380px;">
+        <h3>Öğrenciyi Düzenle</h3>
+        <label class="small">Sınıf</label><input type="text" id="es-sinif" value="${escHtml(st.sinif || '')}" style="width:100%">
+        <label class="small">Okul No</label><input type="text" id="es-okulno" value="${escHtml(st.okulNo || '')}" style="width:100%">
+        <label class="small">Ad Soyad</label><input type="text" id="es-ad" value="${escHtml(st.ad || '')}" style="width:100%">
+        <label class="small">Dal</label><input type="text" id="es-dal" value="${escHtml(st.dal || '')}" style="width:100%">
+        <div class="row">
+          <button class="btn primary" onclick="saveStudentEdit('${id}')">Kaydet</button>
+          <button class="btn" onclick="closeModal()">İptal</button>
+        </div>
+      </div>
+    </div>`;
+}
+function saveStudentEdit(id) {
+  const st = S.students.find(s => s.id === id);
+  if (!st) return;
+  const ad = document.getElementById("es-ad").value.trim();
+  if (!ad) { alert("Ad soyad girin."); return; }
+  st.sinif = document.getElementById("es-sinif").value.trim();
+  st.okulNo = document.getElementById("es-okulno").value.trim();
+  st.ad = ad;
+  st.dal = document.getElementById("es-dal").value.trim();
+  save(); closeModal(); renderMain();
 }
 function setStudentIsletme(id, isletme) {
   const st = S.students.find(s => s.id === id);
@@ -609,7 +639,7 @@ function viewHavuz() {
       <td>${c.grade}</td>
       <td>${c.hours}</td>
       <td>${(c.blocks || []).join("+")}</td>
-      <td><button class="btn danger" onclick="deleteCourse('${c.id}')">Sil</button></td>
+      <td><div class="row" style="margin:0;"><button class="btn" onclick="editCourse('${c.id}')">Düzenle</button><button class="btn danger" onclick="deleteCourse('${c.id}')">Sil</button></div></td>
     </tr>`).join("");
   return `
   <div class="card">
@@ -658,6 +688,49 @@ function deleteCourse(id) {
   S.classes.forEach(cl => { cl.assignments = cl.assignments.filter(a => a.courseId !== id); });
   save(); renderMain();
 }
+function editCourse(id) {
+  const c = courseById(id);
+  if (!c) return;
+  const root = document.getElementById("modal-root");
+  root.innerHTML = `
+    <div class="modal-bg" onclick="if(event.target===this) closeModal()">
+      <div class="modal" style="width:420px;">
+        <h3>Dersi Düzenle</h3>
+        <label class="small">Kod</label><input type="text" id="ec-code" value="${escHtml(c.code)}" style="width:100%">
+        <label class="small">Ders Adı</label><input type="text" id="ec-name" value="${escHtml(c.name)}" style="width:100%">
+        <label class="small">Dal</label>
+        <select id="ec-dal" style="width:100%">
+          <option value="ORTAK9" ${c.dal === 'ORTAK9' ? 'selected' : ''}>9. Sınıf Ortak</option>
+          <option value="MBO" ${c.dal === 'MBO' ? 'selected' : ''}>Makine Bakım Onarım</option>
+          <option value="BMI" ${c.dal === 'BMI' ? 'selected' : ''}>Bilgisayarlı Makine İmalatı</option>
+          <option value="SERT" ${c.dal === 'SERT' ? 'selected' : ''}>Sertifika / Seçmeli</option>
+          <option value="HERDAL" ${c.dal === 'HERDAL' ? 'selected' : ''}>Tüm Dallar</option>
+        </select>
+        <label class="small">Sınıf Seviyesi</label>
+        <select id="ec-grade" style="width:100%">${[9,10,11,12].map(g => `<option ${c.grade === g ? 'selected' : ''}>${g}</option>`).join("")}</select>
+        <label class="small">Haftalık Saat</label><input type="number" id="ec-hours" value="${c.hours}" style="width:100%">
+        <label class="small">Bloklar (örn. 3,3)</label><input type="text" id="ec-blocks" value="${(c.blocks || []).join(",")}" style="width:100%">
+        <div class="row">
+          <button class="btn primary" onclick="saveCourseEdit('${id}')">Kaydet</button>
+          <button class="btn" onclick="closeModal()">İptal</button>
+        </div>
+      </div>
+    </div>`;
+}
+function saveCourseEdit(id) {
+  const c = courseById(id);
+  if (!c) return;
+  const name = document.getElementById("ec-name").value.trim();
+  if (!name) { alert("Ders adı girin."); return; }
+  c.code = document.getElementById("ec-code").value.trim() || name.slice(0, 3).toUpperCase();
+  c.name = name;
+  c.dal = document.getElementById("ec-dal").value;
+  c.grade = parseInt(document.getElementById("ec-grade").value);
+  c.hours = parseInt(document.getElementById("ec-hours").value) || 1;
+  const blocksRaw = document.getElementById("ec-blocks").value.trim();
+  c.blocks = blocksRaw ? blocksRaw.split(",").map(x => parseInt(x.trim())).filter(x => x > 0) : [c.hours];
+  save(); closeModal(); renderMain();
+}
 
 /* ---- Öğretmenler ---- */
 function teacherTitleLabel(teacherId) {
@@ -688,7 +761,7 @@ function viewOgretmen() {
             <option value="exact" ${mode === 'exact' ? 'selected' : ''}>Tam bu kadar (sabit)</option>
           </select></td>
       <td style="text-align:center;"><input type="checkbox" ${coordEligible ? 'checked' : ''} onchange="setTeacherCoordEligible('${t.id}', this.checked)"></td>
-      <td><button class="btn danger" onclick="deleteTeacher('${t.id}')">Sil</button></td>
+      <td><div class="row" style="margin:0;"><button class="btn" onclick="editTeacher('${t.id}')">Düzenle</button><button class="btn danger" onclick="deleteTeacher('${t.id}')">Sil</button></div></td>
     </tr>`;
   }).join("");
 
@@ -825,6 +898,30 @@ function addTeacher() {
   S.teachers.push({ id: uid("t"), name, timeOff: {} });
   save(); renderMain();
 }
+function editTeacher(id) {
+  const t = S.teachers.find(x => x.id === id);
+  if (!t) return;
+  const root = document.getElementById("modal-root");
+  root.innerHTML = `
+    <div class="modal-bg" onclick="if(event.target===this) closeModal()">
+      <div class="modal" style="width:360px;">
+        <h3>Öğretmeni Düzenle</h3>
+        <label class="small">Ad Soyad</label><input type="text" id="et-name" value="${escHtml(t.name)}" style="width:100%">
+        <div class="row">
+          <button class="btn primary" onclick="saveTeacherEdit('${id}')">Kaydet</button>
+          <button class="btn" onclick="closeModal()">İptal</button>
+        </div>
+      </div>
+    </div>`;
+}
+function saveTeacherEdit(id) {
+  const t = S.teachers.find(x => x.id === id);
+  if (!t) return;
+  const name = document.getElementById("et-name").value.trim();
+  if (!name) { alert("Ad soyad girin."); return; }
+  t.name = name;
+  save(); closeModal(); renderMain();
+}
 function deleteTeacher(id) {
   if (!confirm("Bu öğretmeni silmek istiyor musunuz?")) return;
   S.teachers = S.teachers.filter(t => t.id !== id);
@@ -941,7 +1038,7 @@ function viewSinif() {
         </select>
       </div>
       <div class="row"><button class="btn primary" onclick="addClass()">Sınıf Ekle</button></div>
-      ${cls ? `<div class="row"><button class="btn danger" onclick="deleteClass('${cls.id}')">Seçili Sınıfı Sil</button></div>` : ""}
+      ${cls ? `<div class="row"><button class="btn" onclick="editClass('${cls.id}')">Seçili Sınıfı Düzenle</button><button class="btn danger" onclick="deleteClass('${cls.id}')">Seçili Sınıfı Sil</button></div>` : ""}
     </div>
     <div class="card">${detail}</div>
   </div>`;
@@ -1023,6 +1120,39 @@ function deleteClass(id) {
   activeClassId = S.classes[0] ? S.classes[0].id : null;
   save(); renderMain();
 }
+function editClass(id) {
+  const cls = classById(id);
+  if (!cls) return;
+  const root = document.getElementById("modal-root");
+  root.innerHTML = `
+    <div class="modal-bg" onclick="if(event.target===this) closeModal()">
+      <div class="modal" style="width:360px;">
+        <h3>Sınıfı Düzenle</h3>
+        <label class="small">Sınıf Adı</label><input type="text" id="ecl-name" value="${escHtml(cls.name)}" style="width:100%">
+        <label class="small">Sınıf Seviyesi</label>
+        <select id="ecl-grade" style="width:100%">${[9,10,11,12].map(g => `<option ${cls.grade === g ? 'selected' : ''}>${g}</option>`).join("")}</select>
+        <label class="small">Dal</label>
+        <select id="ecl-dal" style="width:100%">
+          <option value="MBO" ${cls.dal === 'MBO' ? 'selected' : ''}>Makine Bakım Onarım</option>
+          <option value="BMI" ${cls.dal === 'BMI' ? 'selected' : ''}>Bilgisayarlı Makine İmalatı</option>
+        </select>
+        <div class="row">
+          <button class="btn primary" onclick="saveClassEdit('${id}')">Kaydet</button>
+          <button class="btn" onclick="closeModal()">İptal</button>
+        </div>
+      </div>
+    </div>`;
+}
+function saveClassEdit(id) {
+  const cls = classById(id);
+  if (!cls) return;
+  const name = document.getElementById("ecl-name").value.trim();
+  if (!name) { alert("Sınıf adı girin."); return; }
+  cls.name = name;
+  cls.grade = parseInt(document.getElementById("ecl-grade").value);
+  cls.dal = document.getElementById("ecl-dal").value;
+  save(); closeModal(); renderMain();
+}
 function addAssignment(classId, courseId) {
   const cls = classById(classId);
   const n = cls.maxTeachersPerCourse || 1;
@@ -1031,6 +1161,7 @@ function addAssignment(classId, courseId) {
   save(); renderMain();
 }
 function removeAssignment(classId, assignmentId) {
+  if (!confirm("Bu ders ataması sınıftan kaldırılsın mı? (Bu derse ait dağıtılmış saatler de silinir)")) return;
   const cls = classById(classId);
   cls.assignments = cls.assignments.filter(a => a.id !== assignmentId);
   Object.keys(S.schedule).forEach(k => { if (S.schedule[k].classId === classId && S.schedule[k].assignmentId === assignmentId) delete S.schedule[k]; });
@@ -1087,6 +1218,7 @@ function viewKoordinatorluk() {
       return `<div class="row" style="max-width:640px;align-items:center;">
         <span style="flex:2;">${isl.name}${shared ? ' <span class="pill info">ortak (her iki grupta da var)</span>' : ''}</span>
         <span class="small" style="flex:1;">${isletmeHoursEstimate(isl)}</span>
+        <button class="btn" onclick="editIsletme('${isl.id}')">Düzenle</button>
         <button class="btn danger" onclick="removeIsletmeGroup('${isl.id}','${groupKey}')">Kaldır</button>
       </div>`;
     }).join("");
