@@ -16,8 +16,8 @@ const DAYS = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma"];
 const KOORD_COURSE_ID = "crs-koordinatorluk";
 const KOORD_START_HOUR = 1; // 2. ders saatinden başlar (0-indeksli)
 const KOORD_BLOCK_LEN = 8;  // Madde 88: günde en fazla 8 saat ücretli koordinatörlük
-const GROUP_DAYS = { psc: [0, 1, 2], cpc: [2, 3, 4] }; // psc: Pzt-Sal-Çar, cpc: Çar-Per-Cum
-const GROUP_LABELS = { psc: "Pazartesi-Salı-Çarşamba", cpc: "Çarşamba-Perşembe-Cuma" };
+const GROUP_DAYS = { psc: [0, 1, 2], cpc: [2, 3, 4], mesem: [0, 1, 3, 4] }; // psc: Pzt-Sal-Çar, cpc: Çar-Per-Cum, mesem: Pzt-Sal-Per-Cum (MESEM öğrencileri Çarşamba okula gelir)
+const GROUP_LABELS = { psc: "Pazartesi-Salı-Çarşamba", cpc: "Çarşamba-Perşembe-Cuma", mesem: "Pazartesi-Salı-Perşembe-Cuma (MESEM)" };
 
 const DAL_LABELS = {
   ORTAK9: "9. Sınıf Ortak",
@@ -117,9 +117,7 @@ function defaultState() {
     teacherBlockedSlots: {},
     coordAssignments: [],
     isletmeler: [],
-    isletmeTeacherAssign: {},
-    noSameDayPairs: [],
-    noLunchSplitCourseIds: []
+    isletmeTeacherAssign: {}
   };
 }
 
@@ -135,9 +133,7 @@ function emptyState() {
     teacherBlockedSlots: {},
     coordAssignments: [],
     isletmeler: [],
-    isletmeTeacherAssign: {},
-    noSameDayPairs: [],
-    noLunchSplitCourseIds: []
+    isletmeTeacherAssign: {}
   };
 }
 
@@ -148,8 +144,6 @@ function normalizeState(s) {
   if (!s.coordAssignments) s.coordAssignments = [];
   if (!s.isletmeler) s.isletmeler = [];
   if (!s.isletmeTeacherAssign) s.isletmeTeacherAssign = {};
-  if (!Array.isArray(s.noSameDayPairs)) s.noSameDayPairs = [];
-  if (!Array.isArray(s.noLunchSplitCourseIds)) s.noLunchSplitCourseIds = [];
   if (s.coordAssignments.length > 0 || s.classes.some(c => c.id && c.id.startsWith("koord-"))) {
     s.coordAssignments = [];
     s.classes = s.classes.filter(c => !(c.id && c.id.startsWith("koord-")));

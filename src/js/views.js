@@ -10,8 +10,6 @@ const DERS_PROGRAMI_TABS = [
   { id: "havuz", label: "Ders Havuzu", icon: "book" },
   { id: "ogretmen", label: "Öğretmenler", icon: "users" },
   { id: "sinif", label: "Sınıflar ve Ders Atama", icon: "school" },
-  { id: "mekanlar", label: "Fiziki Mekanlar", icon: "room" },
-  { id: "kurallar", label: "Ortak-Zıt Dersler", icon: "link" },
   { id: "koordinatorluk", label: "Koordinatörlük", icon: "building" },
   { id: "dagitim", label: "Ders Dağıtım", icon: "shuffle" },
   { id: "programlar", label: "Programlar", icon: "grid" }
@@ -20,7 +18,6 @@ let activeModule = "ana";
 let activeTab = "havuz";
 let activeClassId = S.classes[0] ? S.classes[0].id : null;
 let activeTeacherId = S.teachers[0] ? S.teachers[0].id : null;
-let programView = "ogretmen";
 let multiSelectMode = false;
 let selectedTeacherCells = new Set();
 let activeOffTeacherId = null;
@@ -58,8 +55,6 @@ function renderMain() {
   if (activeTab === "havuz") el.innerHTML = viewHavuz();
   else if (activeTab === "ogretmen") el.innerHTML = viewOgretmen();
   else if (activeTab === "sinif") el.innerHTML = viewSinif();
-  else if (activeTab === "mekanlar") el.innerHTML = viewMekanlar();
-  else if (activeTab === "kurallar") el.innerHTML = viewKurallar();
   else if (activeTab === "dagitim") el.innerHTML = viewDagitim();
   else if (activeTab === "koordinatorluk") el.innerHTML = viewKoordinatorluk();
   else if (activeTab === "programlar") el.innerHTML = viewProgramlar();
@@ -554,11 +549,6 @@ function viewSinif() {
         </label>`).join("");
       const locked = isAssignmentLocked(cls.id, a.id);
       const placement = assignmentPlacementSummary(cls.id, a.id);
-      const roomChecks = S.rooms.map(r => `
-        <label style="margin-right:10px;font-size:12px;">
-          <input type="checkbox" ${(a.roomIds || []).includes(r.id) ? 'checked' : ''} onchange="toggleAssignmentRoom('${cls.id}','${a.id}','${r.id}')"> ${r.name}
-        </label>`).join("") || `<p class="small">Önce Fiziki Mekanlar sekmesinden mekan ekleyin.</p>`;
-      const roomNames = (a.roomIds || []).map(rid => { const r = roomById(rid); return r ? r.name : null; }).filter(Boolean);
       return `
         <div class="card" style="padding:10px 14px;margin-bottom:8px;${locked ? 'border-color:var(--teal);background:var(--teal-bg);' : ''}">
           <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
@@ -582,10 +572,6 @@ function viewSinif() {
               <button class="btn" style="padding:4px 9px;font-size:11.5px;" onclick="setAllEligible('${cls.id}','${a.id}',false)">Hepsini Kaldır (tek tek seç)</button>
               <div style="margin-top:6px;">${teacherChecks}</div>
             </div>
-          </details>
-          <details style="margin-top:6px;">
-            <summary class="small" style="cursor:pointer;color:var(--ink-soft);">Bu ders belirli bir mekana bağlansın (opsiyonel) ${roomNames.length ? '<span class="pill info">' + roomNames.join(', ') + '</span>' : ''}</summary>
-            <div style="margin-top:6px;">${roomChecks}</div>
           </details>
         </div>`;
     }).join("");
@@ -614,11 +600,12 @@ function viewSinif() {
         <p class="small">Herkes her derse girebilir; sistem dağıtım sırasında bu sayıya kadar (uygunsa tam sayı, değilse müsait olduğu kadarı) öğretmen atar. Bu sınıfın <b>tüm derslerine</b> uygulanır.</p>
         <input type="number" min="1" max="6" value="${cls.maxTeachersPerCourse || 1}" style="width:80px" onchange="applyClassTeacherRule('${cls.id}',this.value)">
       </div>`}
+      ${cls.grade === 12 ? `
       <div class="card" style="background:var(--teal-bg);border-color:var(--teal);padding:12px 14px;margin-bottom:16px;">
         <strong style="color:var(--teal-ink);">Bu sınıf okula hangi gün(ler) geliyor?</strong>
         <p class="small">İşletmede mesleki eğitime giden (staj) sınıflar için sadece okula geldikleri günler işaretlenmeli — dağıtım motoru derslerini sadece bu günlere yerleştirir. Okula her gün gelen sınıflar için hepsini işaretli bırakın.</p>
         <div>${dayChecks}</div>
-      </div>
+      </div>` : ``}
       <h2>${cls.name} — Atanmış Dersler</h2>
       ${assignedRows || '<p class="small">Henüz ders atanmadı.</p>'}
       <h2 style="margin-top:20px;">Ders Havuzundan Ekle</h2>
@@ -751,141 +738,6 @@ function setAllEligible(classId, assignmentId, on) {
   a.eligibleTeacherIds = on ? S.teachers.map(t => t.id) : [];
   save(); renderMain();
 }
-function toggleAssignmentRoom(classId, assignmentId, roomId) {
-  const cls = classById(classId);
-  const a = cls.assignments.find(x => x.id === assignmentId);
-  if (!a.roomIds) a.roomIds = [];
-  if (a.roomIds.includes(roomId)) a.roomIds = a.roomIds.filter(x => x !== roomId);
-  else a.roomIds.push(roomId);
-  save(); renderMain();
-}
-
-/* ---- Fiziki Mekanlar ---- */
-let activeRoomId = S.rooms[0] ? S.rooms[0].id : null;
-function roomWeeklyUsage(roomId) {
-  const grid = {};
-  Object.values(S.schedule).forEach(cell => {
-    if ((cell.roomIds || []).includes(roomId)) grid[cell.day + "_" + cell.hour] = cell;
-  });
-  return grid;
-}
-function roomAssignmentCount(roomId) {
-  let n = 0;
-  S.classes.forEach(cls => cls.assignments.forEach(a => { if ((a.roomIds || []).includes(roomId)) n++; }));
-  return n;
-}
-function viewMekanlar() {
-  const rows = S.rooms.map(r => `
-    <tr>
-      <td>${r.name}</td>
-      <td>${roomAssignmentCount(r.id)} derse bağlı</td>
-      <td><button class="btn" onclick="setActiveRoom('${r.id}')">Kullanım Tablosu</button> <button class="btn danger" onclick="deleteRoom('${r.id}')">Sil</button></td>
-    </tr>`).join("") || `<tr><td colspan="3" class="small">Henüz mekan eklenmedi.</td></tr>`;
-
-  let usageHtml = `<p class="small">Kullanım tablosunu görmek için soldan bir mekan seçin.</p>`;
-  const room = roomById(activeRoomId);
-  if (room) {
-    const grid = roomWeeklyUsage(room.id);
-    let html = `<h2>${room.name} — Haftalık Kullanım</h2>`;
-    html += `<table class="sched-table"><tr><th>Saat</th>${DAYS.map(d => `<th>${d}</th>`).join("")}</tr>`;
-    for (let h = 0; h < S.hoursPerDay; h++) {
-      html += `<tr><td class="small" style="text-align:center;">${h + 1}</td>`;
-      DAYS.forEach((d, day) => {
-        const cell = grid[day + "_" + h];
-        if (cell) {
-          const course = courseById(cell.courseId);
-          const cls = classById(cell.classId);
-          html += `<td><div class="sched-cell filled"><div class="c1">${cls ? cls.name : '?'}</div><div class="c2">${course ? course.name : '?'}</div></div></td>`;
-        } else {
-          html += `<td><div class="sched-cell"></div></td>`;
-        }
-      });
-      html += "</tr>";
-    }
-    html += "</table>";
-    usageHtml = html;
-  }
-
-  return `
-  <div class="card">
-    <h2>Fiziki Mekanlar</h2>
-    <p class="small">Atölye, laboratuvar, derslik gibi mekanları buraya ekleyin. Bir dersi belirli bir mekana bağlamak için <b>Sınıflar ve Ders Atama</b> ekranındaki ilgili dersin altındaki "Bu ders belirli bir mekana bağlansın" bölümünü kullanın — dağıtım motoru o mekanı aynı saatte başka bir derse vermez.</p>
-    <table><tr><th>Mekan</th><th>Kullanım</th><th></th></tr>${rows}</table>
-    <div class="row" style="max-width:400px">
-      <input type="text" id="new-room-name" placeholder="Yeni mekan adı (örn. CNC Atölyesi)">
-      <button class="btn primary" onclick="addRoom()">Ekle</button>
-    </div>
-  </div>
-  <div class="card">${usageHtml}</div>`;
-}
-function setActiveRoom(id) { activeRoomId = id; renderMain(); }
-function addRoom() {
-  const input = document.getElementById("new-room-name");
-  const name = input.value.trim();
-  if (!name) return;
-  const r = { id: uid("r"), name };
-  S.rooms.push(r);
-  activeRoomId = r.id;
-  save(); renderMain();
-}
-function deleteRoom(id) {
-  if (!confirm("Bu mekanı silmek istiyor musunuz? Bu mekana bağlı derslerin mekan bağlantısı kaldırılır.")) return;
-  S.rooms = S.rooms.filter(r => r.id !== id);
-  S.classes.forEach(cls => cls.assignments.forEach(a => { if (a.roomIds) a.roomIds = a.roomIds.filter(x => x !== id); }));
-  Object.values(S.schedule).forEach(cell => { if (cell.roomIds) cell.roomIds = cell.roomIds.filter(x => x !== id); });
-  if (activeRoomId === id) activeRoomId = S.rooms[0] ? S.rooms[0].id : null;
-  save(); renderMain();
-}
-
-/* ---- Ortak-Zıt Dersler ---- */
-function viewKurallar() {
-  const realCourses = S.courses.filter(c => c.id !== KOORD_COURSE_ID);
-  const courseOpts = realCourses.map(c => `<option value="${c.id}">${c.name}</option>`).join("");
-  const pairRows = (S.noSameDayPairs || []).map(p => {
-    const a = courseById(p.courseIdA), b = courseById(p.courseIdB);
-    return `<tr><td>${a ? a.name : '?'}</td><td>${b ? b.name : '?'}</td><td><button class="btn danger" onclick="removeNoSameDayPair('${p.id}')">Kaldır</button></td></tr>`;
-  }).join("") || `<tr><td colspan="3" class="small">Henüz kural eklenmedi.</td></tr>`;
-
-  const lunchList = realCourses.map(c => `
-    <div class="chk-row">
-      <label style="flex:1;"><input type="checkbox" ${(S.noLunchSplitCourseIds || []).includes(c.id) ? 'checked' : ''} onchange="toggleNoLunchSplit('${c.id}')"> ${c.name}</label>
-    </div>`).join("");
-
-  return `
-  <div class="card">
-    <h2>Aynı Güne Gelmesin</h2>
-    <p class="small">Seçtiğiniz iki ders, aynı sınıfta artık aynı güne denk gelmeyecek şekilde dağıtılır (ör. iki ağır atölye dersi aynı gün üst üste binmesin). Kural, o dersi alan her sınıf için otomatik uygulanır.</p>
-    <div class="row" style="max-width:600px;">
-      <select id="nsd-a" style="width:100%">${courseOpts}</select>
-      <select id="nsd-b" style="width:100%">${courseOpts}</select>
-      <button class="btn primary" onclick="addNoSameDayPair()">Kural Ekle</button>
-    </div>
-    <table style="margin-top:10px;"><tr><th>Ders</th><th>Aynı Güne Gelmesin</th><th></th></tr>${pairRows}</table>
-  </div>
-  <div class="card">
-    <h2>Öğle Arasını Bölmesin</h2>
-    <p class="small">İşaretlediğiniz dersler, blok hâlinde yerleştirilirken öğle arasının (günün ortasının) iki yakasına bölünmeden, öğleden önce ya da öğleden sonra tek parça olarak yerleştirilir.</p>
-    ${lunchList}
-  </div>`;
-}
-function addNoSameDayPair() {
-  const a = document.getElementById("nsd-a").value;
-  const b = document.getElementById("nsd-b").value;
-  if (!a || !b || a === b) { alert("İki farklı ders seçin."); return; }
-  const exists = (S.noSameDayPairs || []).some(p => (p.courseIdA === a && p.courseIdB === b) || (p.courseIdA === b && p.courseIdB === a));
-  if (exists) { alert("Bu kural zaten ekli."); return; }
-  S.noSameDayPairs.push({ id: uid("nsd"), courseIdA: a, courseIdB: b });
-  save(); renderMain();
-}
-function removeNoSameDayPair(id) {
-  S.noSameDayPairs = S.noSameDayPairs.filter(p => p.id !== id);
-  save(); renderMain();
-}
-function toggleNoLunchSplit(courseId) {
-  if (S.noLunchSplitCourseIds.includes(courseId)) S.noLunchSplitCourseIds = S.noLunchSplitCourseIds.filter(x => x !== courseId);
-  else S.noLunchSplitCourseIds.push(courseId);
-  save(); renderMain();
-}
 
 /* ---- Ders Dağıtım ---- */
 function assignmentStatusRows() {
@@ -919,7 +771,7 @@ function viewKoordinatorluk() {
     const items = S.isletmeler.filter(i => i.groups.includes(groupKey));
     if (items.length === 0) return `<p class="small">Henüz işletme eklenmedi.</p>`;
     return items.map(isl => {
-      const shared = isl.groups.length === 2;
+      const shared = isPscCpcShared(isl);
       return `<div class="row" style="max-width:640px;align-items:center;">
         <span style="flex:2;">${isl.name}${shared ? ' <span class="pill info">ortak (her iki grupta da var)</span>' : ''}</span>
         <span class="small" style="flex:1;">${isletmeHoursEstimate(isl)}</span>
@@ -930,7 +782,7 @@ function viewKoordinatorluk() {
 
   const teacherAssignRows = S.isletmeler.map(isl => {
     return `<tr>
-      <td>${isl.name}${isl.groups.length === 2 ? ' <span class="pill info">ortak</span>' : ''}</td>
+      <td>${isl.name}${isPscCpcShared(isl) ? ' <span class="pill info">ortak</span>' : ''}</td>
       <td>${isl.groups.map(g => GROUP_LABELS[g]).join(" + ")}</td>
       <td><select onchange="setIsletmeTeacher('${isl.id}', this.value)" style="width:100%">${teacherOpts(isl)}</select></td>
     </tr>`;
@@ -966,7 +818,7 @@ function viewKoordinatorluk() {
       Bir işletme adı <b>her iki listeye de</b> yazılırsa (ör. aynı işletmeye hem Pazartesi-Salı-Çarşamba hem Çarşamba-Perşembe-Cuma grubundan öğrenci gidiyorsa), sistem bunu <b>ortak</b> işaretler ve dağıtımda otomatik olarak ya tek bir Çarşamba ziyaretiyle (8 saat, daha az yük) ya da iki ayrı ziyaretle (16 saat) — hangisi genel programı daha dengeli/boşluksuz yapıyorsa o şekilde çözer.
       <br><span class="small" style="color:var(--ink-soft);">Dayanak: Ortaöğretim Kurumları Yönetmeliği Madde 88 — bir öğretmene aynı gün için 8 saatten fazla ek ders (koordinatörlük) görevi verilmez; bu nedenle koordinatörlük günü o öğretmene ayrıca okul dersi eklenmez.</span>
     </p>
-    <div class="grid2">
+    <div class="grid3">
       <div>
         <h2>Pazartesi-Salı-Çarşamba grubu işletmeleri</h2>
         <div class="row" style="max-width:420px;">
@@ -982,6 +834,15 @@ function viewKoordinatorluk() {
           <button class="btn primary" onclick="addIsletme('cpc', document.getElementById('isl-cpc-name').value); document.getElementById('isl-cpc-name').value='';">Ekle</button>
         </div>
         ${isletmeListHtml('cpc')}
+      </div>
+      <div>
+        <h2>MESEM işletmeleri</h2>
+        <p class="small">MESEM öğrencileri Pazartesi, Salı, Perşembe ve Cuma günleri işletmededir; okula sadece Çarşamba günü gelirler. Koordinatör öğretmen bu 4 günden birinde ziyaret eder.</p>
+        <div class="row" style="max-width:420px;">
+          <input type="text" id="isl-mesem-name" placeholder="İşletme adı" style="width:100%">
+          <button class="btn primary" onclick="addIsletme('mesem', document.getElementById('isl-mesem-name').value); document.getElementById('isl-mesem-name').value='';">Ekle</button>
+        </div>
+        ${isletmeListHtml('mesem')}
       </div>
     </div>
   </div>
@@ -1075,12 +936,10 @@ function refreshProgram() {
   showPreDistributionWarnings(() => {
     showWorkingOverlay("Program hesaplanıyor…");
     setTimeout(() => {
-      S.schedule = {};
       distributeAllBestAsync(450,
         (r) => {
           hideWorkingOverlay();
           activeTab = "programlar";
-          programView = "tumogretmen";
           renderTabbar();
           renderMain();
           showDistributionIssuesModal(r);
@@ -1291,13 +1150,6 @@ function showDagitimSonuc(r) {
 
 /* ---- Programlar (Çıktılar) ---- */
 function viewProgramlar() {
-  const teacherOpts = S.teachers.map(t => `<option value="${t.id}" ${t.id === activeTeacherId ? 'selected' : ''}>${t.name}</option>`).join("");
-  let body = "";
-  if (programView === "ogretmen") {
-    body = renderEditableTeacherGrid(activeTeacherId);
-  } else if (programView === "tumogretmen") {
-    body = renderAllTeachersCombined();
-  }
   const hoursSummary = S.teachers.map(t => {
     const h = teacherTotalHours(t.id);
     const mode = t.hoursMode || "min";
@@ -1307,69 +1159,25 @@ function viewProgramlar() {
     else ok = (typeof target !== "number") || (h >= target);
     return `<span class="pill ${ok ? 'ok' : 'warn'}" style="margin-right:6px;">${t.name}: ${h} sa</span>`;
   }).join("");
+  const body = S.teachers.map(t => renderEditableTeacherGrid(t.id)).join('<hr style="margin:22px 0;border:none;border-top:1px solid var(--line);">');
   return `
   <div class="card no-print">
     <h2>Programlar</h2>
-    ${programView === 'ogretmen'
-      ? (multiSelectMode
-          ? `<p class="small">Fareyle basılı tutup hücreler üzerinde gezdirin; bıraktığınızda seçtiğiniz hücreler için yapmak istediğiniz işlemi seçebileceğiniz bir pencere açılır. Tek bir hücreye tıklayıp bırakmak da o hücreyi tek başına seçer.</p>`
-          : `<p class="small">Boş bir hücreye tıklayın: ders ekleyin ya da o saati boşta kilitleyin. Dolu bir hücreye tıklayın: dersi kilitleyin ya da kaldırın. Birden fazla hücrede aynı anda işlem yapmak için <b>Çoklu Seçim</b>'i açın.</p>`)
-      : ``}
+    <p class="small">Boş bir hücreye tıklayın: ders ekleyin ya da o saati boşta kilitleyin. Dolu bir hücreye tıklayın: dersi kilitleyin ya da kaldırın. Bir öğretmenin programında birden fazla hücrede aynı anda işlem yapmak için o öğretmenin başlığındaki <b>Çoklu Seçim</b>'i açın.</p>
     <div style="margin-bottom:10px;">${hoursSummary}</div>
-    <div class="row" style="max-width:600px;">
-      <button class="btn ${programView === 'ogretmen' ? 'primary' : ''}" onclick="setProgramView('ogretmen')">Öğretmen Programı</button>
-      <button class="btn ${programView === 'tumogretmen' ? 'primary' : ''}" onclick="setProgramView('tumogretmen')">Tüm Öğretmenler (birlikte)</button>
-    </div>
-    <div class="row" style="max-width:520px;">
-      ${programView === 'ogretmen'
-        ? `<select onchange="activeTeacherId=this.value; clearSelection(); renderMain();" style="width:100%">${teacherOpts}</select>`
-        : ``}
-      <button class="btn" onclick="window.print()">Yazdır</button>
-    </div>
-    ${programView === 'ogretmen' ? `
-    <div class="row" style="max-width:520px;">
-      <button class="btn ${multiSelectMode ? 'primary' : ''}" onclick="toggleMultiSelect()">${multiSelectMode ? '✓ Çoklu Seçim Açık' : 'Çoklu Seçim'}</button>
-      ${multiSelectMode && selectedTeacherCells.size > 0 ? `<button class="btn" onclick="clearSelection()">Seçimi Temizle (${selectedTeacherCells.size})</button>` : ``}
-    </div>
-    ` : ``}
+    <div class="row" style="max-width:300px;"><button class="btn" onclick="window.print()">Yazdır</button></div>
   </div>
   <div class="card">${body}</div>`;
 }
-function setProgramView(v) { programView = v; renderMain(); }
-
-function renderAllTeachersCombined() {
-  const legend = Object.values(GRADE_COLORS).map(c =>
-    `<span style="display:inline-flex;align-items:center;gap:5px;margin-right:12px;font-size:11.5px;">
-      <span style="width:12px;height:12px;border-radius:3px;background:${c.bg};border:1px solid ${c.ink};display:inline-block;"></span>${c.label}
-    </span>`
-  ).join("");
-  let html = `<div style="margin-bottom:14px;">${legend}</div>`;
-  html += `<table class="sched-table"><tr><th>Gün</th><th>Saat</th>${S.teachers.map(t => `<th>${t.name}</th>`).join("")}</tr>`;
-  DAYS.forEach((d, day) => {
-    for (let h = 0; h < S.hoursPerDay; h++) {
-      html += "<tr>";
-      if (h === 0) html += `<td rowspan="${S.hoursPerDay}" style="background:var(--panel-2);font-weight:600;text-align:center;vertical-align:middle;">${d}</td>`;
-      html += `<td class="small" style="text-align:center;">${h + 1}</td>`;
-      S.teachers.forEach(t => {
-        const cell = Object.values(S.schedule).find(c => c.day === day && c.hour === h && c.teacherIds.includes(t.id));
-        if (cell) {
-          const course = courseById(cell.courseId);
-          const cls = classById(cell.classId);
-          const isKoord = cell.courseId === KOORD_COURSE_ID;
-          const gc = isKoord ? { bg: "#EDE3F5", ink: "#5B3A85" } : gradeColor(cls ? cls.grade : 0);
-          html += `<td><div class="sched-cell filled" style="background:${gc.bg};">
-            <div class="c1" style="color:${gc.ink};font-size:10px;">${isKoord ? (cell.isletme || 'Koordinatörlük') : (cls ? cls.name : '')}</div>
-            <div class="c2" style="font-size:9.5px;">${isKoord ? 'Koordinatörlük' : (course ? course.name : '?')}</div>
-          </div></td>`;
-        } else {
-          html += `<td><div class="sched-cell"></div></td>`;
-        }
-      });
-      html += "</tr>";
-    }
-  });
-  html += "</table>";
-  return html;
+function toggleMultiSelectFor(teacherId) {
+  if (multiSelectMode && activeTeacherId === teacherId) {
+    multiSelectMode = false;
+  } else {
+    activeTeacherId = teacherId;
+    multiSelectMode = true;
+  }
+  selectedTeacherCells.clear();
+  renderMain();
 }
 
 /* ---- Öğretmen programı — doğrudan düzenleme (hücreye tıklayınca) ---- */
@@ -1382,7 +1190,15 @@ function renderEditableTeacherGrid(teacherId) {
       <span style="width:12px;height:12px;border-radius:3px;background:${c.bg};border:1px solid ${c.ink};display:inline-block;"></span>${c.label}
     </span>`
   ).join("");
-  let html = `<h2>${t.name} Haftalık Programı</h2><div style="margin-bottom:10px;">${legend}</div>`;
+  const gridMultiSelect = multiSelectMode && activeTeacherId === teacherId;
+  let html = `<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+    <h2 style="margin:0;">${t.name} Haftalık Programı</h2>
+    <div class="no-print" style="display:flex;gap:6px;align-items:center;">
+      <button class="btn ${gridMultiSelect ? 'primary' : ''}" style="padding:4px 9px;font-size:11px;" onclick="toggleMultiSelectFor('${teacherId}')">${gridMultiSelect ? '✓ Çoklu Seçim Açık' : 'Çoklu Seçim'}</button>
+      ${gridMultiSelect && selectedTeacherCells.size > 0 ? `<button class="btn" style="padding:4px 9px;font-size:11px;" onclick="clearSelection()">Seçimi Temizle (${selectedTeacherCells.size})</button>` : ``}
+    </div>
+  </div>
+  <div style="margin:8px 0 10px;">${legend}</div>`;
   html += `<table class="sched-table"><tr><th>Saat</th>${DAYS.map(d => `<th>${d}</th>`).join("")}</tr>`;
   for (let h = 0; h < S.hoursPerDay; h++) {
     html += `<tr><td class="small" style="text-align:center;">${h + 1}</td>`;
@@ -1391,9 +1207,9 @@ function renderEditableTeacherGrid(teacherId) {
       const blocked = S.teacherBlockedSlots[teacherBlockKey(teacherId, day, h)];
       const off = isTeacherOffAt(teacherId, day, h);
       const selKey = day + "_" + h;
-      const selected = selectedTeacherCells.has(selKey);
+      const selected = gridMultiSelect && selectedTeacherCells.has(selKey);
       const selStyle = selected ? "outline:2px solid var(--navy);outline-offset:-2px;" : "";
-      const eventAttrs = multiSelectMode
+      const eventAttrs = gridMultiSelect
         ? `onmousedown="startCellDrag(event,${day},${h})" onmouseenter="continueCellDrag(${day},${h})" ondragstart="return false"`
         : `onclick="openTeacherCellModal('${teacherId}',${day},${h})"`;
       if (cell) {
@@ -1686,7 +1502,7 @@ function teacherGridAddCell(teacherId, day, hour) {
   const key = scheduleKey(classId, day, hour);
   if (!isClassFree(classId, day, hour)) { alert("Bu saatte sınıfın başka bir dersi var."); return; }
   if (!areRoomsFree(a.roomIds, day, hour, key)) { alert("Bu saatte seçili mekan(lar)dan biri kullanılıyor."); return; }
-  S.schedule[key] = { day, hour, classId, assignmentId: a.id, courseId: a.courseId, teacherIds: checked, roomIds: (a.roomIds || []).slice() };
+  S.schedule[key] = { day, hour, classId, assignmentId: a.id, courseId: a.courseId, teacherIds: checked, roomIds: (a.roomIds || []).slice(), locked: true };
   save(); closeModal(); renderMain();
 }
 function teacherGridRemoveCell(classId, day, hour) {

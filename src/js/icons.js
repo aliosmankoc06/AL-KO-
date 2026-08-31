@@ -11,9 +11,7 @@ const ICONS = {
   shuffle: '<path d="M3 6h3.5c2 0 3 1 4.5 3M3 18h3.5c2 0 3-1 4.5-3M15 6h6M15 18h6"/><path d="M18 3.5 21 6l-3 2.5M18 20.5 21 18l-3-2.5M14 6l1.5-1.5M14 18l1.5 1.5"/>',
   grid: '<rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="8" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/><rect x="13" y="13" width="8" height="8" rx="1"/>',
   play: '<path d="M6 4.5v15l14-7.5-14-7.5Z"/>',
-  new: '<path d="M12 4v16M4 12h16"/>',
-  room: '<rect x="3" y="4" width="18" height="16" rx="1.5"/><path d="M9 4v16M15 9l2 2-2 2"/>',
-  link: '<path d="M9 15 15 9"/><path d="M8 16.5 5.5 19a3 3 0 0 1-4.2-4.2L4 12.3"/><path d="M16 7.5 18.5 5a3 3 0 0 1 4.2 4.2L20 11.7"/>'
+  new: '<path d="M12 4v16M4 12h16"/>'
 };
 function icon(name) {
   const body = ICONS[name] || "";
