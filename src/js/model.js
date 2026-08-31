@@ -196,6 +196,7 @@ function normalizeState(s) {
   if (s.akademikTakvim && (!s.akademikTakvim.sinavTarihleri || typeof s.akademikTakvim.sinavTarihleri !== "object")) {
     s.akademikTakvim.sinavTarihleri = { d1s1: "", d1s2: "", d2s1: "", d2s2: "" };
   }
+  if (s.akademikTakvim && !Array.isArray(s.akademikTakvim.haftalar)) s.akademikTakvim.haftalar = [];
   if (!Array.isArray(s.yillikPlanlar)) s.yillikPlanlar = [];
   if (!Array.isArray(s.gunlukPlanlar)) s.gunlukPlanlar = [];
   s.yillikPlanlar.forEach(p => {
