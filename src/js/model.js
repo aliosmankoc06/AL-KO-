@@ -128,7 +128,9 @@ function defaultState() {
     durumTespitFormlari: [],
     performansKayitlari: [],
     performansAgirliklari: { dersici: [10, 10, 10, 10, 10, 30, 10, 10], odev: [10, 10, 10, 10, 10, 30, 10, 10] },
-    donemRaporlari: { dersKesim: [], yaziliTeslim: [] }
+    donemRaporlari: { dersKesim: [], yaziliTeslim: [] },
+    sinavHavuzu: { sorular: [] },
+    sinavKagitlari: []
   };
 }
 
@@ -155,7 +157,9 @@ function emptyState() {
     durumTespitFormlari: [],
     performansKayitlari: [],
     performansAgirliklari: { dersici: [10, 10, 10, 10, 10, 30, 10, 10], odev: [10, 10, 10, 10, 10, 30, 10, 10] },
-    donemRaporlari: { dersKesim: [], yaziliTeslim: [] }
+    donemRaporlari: { dersKesim: [], yaziliTeslim: [] },
+    sinavHavuzu: { sorular: [] },
+    sinavKagitlari: []
   };
 }
 
@@ -231,6 +235,19 @@ function normalizeState(s) {
     if (!r.id) r.id = uid("yt");
     if (!Array.isArray(r.satirlar)) r.satirlar = [];
     r.satirlar.forEach(x => { if (!x.id) x.id = uid("ytr"); });
+  });
+  if (!s.sinavHavuzu || typeof s.sinavHavuzu !== "object") s.sinavHavuzu = {};
+  if (!Array.isArray(s.sinavHavuzu.sorular)) s.sinavHavuzu.sorular = [];
+  s.sinavHavuzu.sorular.forEach(q => {
+    if (!q.id) q.id = uid("sr");
+    if (!Array.isArray(q.secenekler)) q.secenekler = [];
+    q.secenekler.forEach(o => { if (!o.id) o.id = uid("sc"); });
+    if (typeof q.puan !== "number") q.puan = Number(q.puan) || 10;
+  });
+  if (!Array.isArray(s.sinavKagitlari)) s.sinavKagitlari = [];
+  s.sinavKagitlari.forEach(k => {
+    if (!k.id) k.id = uid("sk");
+    if (!Array.isArray(k.soruIdleri)) k.soruIdleri = [];
   });
   if (!s.seededIsletmeler2026) {
     s.seededIsletmeler2026 = true;
