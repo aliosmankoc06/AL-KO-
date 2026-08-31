@@ -10,7 +10,7 @@
 <div class="app-shell">
   <aside class="sidebar">
     <div class="brand">
-      <div class="brand-mark">
+      <div class="brand-mark" id="sidebar-logo">
         <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
           <path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z"/>
           <path d="M19.4 13.5c.1-.5.1-1 0-1.5l1.6-1.2-1.5-2.6-1.9.6a5.7 5.7 0 0 0-1.3-.8l-.3-2H10l-.3 2c-.5.2-.9.5-1.3.8l-1.9-.6-1.5 2.6L6.6 12c-.1.5-.1 1 0 1.5l-1.6 1.2 1.5 2.6 1.9-.6c.4.3.8.6 1.3.8l.3 2h4l.3-2c.5-.2.9-.5 1.3-.8l1.9.6 1.5-2.6-1.6-1.2Z"/>
@@ -18,10 +18,14 @@
       </div>
       <div class="brand-text">
         <div class="title">Alan Yönetim Sistemi</div>
-        <div class="subtitle">Ali Osman Koç</div>
+        <div class="subtitle" id="sidebar-subtitle">Ali Osman Koç</div>
       </div>
     </div>
-    <div class="school-line">Soma Mesleki ve Teknik Anadolu Lisesi<br>Makine Teknolojisi Alanı</div>
+    <div class="school-line" id="sidebar-school-line">Soma Mesleki ve Teknik Anadolu Lisesi<br>Makine Teknolojisi Alanı</div>
+    <div class="sidebar-search">
+      <input type="text" id="global-search-input" placeholder="Ara: sınıf, öğretmen, öğrenci, makine..." autocomplete="off" oninput="onGlobalSearchInput(this.value)" onkeydown="if(event.key==='Escape'){this.value='';onGlobalSearchInput('');this.blur();}">
+      <div id="global-search-results"></div>
+    </div>
     <nav id="tabbar"></nav>
     <nav id="subtabbar"></nav>
   </aside>

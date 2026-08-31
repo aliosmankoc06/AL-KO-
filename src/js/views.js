@@ -14,7 +14,8 @@ const MODULES = [
   { id: "atolye-envanter", label: "Atölye / Envanter", icon: "tool" },
   { id: "performans", label: "Performans Kriterleri", icon: "star" },
   { id: "donem-raporlari", label: "Ders Kesim / Yazılı Teslim", icon: "report" },
-  { id: "sinav-havuzu", label: "Sınav Havuzu", icon: "question" }
+  { id: "sinav-havuzu", label: "Sınav Havuzu", icon: "question" },
+  { id: "ayarlar", label: "Ayarlar", icon: "settings" }
 ];
 const DERS_PROGRAMI_TABS = [
   { id: "havuz", label: "Ders Havuzu", icon: "book" },
@@ -74,6 +75,7 @@ function renderMain() {
   if (activeModule === "performans") { el.innerHTML = viewPerformans(); return; }
   if (activeModule === "donem-raporlari") { el.innerHTML = viewDonemRaporlari(); return; }
   if (activeModule === "sinav-havuzu") { el.innerHTML = viewSinavHavuzu(); return; }
+  if (activeModule === "ayarlar") { el.innerHTML = viewAyarlar(); return; }
   if (activeTab === "havuz") el.innerHTML = viewHavuz();
   else if (activeTab === "ogretmen") el.innerHTML = viewOgretmen();
   else if (activeTab === "sinif") el.innerHTML = viewSinif();
@@ -433,10 +435,14 @@ function belgeAracCubugu(dosyaAdi) {
 }
 function belgeYazdirmaBasligi(altBaslik) {
   const tarih = new Date().toLocaleDateString("tr-TR");
+  const k = S.kurumBilgileri;
   return `<div class="print-doc-header print-only">
-    <div>
-      <div class="okul">Soma Mesleki ve Teknik Anadolu Lisesi</div>
-      <div class="alan">Makine Teknolojisi Alanı${altBaslik ? " · " + altBaslik : ""}</div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      ${k.logo ? `<img src="${k.logo}" style="height:34px;width:auto;max-width:90px;object-fit:contain;">` : ""}
+      <div>
+        <div class="okul">${escHtml(k.okulAdi)}</div>
+        <div class="alan">${escHtml(k.alanAdi)}${altBaslik ? " · " + escHtml(altBaslik) : ""}</div>
+      </div>
     </div>
     <div class="tarih">Yazdırma Tarihi<br>${tarih}</div>
   </div>`;
@@ -1491,7 +1497,7 @@ function addDurumTespit() {
         <label class="small">Tarih</label><input type="text" id="dt-tarih" style="width:100%">
         <label class="small">Atölye/Lab. Şefi</label><input type="text" id="dt-atolyesefi" style="width:100%">
         <label class="small">Okul Müdürü</label><input type="text" id="dt-okulmuduru" style="width:100%">
-        <label class="small">Alan Şefi</label><input type="text" id="dt-alansefi" value="Ali Osman Koç" style="width:100%">
+        <label class="small">Alan Şefi</label><input type="text" id="dt-alansefi" value="${escHtml(S.kurumBilgileri.alanSefiAdi)}" style="width:100%">
         <div class="row">
           <button class="btn primary" onclick="saveNewDurumTespit()">Ekle</button>
           <button class="btn" onclick="closeModal()">İptal</button>
@@ -2243,8 +2249,8 @@ function renderDonemRaporDetay(tur, r) {
     </div>
   </div>
   <div style="margin-bottom:14px;">
-    <div>SOMA MESLEKİ VE TEKNİK ANADOLU LİSESİ MÜDÜRLÜĞÜ'NE</div>
-    <div>SOMA</div>
+    <div>${escHtml((S.kurumBilgileri.okulAdi || "").toLocaleUpperCase("tr-TR"))} MÜDÜRLÜĞÜ'NE</div>
+    <div>${escHtml(S.kurumBilgileri.sehir || "")}</div>
   </div>
   <p class="small" style="margin-bottom:14px;">${paragraf}</p>
   <table><thead><tr>
@@ -2706,6 +2712,150 @@ function viewSinavHavuzu() {
   return ustBar + sinifBar + dersBar + tabBar + govde;
 }
 
+/* ---- Ayarlar (Kurum Bilgileri) ---- */
+function updateKurumBilgi(field, value) {
+  S.kurumBilgileri[field] = value.trim();
+  save();
+  renderSidebarBrand();
+}
+function logoDosyaSecildi(event) {
+  const file = event.target.files && event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    S.kurumBilgileri.logo = reader.result;
+    save();
+    renderSidebarBrand();
+    renderMain();
+  };
+  reader.readAsDataURL(file);
+}
+function logoKaldir() {
+  if (!confirm("Okul logosu kaldırılsın mı?")) return;
+  S.kurumBilgileri.logo = null;
+  save();
+  renderSidebarBrand();
+  renderMain();
+}
+function renderSidebarBrand() {
+  const k = S.kurumBilgileri;
+  const subtitleEl = document.getElementById("sidebar-subtitle");
+  const schoolEl = document.getElementById("sidebar-school-line");
+  const logoEl = document.getElementById("sidebar-logo");
+  if (subtitleEl) subtitleEl.textContent = k.alanSefiAdi || "";
+  if (schoolEl) schoolEl.innerHTML = escHtml(k.okulAdi) + "<br>" + escHtml(k.alanAdi);
+  if (logoEl) {
+    logoEl.innerHTML = k.logo
+      ? `<img src="${k.logo}" style="width:100%;height:100%;object-fit:contain;border-radius:8px;">`
+      : `<svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z"/><path d="M19.4 13.5c.1-.5.1-1 0-1.5l1.6-1.2-1.5-2.6-1.9.6a5.7 5.7 0 0 0-1.3-.8l-.3-2H10l-.3 2c-.5.2-.9.5-1.3.8l-1.9-.6-1.5 2.6L6.6 12c-.1.5-.1 1 0 1.5l-1.6 1.2 1.5 2.6 1.9-.6c.4.3.8.6 1.3.8l.3 2h4l.3-2c.5-.2.9-.5 1.3-.8l1.9.6 1.5-2.6-1.6-1.2Z"/></svg>`;
+  }
+}
+/* ---- Genel Arama ---- */
+let globalSearchResults = [];
+function trLower(s) { return String(s || "").toLocaleLowerCase("tr-TR"); }
+function globalSearch(query) {
+  const q = trLower(query).trim();
+  if (!q) return [];
+  const results = [];
+  S.classes.filter(c => c.grade > 0).forEach(c => {
+    if (trLower(c.name).includes(q)) {
+      results.push({ tip: "Sınıf", ad: c.name, action: () => { setModule("ders-programi"); setTab("sinif"); activeClassId = c.id; } });
+    }
+  });
+  S.teachers.forEach(t => {
+    if (trLower(t.name).includes(q)) {
+      results.push({ tip: "Öğretmen", ad: t.name, action: () => { setModule("ders-programi"); setTab("ogretmen"); activeTeacherId = t.id; } });
+    }
+  });
+  S.courses.filter(c => c.id !== KOORD_COURSE_ID).forEach(c => {
+    if (trLower(c.name).includes(q) || trLower(c.code).includes(q)) {
+      results.push({ tip: "Ders", ad: c.name, action: () => { setModule("ders-programi"); setTab("havuz"); } });
+    }
+  });
+  S.isletmeler.forEach(i => {
+    if (trLower(i.name).includes(q)) {
+      results.push({ tip: "İşletme", ad: i.name, action: () => { setModule("ders-programi"); setTab("koordinatorluk"); } });
+    }
+  });
+  S.students.forEach(s => {
+    if (trLower(s.ad).includes(q)) {
+      results.push({ tip: "Öğrenci (Staj)", ad: s.ad + (s.sinif ? " · " + s.sinif : ""), action: () => setModule("staj-yerlestirme") });
+    }
+  });
+  S.envanter.makineler.forEach(m => {
+    if (trLower(m.ad).includes(q)) {
+      results.push({ tip: "Makine", ad: m.ad + (m.lab ? " · " + m.lab : ""), action: () => { setModule("atolye-envanter"); activeEnvanterTab = "makineler"; activeMakineId = m.id; } });
+    }
+  });
+  S.sinavHavuzu.sorular.forEach(sr => {
+    if (trLower(sr.soruMetni).includes(q)) {
+      results.push({ tip: "Sınav Sorusu", ad: sr.soruMetni.length > 60 ? sr.soruMetni.slice(0, 60) + "…" : sr.soruMetni, action: () => { setModule("sinav-havuzu"); activeSinavSinifId = sr.classId; activeSinavCourseId = sr.courseId; activeSinavTab = "havuz"; } });
+    }
+  });
+  S.performansKayitlari.forEach(k => {
+    if (trLower(k.sinif).includes(q) || trLower(k.ders).includes(q)) {
+      results.push({ tip: "Performans Kaydı", ad: k.sinif + " · " + k.ders, action: () => { setModule("performans"); activePerformansTab = k.tur; activePerformansSinif = k.sinif; activePerformansDonem = k.donem; activePerformansId[k.tur] = k.id; } });
+    }
+  });
+  return results.slice(0, 20);
+}
+function onGlobalSearchInput(value) {
+  globalSearchResults = globalSearch(value);
+  const el = document.getElementById("global-search-results");
+  if (!el) return;
+  if (!value.trim()) { el.innerHTML = ""; el.style.display = "none"; return; }
+  el.style.display = "block";
+  el.innerHTML = globalSearchResults.length
+    ? globalSearchResults.map((r, i) => `<div class="search-result-item" onclick="runGlobalSearchResult(${i})"><span class="tip">${escHtml(r.tip)}</span>${escHtml(r.ad)}</div>`).join("")
+    : `<div class="search-result-empty small">Sonuç bulunamadı.</div>`;
+}
+function runGlobalSearchResult(i) {
+  const r = globalSearchResults[i];
+  if (!r) return;
+  r.action();
+  const input = document.getElementById("global-search-input");
+  const el = document.getElementById("global-search-results");
+  if (input) input.value = "";
+  if (el) { el.innerHTML = ""; el.style.display = "none"; }
+  renderTabbar();
+  renderMain();
+}
+document.addEventListener("click", (e) => {
+  const box = document.querySelector(".sidebar-search");
+  const results = document.getElementById("global-search-results");
+  if (box && results && !box.contains(e.target)) { results.style.display = "none"; }
+});
+
+function viewAyarlar() {
+  const k = S.kurumBilgileri;
+  return `
+  <div class="card">
+    <h2>Kurum Bilgileri</h2>
+    <p class="small">Bu bilgiler programın ürettiği tüm resmi belgelerde (yazdırma başlığı, raporlar, imza blokları) ve sol menüde otomatik kullanılır — burada bir kez girip güncel tutmanız yeterli, her belgeye tek tek yazmanıza gerek yok.</p>
+    <label class="small">Okul Adı</label>
+    <input type="text" value="${escHtml(k.okulAdi)}" style="width:100%;max-width:480px;" onchange="updateKurumBilgi('okulAdi', this.value)">
+    <label class="small">İlçe / Şehir</label>
+    <input type="text" value="${escHtml(k.sehir)}" style="width:100%;max-width:480px;" onchange="updateKurumBilgi('sehir', this.value)">
+    <label class="small">Alan Adı</label>
+    <input type="text" value="${escHtml(k.alanAdi)}" style="width:100%;max-width:480px;" onchange="updateKurumBilgi('alanAdi', this.value)">
+    <label class="small">Okul Müdürü</label>
+    <input type="text" value="${escHtml(k.mudurAdi)}" style="width:100%;max-width:480px;" onchange="updateKurumBilgi('mudurAdi', this.value)">
+    <label class="small">Alan Şefi Adı Soyadı</label>
+    <input type="text" value="${escHtml(k.alanSefiAdi)}" style="width:100%;max-width:480px;" onchange="updateKurumBilgi('alanSefiAdi', this.value)">
+    <label class="small">Alan Şefi Unvanı</label>
+    <input type="text" value="${escHtml(k.alanSefiUnvani)}" style="width:100%;max-width:480px;" onchange="updateKurumBilgi('alanSefiUnvani', this.value)">
+    <div style="margin-top:16px;">
+      <label class="small">Okul Logosu (opsiyonel — belgelerde ve sol menüde kullanılır)</label><br>
+      ${k.logo ? `<img src="${k.logo}" style="max-height:70px;max-width:160px;display:block;margin:8px 0;border:1px solid var(--line);border-radius:6px;padding:4px;">` : `<p class="small">Henüz logo eklenmedi.</p>`}
+      <input type="file" id="ay-logo-input" accept="image/*" style="display:none" onchange="logoDosyaSecildi(event)">
+      <div class="row">
+        <button class="btn" onclick="document.getElementById('ay-logo-input').click()">Logo Seç</button>
+        ${k.logo ? `<button class="btn danger" onclick="logoKaldir()">Logoyu Kaldır</button>` : ""}
+      </div>
+    </div>
+  </div>`;
+}
+
 /* ---- Ana Sayfa ---- */
 function systemHealthSummary() {
   const q = scheduleQualityScore();
@@ -2736,12 +2886,60 @@ function systemHealthSummary() {
   </div>`;
 }
 
+function anaSayfaUyarilari() {
+  const uyarilar = [];
+  const gercekSiniflar = S.classes.filter(c => c.grade > 0);
+  gercekSiniflar.forEach(c => {
+    if (!c.excludeFromDistribution && S.normKadro.ogrenciSayilari[c.id] === undefined) {
+      uyarilar.push({ text: `${c.name} sınıfının Norm Kadro'da öğrenci sayısı girilmemiş`, moduleId: "norm-kadro" });
+    }
+  });
+  const arizaliMakineler = S.envanter.makineler.filter(m => /ar[ıi]z/i.test(m.durum || ""));
+  if (arizaliMakineler.length) {
+    uyarilar.push({ text: `${arizaliMakineler.length} makine "Arızalı" durumda`, moduleId: "atolye-envanter" });
+  }
+  const isletmesizOgrenci = S.students.filter(s => !s.isletme).length;
+  if (isletmesizOgrenci) {
+    uyarilar.push({ text: `${isletmesizOgrenci} öğrencinin staj işletmesi henüz atanmamış`, moduleId: "staj-yerlestirme" });
+  }
+  if (!S.akademikTakvim) {
+    uyarilar.push({ text: `Akademik takvim henüz yüklenmedi (Yıllık Plan'dan Excel içe aktarabilirsiniz)`, moduleId: "yillik-plan" });
+  }
+  return uyarilar;
+}
+function anaSayfaIstatistikKarti(deger, etiket, moduleId) {
+  return `<div class="card" style="text-align:center;cursor:pointer;" onclick="setModule('${moduleId}')">
+    <div class="dash-num">${deger}</div>
+    <div class="small">${escHtml(etiket)}</div>
+  </div>`;
+}
 function viewAna() {
+  const k = S.kurumBilgileri;
+  const istatistikler = [
+    [S.classes.filter(c => c.grade > 0).length, "Sınıf", "ders-programi"],
+    [S.teachers.length, "Öğretmen", "ders-programi"],
+    [S.envanter.makineler.length, "Atölye Makinesi", "atolye-envanter"],
+    [S.sinavKagitlari.length, "Sınav Kağıdı", "sinav-havuzu"],
+    [S.performansKayitlari.length, "Performans Kaydı", "performans"],
+    [S.students.length, "Staj Öğrencisi", "staj-yerlestirme"]
+  ];
+  const uyarilar = anaSayfaUyarilari();
   return `
   <div class="hero-card">
     <h2>Alan Yönetim Sistemi</h2>
-    <p class="small">Soma Mesleki ve Teknik Anadolu Lisesi · Makine Teknolojisi Alanı</p>
+    <p class="small">${escHtml(k.okulAdi)} · ${escHtml(k.alanAdi)}</p>
     <button class="btn primary" style="margin-top:14px;" onclick="setModule('ders-programi')">Ders Programına Git</button>
+  </div>
+  <div class="grid3" style="margin-top:14px;">
+    ${istatistikler.map(([d, e, m]) => anaSayfaIstatistikKarti(d, e, m)).join("")}
+  </div>
+  ${systemHealthSummary()}
+  <div class="card">
+    <h3 style="margin-top:0;">${uyarilar.length ? "Dikkat Gerektirenler" : "Her Şey Yolunda"}</h3>
+    ${uyarilar.length ? `
+    <ul class="small" style="margin:0;padding-left:18px;">
+      ${uyarilar.map(u => `<li style="margin-bottom:5px;"><a href="#" onclick="setModule('${u.moduleId}');return false;">${escHtml(u.text)}</a></li>`).join("")}
+    </ul>` : `<p class="small" style="margin:0;">Şu an dikkat gerektiren bir eksik görünmüyor.</p>`}
   </div>`;
 }
 function openSavedProgramsModal() {

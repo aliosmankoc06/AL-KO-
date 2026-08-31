@@ -130,7 +130,16 @@ function defaultState() {
     performansAgirliklari: { dersici: [10, 10, 10, 10, 10, 30, 10, 10], odev: [10, 10, 10, 10, 10, 30, 10, 10] },
     donemRaporlari: { dersKesim: [], yaziliTeslim: [] },
     sinavHavuzu: { sorular: [] },
-    sinavKagitlari: []
+    sinavKagitlari: [],
+    kurumBilgileri: {
+      okulAdi: "Soma Mesleki ve Teknik Anadolu Lisesi",
+      sehir: "SOMA",
+      alanAdi: "Makine Teknolojisi Alanı",
+      mudurAdi: "Ahmet Açar",
+      alanSefiAdi: "Ali Osman Koç",
+      alanSefiUnvani: "Makine Teknolojisi Alan Şefi",
+      logo: null
+    }
   };
 }
 
@@ -159,7 +168,16 @@ function emptyState() {
     performansAgirliklari: { dersici: [10, 10, 10, 10, 10, 30, 10, 10], odev: [10, 10, 10, 10, 10, 30, 10, 10] },
     donemRaporlari: { dersKesim: [], yaziliTeslim: [] },
     sinavHavuzu: { sorular: [] },
-    sinavKagitlari: []
+    sinavKagitlari: [],
+    kurumBilgileri: {
+      okulAdi: "Soma Mesleki ve Teknik Anadolu Lisesi",
+      sehir: "SOMA",
+      alanAdi: "Makine Teknolojisi Alanı",
+      mudurAdi: "Ahmet Açar",
+      alanSefiAdi: "Ali Osman Koç",
+      alanSefiUnvani: "Makine Teknolojisi Alan Şefi",
+      logo: null
+    }
   };
 }
 
@@ -249,6 +267,17 @@ function normalizeState(s) {
     if (!k.id) k.id = uid("sk");
     if (!Array.isArray(k.soruIdleri)) k.soruIdleri = [];
   });
+  if (!s.kurumBilgileri || typeof s.kurumBilgileri !== "object") s.kurumBilgileri = {};
+  {
+    const kb = s.kurumBilgileri;
+    if (typeof kb.okulAdi !== "string" || !kb.okulAdi) kb.okulAdi = "Soma Mesleki ve Teknik Anadolu Lisesi";
+    if (typeof kb.sehir !== "string" || !kb.sehir) kb.sehir = "SOMA";
+    if (typeof kb.alanAdi !== "string" || !kb.alanAdi) kb.alanAdi = "Makine Teknolojisi Alanı";
+    if (typeof kb.mudurAdi !== "string") kb.mudurAdi = "";
+    if (typeof kb.alanSefiAdi !== "string") kb.alanSefiAdi = "";
+    if (typeof kb.alanSefiUnvani !== "string") kb.alanSefiUnvani = "";
+    if (typeof kb.logo !== "string") kb.logo = null;
+  }
   if (!s.seededIsletmeler2026) {
     s.seededIsletmeler2026 = true;
     const seed = [

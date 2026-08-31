@@ -10,3 +10,4 @@ if (window.desktop && window.desktop.isElectron) {
 
 renderTabbar();
 renderMain();
+renderSidebarBrand();
