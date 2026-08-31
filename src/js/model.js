@@ -222,6 +222,12 @@ function normalizeState(s) {
   if (!s.courses.find(c => c.id === "crs-koordinatorluk")) {
     s.courses.push({ id: "crs-koordinatorluk", code: "KOORD", name: "Koordinatörlük (İşletme Ziyareti)", dal: "KOORD", grade: 0, hours: 8, blocks: [8] });
   }
+  [9, 10, 11, 12].forEach(grade => {
+    const id = "c-reh-" + grade;
+    if (!s.courses.find(c => c.id === id)) {
+      s.courses.push({ id, code: "REH", name: "Rehberlik", dal: "ORTAK", grade, hours: 1, blocks: [1] });
+    }
+  });
   s.teachers.forEach(t => {
     if (!t.timeOff) t.timeOff = {};
     if (typeof t.hoursMode !== "string") {
