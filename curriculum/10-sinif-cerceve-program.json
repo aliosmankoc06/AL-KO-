@@ -1,0 +1,89 @@
+{
+  "kaynak": {
+    "belge": "Makine Teknolojisi Alanı Çerçeve Öğretim Programı (önceki/mevcut müfredat)",
+    "onemliNot": "Bu belge 9. sınıf için gönderilen 'Türkiye Yüzyılı Maarif Modeli 2026' belgesinden FARKLI ve DAHA ESKİ bir çerçeve programdır (dal adları farklı: örn. 'Bilgisayar Destekli Makine Ressamlığı', 'Endüstriyel Ürünler Tasarımı', 'Değirmencilik' -- yeni modelde yok). Kullanıcının yüklediği '10. Sınıf.pdf' ve '11. Sınıf.pdf' dosyaları birebir aynı içerik (aynı 114 sayfalık alan-geneli belge, muhtemelen aynı kaynaktan iki kez indirilmiş). '12. Sınıf.pdf' de aynı belgenin 94 sayfalık farklı bir biçimlendirmesi, içerik olarak aynı.",
+    "gecisAciklamasi": "MEB 2025-2026'da müfredat reformuna 9. sınıftan başladı (Türkiye Yüzyılı Maarif Modeli). Bu yüzden okulun bu yılki 10, 11 ve 12. sınıf öğrencileri henüz ESKİ çerçeve programa göre okutuluyor (onlar reform öncesi başladı), 9. sınıflar ise YENİ programa göre okutuluyor. Yani her iki belge de doğru ve güncel -- sadece farklı sınıf seviyeleri için farklı sürümler geçerli.",
+    "kullanilanDal": "Okulun 10-A ve 11-A şubeleri MAKİNE BAKIM ONARIM (MBO) dalında okutuluyor (model.js ile doğrulandı)."
+  },
+  "haftalikDersCizelgesi_MBO_AMP": {
+    "not": "Makine Bakım Onarım Dalı, Anadolu Meslek Programı (AMP) - okulun fiilen kullandığı program türü.",
+    "9Sinif": { "MESLEKİ GELİŞİM ATÖLYESİ": 2, "TEKNİK RESİM": 3, "TEMEL İMALAT İŞLEMLERİ": 6, "toplam": 11, "not": "Bu satır eski programa ait; okulun güncel 9. sınıfı artık yeni Maarif Model programını kullanıyor (bkz. 9-sinif-cerceve-program.json: MGA 2 + Teknik Resim 2 + Temel İmalat İşlemleri 8 = 12 saat). Sadece referans amaçlı bırakıldı." },
+    "10Sinif": { "İMALAT YÖNTEMLERİ": 6, "BAKIM ONARIM MESLEK RESMİ": 3, "ÖLÇME VE KONTROL": 2, "MALZEME BİLGİSİ": 2, "toplam": 13 },
+    "11Sinif": { "MEKANİK BAKIM ONARIM": 6, "OTOMATİK KONTROL SİSTEMLERİ": 6, "MEKANİZMALAR": 3, "TEMEL ELEKTRİK": 2, "toplam": 17 },
+    "12Sinif": { "İŞLETMELERDE MESLEKİ EĞİTİM": 24, "not": "Tamamen işletmede staj; okulda ayrı ders saati yok. Bu, uygulamada koordinatörlük/işletme ziyaret sistemiyle karşılanıyor (crs-koordinatorluk), ayrı bir 'ders' olarak modellenmiyor." }
+  },
+  "modelJsIleKarsilastirma": {
+    "durum": "UYUMLU",
+    "aciklama": "src/js/model.js -> cl-10a (dal: MBO) assignments: c10mbo-1 İmalat Yöntemleri 6sa, c10mbo-2 Bakım Onarım Meslek Resmi 3sa, c10mbo-3 Ölçme ve Kontrol 2sa, c10mbo-4 Malzeme Bilgisi 2sa = 13 saat. Resmi çerçeve programdaki MBO 10. sınıf tablosuyla (13 saat) birebir eşleşiyor. Değişiklik gerekmiyor."
+  },
+  "meslekDersleri_10Sinif_MBO": [
+    {
+      "dersAdi": "İmalat Yöntemleri",
+      "dal": "MAKİNE BAKIM ONARIM",
+      "dersSaati": 6,
+      "amac": "Bu derste öğrenciye; iş sağlığı ve güvenliği tedbirlerini alarak el aletleri ve takım tezgâhlarını kullanarak iş parçalarını imal etme ile ilgili bilgi ve becerilerin kazandırılması amaçlanmaktadır.",
+      "ogrenmeBirimleri": [
+        { "adi": "Torna Tezgâhında Delme ve Delik Büyütme", "kazanimlar": ["Torna tezgâhında delme ve delik büyütme işlemlerini yapar.", "Torna tezgâhında ölçme ve kontrol işlemlerini yapar."] },
+        { "adi": "Torna Tezgâhında Vida Açma", "kazanimlar": ["Torna tezgâhında üçgen vida açma işlemleri yapar.", "Torna tezgâhında kare vida açma işlemleri yapar.", "Torna tezgâhında trapez vida açma işlemleri yapar."] },
+        { "adi": "Frezede Delme ve Kama Kanalı Açma", "kazanimlar": ["Freze tezgâhında delme ve delik büyütme işlemleri yapar.", "Freze tezgâhında kanal açma işlemi yapar.", "Freze tezgâhlarının bakım işlemlerini yapar."] },
+        { "adi": "Frezede Dişli Açma", "kazanimlar": ["Freze tezgâhında düz dişli açma işlemleri yapar.", "Freze tezgâhında kremayer dişli açma işlemleri yapar."] },
+        { "adi": "Temel Taşlama İşlemleri", "kazanimlar": ["Zımpara taşlarını dengeleyerek tezgâha bağlar.", "Düzlem yüzeyleri taşlama işlemleri yapar.", "Silindirik yüzeyleri taşlama işlemleri yapar."] },
+        { "adi": "Elektrik Arkı İle Dikiş Çekme", "kazanimlar": ["Kaynak makinesini güç kaynağına bağlar.", "Elektrik ark kaynağı ile ark yapar.", "Yatayda düz dikiş çeker."] },
+        { "adi": "Oksi-Gaz İle Dikiş Çekme", "kazanimlar": ["Oksijen ve asetilen tüplerini açıp kapatır.", "Manometre (regülatör) ayarı yapar.", "Alev oluşturarak alev ayarı yapar.", "Yatayda telsiz dikiş çeker.", "Yatayda telli dikiş çeker."] }
+      ]
+    },
+    {
+      "dersAdi": "Bakım Onarım Meslek Resmi",
+      "dal": "MAKİNE BAKIM ONARIM",
+      "dersSaati": 3,
+      "amac": "Bu derste öğrenciye; iş sağlığı ve güvenliği tedbirlerini alarak standart makine elemanları, hareket ve güç iletme elemanları, sökülemeyen birleştirmeler, montaj ve komple resimlerin çizimi ile ilgili bilgi ve becerilerin kazandırılması amaçlanmaktadır.",
+      "ogrenmeBirimleri": [
+        { "adi": "Vida, Cıvata ve Somun Resimlerinin Çizimi", "kazanimlar": ["Standart çizelgelerden yararlanarak vida dişi resimlerini çizer.", "Standart çizelgelerden yararlanarak cıvata resimlerini çizer.", "Standart çizelgelerden yararlanarak somun resimlerini çizer.", "Vidalı birleştirme resimlerini çizer."] },
+        { "adi": "Emniyetli Bağlama Elemanları Çizimi", "kazanimlar": ["Standart çizelgelerden yararlanarak rondela resmini çizer.", "Standart ölçülerini dikkate alarak emniyet sacı resmini çizer.", "Ayar bileziğinin resmini çizer.", "Gupilyanın resmini çizer.", "Emniyet segmanın resmini çizer.", "Mil tespit plakasının resmini çizer."] },
+        { "adi": "Birleştirme Resimleri Çizimi", "kazanimlar": ["Standart çizelgelerden yararlanarak perno resimlerini çizer.", "Standart çizelgelerden yararlanarak pim resimlerini çizer.", "Standart çizelgelerden yararlanarak kama resimlerini çizer.", "Yay boyunu hesaplayarak yay resimlerini çizer.", "Perçin ölçülerini belirleyerek perçinli birleştirme resimlerini çizer.", "Kaynaklı birleştirme çeşitlerini belirleyerek kaynaklı birleştirme resimlerini çizer."] },
+        { "adi": "Makine Elemanları Resmi Çizimi", "kazanimlar": ["Ölçülerini dikkate alarak kasnak resimlerini çizer.", "Ölçülerini dikkate alarak kayma dirençli yatak resimlerini çizer.", "Standart ölçülerini dikkate alarak yuvarlanma dirençli yatak resimlerini çizer."] },
+        { "adi": "Komple Resimler", "kazanimlar": ["İşlem sırasına göre komple (montaj) resimlerini çizer.", "Komple resimlerinden grup montaj resimlerini çizer.", "Grup montaj resimlerinden organ montaj resimlerini çizer."] }
+      ]
+    },
+    {
+      "dersAdi": "Ölçme ve Kontrol",
+      "dal": "MAKİNE BAKIM ONARIM",
+      "dersSaati": 2,
+      "amac": "Bu derste öğrenciye; iş sağlığı ve güvenliği tedbirlerini alarak ölçme ve kontrol yapma, TS, EN, ISO ve DIN Standartlarına göre ölçme ve kontrol aletlerini kullanma ile ilgili bilgi ve becerilerin kazandırılması amaçlanmaktadır.",
+      "ogrenmeBirimleri": [
+        { "adi": "Kumpasla Ölçüm Yapma", "kazanimlar": ["Ölçülecek profile ve ölçü büyüklüğüne göre kumpas seçer.", "Kumpas çene hassasiyetini kontrol eder.", "Kumpası parça geometrisine göre konumlandırır.", "Tespit vidası yardımıyla hareketli çeneyi tespit eder.", "Kumpastan değer okur."] },
+        { "adi": "Mikrometre Ölçüm Yapma", "kazanimlar": ["Ölçülecek profile ve ölçü büyüklüğüne göre mikrometre seçer.", "Mikrometre örslerinin temizlik kontrolünü yapar.", "Kontrol mastarlarıyla ölçü hassasiyeti kontrolünü yapar.", "Mikrometreyi parça geometrisine göre konumlandırır.", "Tespit mandalı yardımıyla hareketli mili tespit eder.", "Mikrometreden değer okur."] },
+        { "adi": "Açı Ölçme", "kazanimlar": ["Verniyerli açıölçerlerle ölçüm yapar.", "Sinüs çubuğu ve ölçü mastarıyla ölçüm yapar.", "Silindirik makaralar ve bilyeler yardımıyla koniklik açısı ölçer.", "Optik açı ölçüm cihazıyla açıyı ölçer."] },
+        { "adi": "Yüzey Pürüzlülüğü Ölçme", "kazanimlar": ["Yüzey profilometresi ile yüzey pürüzlülüğünü ölçer.", "Yüzey pürüzlülük mastarlarıyla ölçüm yapar."] },
+        { "adi": "Vidaları Ölçme", "kazanimlar": ["Kumpas ile vidanın metrik veya whitworth vida cinslerinden hangisi olduğunu belirler.", "Kumpas veya mikrometre ile diş üstü çapını ölçer.", "Mikrometreyle diş dibi çapını ölçer.", "Vida tarağıyla vida adımını ölçer."] },
+        { "adi": "Dişli Çarkları Ölçme", "kazanimlar": ["Diş büyüklüğüne göre modül tahmin eder.", "Yapılan tahmine göre modül kumpasının ağzını ayarlar.", "Modül kumpasını diş üzerine yerleştirip ölçüm yapar."] },
+        { "adi": "Mastarlar ve Optik Camlarla Yüzey Kontrolü Yapma", "kazanimlar": ["Ölçülecek profile göre mastarı seçer.", "Mastarları birleştirir.", "Mastarları iş parçasına yerleştirir.", "Mastarlar ile kontrol işlemleri yapar."] },
+        { "adi": "Şekil Tolerans Kontrolü Yapma", "kazanimlar": ["İmalat resmine göre uygun şekil kontrol aracını seçer.", "Kontrolü yapılacak iş parçasını hazırlar.", "Kontrol işlemi yaparak sonucunu kaydeder."] },
+        { "adi": "Boyut Tolerans Kontrolü Yapma", "kazanimlar": ["İmalat resmine bakarak uygun mastar seçer.", "Kontrolü yapılacak iş parçasını hazırlar.", "Kontrol işlemi yaparak sonucunu kaydeder."] }
+      ]
+    },
+    {
+      "dersAdi": "Malzeme Bilgisi",
+      "dal": "MAKİNE BAKIM ONARIM",
+      "dersSaati": 2,
+      "amac": "Bu derste öğrenciye; iş sağlığı ve güvenliği tedbirlerini alarak TS, EN, ISO Standartlarına göre malzeme seçimi, demir ve çelik üretimi, çeliklere uygulanan ısıl işlemler, korozyon, malzeme muayene yöntemleri ve toz metalürjisi ile ilgili bilgilerin kazandırılması amaçlanmaktadır.",
+      "ogrenmeBirimleri": [
+        { "adi": "Malzeme Bilimi", "kazanimlar": ["Malzemenin tanımı ve sınıflandırmasını yapar.", "İşe uygun malzeme seçimi yapar.", "Alaşımları ve alaşım yapmayı açıklar.", "Allotropi-faz dönüşümlerini açıklayarak denge diyagramlarını çizer."] },
+        { "adi": "Demir Üretimi", "kazanimlar": ["Ham demir üretimini açıklar.", "Dökme demir üretimini açıklar."] },
+        { "adi": "Çelik Üretimi", "kazanimlar": ["Çelik üretim yöntemlerini açıklar.", "Çeliklerin sınıflandırmasını yapar.", "Çelikte katkı elemanlarının etkilerini ve çelik standartlarını açıklar."] },
+        { "adi": "Çeliklerin Isıl İşlemleri", "kazanimlar": ["Isıl işlemlerin amaçlarını açıklar.", "Çeliklerde tavlama işlemlerini açıklar.", "Çeliklerde sertleştirme işlemlerini açıklar.", "Yüzey sertleştirme işlemlerini açıklar."] },
+        { "adi": "Korozyon", "kazanimlar": ["Korozyon çeşitlerini açıklar.", "Korozyondan korunma yöntemlerini açıklar."] },
+        { "adi": "Demir Dışı Malzemeler", "kazanimlar": ["Demir olmayan metalleri açıklar.", "Plastik malzemeleri açıklar.", "Kompozit malzemeleri açıklar."] },
+        { "adi": "Malzeme Muayene Yöntemleri", "kazanimlar": ["Malzemelere atölyede yapılacak basit deneyleri açıklar.", "Malzemelere uygulanan teknolojik deneyleri açıklar.", "Malzemelere uygulanan mekanik deneyleri açıklar.", "Tahribatsız malzeme muayene yöntemlerini açıklar."] },
+        { "adi": "Toz Metalürjisi", "kazanimlar": ["Toz üretim yöntemlerini açıklar.", "Toz şekillendirme yöntemlerini açıklar.", "Sinterleme kavramını açıklar.", "Serbest şekilli üretim sistemlerini açıklar.", "Bitirme işlemlerini açıklar."] }
+      ]
+    }
+  ],
+  "bmiDaliReferans_kullanilmiyorBuYil": {
+    "not": "Okulun 10-B/11-B şubeleri şu an dağıtıma dahil değil (excludeFromDistribution). Eğer ileride Bilgisayarlı Makine İmalatı (BMI) dalı olarak aktive edilirse resmi haftalık saatler şöyle (aynı çerçeve programdan, AMP):",
+    "10Sinif": { "İMALAT İŞLEMLERİ": 7, "MAKİNE MESLEK RESMİ": 3, "BİLGİSAYAR DESTEKLİ ÇİZİM": 3, "toplam": 13 },
+    "11Sinif": { "BİLGİSAYAR KONTROLLÜ ÜRETİM (CNC/CAM)": 9, "BİLGİSAYAR DESTEKLİ TASARIM (CAD)": 4, "YENİLİKÇİ ÜRETİM YÖNTEMLERİ": 4, "toplam": 17 },
+    "12Sinif": { "İŞLETMELERDE MESLEKİ EĞİTİM": 24 },
+    "detay": "Öğrenme birimi/kazanım detayları henüz çıkarılmadı -- gerektiğinde 10sinif/11sinif/12sinif kaynak PDF'lerinden (scratchpad) tekrar çıkarılabilir."
+  }
+}

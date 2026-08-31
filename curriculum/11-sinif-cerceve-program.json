@@ -1,0 +1,63 @@
+{
+  "kaynak": {
+    "belge": "Makine Teknolojisi Alanı Çerçeve Öğretim Programı (önceki/mevcut müfredat)",
+    "not": "10-sinif-cerceve-program.json ile aynı kaynak belge (10. Sınıf.pdf ve 11. Sınıf.pdf birebir aynı dosya). Bu yılki 11-A şubesi Makine Bakım Onarım (MBO) dalında."
+  },
+  "haftalikDersCizelgesi_MBO_AMP_11Sinif": { "MEKANİK BAKIM ONARIM": 6, "OTOMATİK KONTROL SİSTEMLERİ": 6, "MEKANİZMALAR": 3, "TEMEL ELEKTRİK": 2, "toplam": 17 },
+  "modelJsIleKarsilastirma": {
+    "durum": "UYUMLU",
+    "aciklama": "src/js/model.js -> cl-11a (dal: MBO) assignments: c11mbo-1 Mekanik Bakım Onarım 6sa, c11mbo-2 Otomatik Kontrol Sistemleri 6sa, c11mbo-3 Mekanizmalar 3sa, c11mbo-4 Temel Elektrik 2sa = 17 saat. Resmi çerçeve programdaki MBO 11. sınıf tablosuyla (17 saat) birebir eşleşiyor. Değişiklik gerekmiyor."
+  },
+  "meslekDersleri_11Sinif_MBO": [
+    {
+      "dersAdi": "Mekanik Bakım Onarım",
+      "dal": "MAKİNE BAKIM ONARIM",
+      "dersSaati": 6,
+      "amac": "Bu derste öğrenciye; iş sağlığı ve güvenliği tedbirlerini alarak makine yerleşim planı yapma ve makine kurma, sistemlerin düzenli kontrollerini yapma, kaldırma ve taşıma araçlarını kullanma, arıza tespiti yapma, arızalı makinenin onarımını yapma ile ilgili bilgi ve becerilerin kazandırılması amaçlanmaktadır.",
+      "ogrenmeBirimleri": [
+        { "adi": "Makine Yerleşim Planı", "kazanimlar": ["Makine kullanma kılavuzu ve kataloglarını inceler.", "Makine yerleşim planı yapar.", "Yerleşim planı çizerek basınçlı hava tesisatını hazırlar."] },
+        { "adi": "Makine Kurma İşlemleri", "kazanimlar": ["Nakliye emniyetlerini çıkararak makineyi ambalajından güvenli bir şekilde çıkarır.", "Makineyi yerleştirerek, elektrik ve basınçlı hava tesisatını bağlar.", "Makinenin uygun yağlama yağlarını koyarak test eder.", "Pnömatik ve soğutma sıvı bağlantısını yaparak test eder.", "Makineyi sabitleyerek koruyucu yağlarını temizler.", "Makineye yağlama yağı katar ve gevşeyen parçalarını sıkar."] },
+        { "adi": "Makinelerin Düzenli Bakımı", "kazanimlar": ["Günlük, haftalık, aylık ve altı aylık bakım takvimini oluşturur.", "Makine katalogları, atölye yerleşim ve tesisat planlarını inceler.", "Sızdırmazlık elemanlarını kullanır.", "Karter ve boyun sızdırmazlık elemanlarını değiştirir.", "Kataloglardaki makine ve parça resimlerini okuyarak parça seçimi ve montajını yapar."] },
+        { "adi": "Sistemlerin Düzenli Kontrolleri", "kazanimlar": ["Rulman, yatak, dişli, mil, kama ve burçların bakımını yapar.", "Kavrama ve fren sistemlerinin kontrolünü yapar.", "Kayış kasnak sistemi ve koruyucularının bakımını yapar.", "Makine yağlama sistemlerinin kontrolünü yaparak yağ kataloglarını kullanır.", "Yağ değişimini yapar."] },
+        { "adi": "Kaldırma ve Taşıma Araçları", "kazanimlar": ["Tel halat ve yük kaldırma zincirlerini kullanır.", "Krikoları kullanır.", "Vinçleri sınıflandırarak emniyet tedbirlerini alır.", "Forkliftlerle yük taşıma ilkelerini açıklar.", "Elevatörle yük taşıma ilkelerini açıklar."] },
+        { "adi": "Arıza Tespiti", "kazanimlar": ["Arızalı bölüm ve parçayı tespit eder.", "Makinenin çalışma sistemini tanıyarak arızalı makinenin arıza sebebini araştırır."] },
+        { "adi": "Arızalı Makinenin Onarımı", "kazanimlar": ["Vakum makinesi ve diğer temizleme malzemelerini (üstüpü, bez, güderi vb.) kullanarak arızalı kısmı temizler.", "Sökme takma takımlarını kullanarak arızalı parçayı söker.", "Arızalı parçayı onarır veya değiştirir.", "Elle veya ölçü aletleri ile tamir sonrası makine testini yapar."] }
+      ]
+    },
+    {
+      "dersAdi": "Mekanizmalar",
+      "dal": "MAKİNE BAKIM ONARIM",
+      "dersSaati": 3,
+      "amac": "Bu derste öğrenciye; iş sağlığı ve güvenliği tedbirlerini alarak basit mekanizmaları söküp takma işlemlerini yapma ile ilgili bilgi ve becerilerin kazandırılması amaçlanmaktadır.",
+      "ogrenmeBirimleri": [
+        { "adi": "Basit Mekanizmalar", "kazanimlar": ["Vida, cıvata, saplama ve somun bağlama elemanlarını kullanarak birleştirmeler yapar.", "Pim, perno, kama ve segmanlar ile makine parçalarını birleştirir.", "Makine parçalarını, perçin ve kaynak ile birleştirir."] },
+        { "adi": "Mekanizmalarda Aktarma Elemanları", "kazanimlar": ["Mil, muylu ve yataklar ile makine montaj işlemleri yapar.", "Sabit, kaymalı, hareketli ve esnek kavrama elemanlarını kullanır.", "Kam, kasnak, kayışlar ile hareket aktarma işlemlerini yapar.", "Düz dişli çark hesaplamaları yapar.", "Basit mekanizmaların sökme takma işlemlerini yapar.", "Yağlama sistemi ve arızalarını giderir."] }
+      ]
+    },
+    {
+      "dersAdi": "Otomatik Kontrol Sistemleri",
+      "dal": "MAKİNE BAKIM ONARIM",
+      "dersSaati": 6,
+      "amac": "Bu derste öğrenciye; iş sağlığı ve güvenliği tedbirlerini alarak hidrolik ve pnömatik devre elemanlarını hazırlama, bakım ve onarımlarını yapma ile ilgili bilgi ve becerilerin kazandırılması amaçlanmaktadır.",
+      "ogrenmeBirimleri": [
+        { "adi": "Hidrolik Devre Elemanları", "kazanimlar": ["Hidrolik devre elemanlarının seçimini yapar.", "Hidrolik devre çizimleri yapar.", "Hidrolik devre elemanlarının montajını yapar.", "Hidrolik boru montajı yapar.", "Hidrolik akışkan seçimi yapar."] },
+        { "adi": "Hidrolik Devrelerde Bakım Planı", "kazanimlar": ["Bakım planı ve tamirat dosyasını hazırlar.", "Arızalı tesisatları sökerek bakımını yapar."] },
+        { "adi": "Hidrolik Devre Elemanları Bakım ve Onarımı", "kazanimlar": ["Hidrolik valflerde arıza arar.", "Hidrolik silindirlerde arıza arar.", "Hidrolik pompa ve motorlarda arıza arar."] },
+        { "adi": "Pnömatik Devre Elemanları", "kazanimlar": ["Pnömatik devre elemanlarının seçimi yapar.", "Pnömatik devre çizimi yapar.", "Pnömatik devre elemanlarının montajını yapar.", "Pnömatik sistemlerin kurulumunu yapar."] },
+        { "adi": "Pnömatik Devrelerde Bakım Planı", "kazanimlar": ["Pnömatik sistemlerin bakım planını hazırlar.", "Pnömatik sistemlerde arıza arar."] }
+      ]
+    },
+    {
+      "dersAdi": "Temel Elektrik",
+      "dal": "MAKİNE BAKIM ONARIM",
+      "dersSaati": 2,
+      "amac": "Bu derste öğrenciye; iş sağlığı ve güvenliği tedbirlerini alarak iletkenleri bağlantıya hazırlama, iletkenlerin bağlantılarını yapma, basit elektrik devrelerini kurma, faz kontrolü yapma ve motor devir yönünü değiştirme ile ilgili bilgi ve becerilerin kazandırılması amaçlanmaktadır.",
+      "ogrenmeBirimleri": [
+        { "adi": "İletkenleri Bağlantıya Hazırlama", "kazanimlar": ["İletkenleri keser.", "İletken üzerindeki yalıtkanı soyar.", "İletkenleri büker."] },
+        { "adi": "İletkenleri Ekleme ve Bağlama", "kazanimlar": ["Tekli düz ek yapar.", "Çiftli düz ek yapar.", "Klemens ile bağlantı yapar.", "İletkenlerin terminale bağlantısını yapar.", "Topraklı fiş ve prize kablo bağlantısı yapar."] },
+        { "adi": "Elektrik Devresi Kurma ve Faz Kontrolü", "kazanimlar": ["Basit elektrik devrelerini kurar ve çalıştırır.", "Basit faz (enerji) kontrolü yapar.", "Basit müdahale ile motor devir yönünü değiştirir."] }
+      ]
+    }
+  ],
+  "not_12Sinif": "12-A (MBO) ve 12-B (BMİ) tamamen İşletmelerde Mesleki Eğitim (staj, 24 saat) -- okulda meslek dersi yok, bu app'te koordinatörlük/işletme ziyaret sistemi olarak modelleniyor. Ayrı bir öğrenme birimi/kazanım tablosu bu çerçeve programda 12. sınıf için verilmiyor (staj yönergesine tabi)."
+}
