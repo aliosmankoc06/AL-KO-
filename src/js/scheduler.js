@@ -332,6 +332,20 @@ function teacherWorkingDayCount(teacherId) {
 function totalTeacherWorkingDays() {
   return S.teachers.reduce((s, t) => s + teacherWorkingDayCount(t.id), 0);
 }
+// Bir öğretmenin ders saatlerini sığdırmak için matematiksel olarak gereken
+// en az gün sayısının ÜZERİNDE kaç gün kullanılmış (ör. 29 saat, günde en
+// çok 10 saat -> en az 3 gün yeter; 4 gün kullanılıyorsa 1 gün "fazladan").
+// Her fazladan gün, o öğretmene bir koordinatörlük ziyareti (8 saat) daha
+// alabileceği bir tam boş günü elinden alıyor demektir.
+function teacherWorkingDayExcess(teacherId) {
+  const days = teacherWorkingDayCount(teacherId);
+  const dersSaat = teacherTotalHours(teacherId) - teacherCoordHours(teacherId);
+  const minDays = dersSaat > 0 ? Math.ceil(dersSaat / S.hoursPerDay) : 0;
+  return Math.max(0, days - minDays);
+}
+function totalTeacherWorkingDayExcess() {
+  return S.teachers.reduce((s, t) => s + teacherWorkingDayExcess(t.id), 0);
+}
 
 function scheduleQualityScore() {
   let unplaced = 0;
@@ -365,7 +379,8 @@ function scheduleQualityScore() {
   const spreadPenalty = spread <= 3 ? spread : (spread - 3) * 120 + 3;
   const koordSpreadPenalty = koordSpread <= 4 ? koordSpread * 2 : (koordSpread - 4) * 100 + 8;
   const workingDays = totalTeacherWorkingDays();
-  return { unplaced, spread, koordSpread, under20, capPenalty, gaps: totalGapCount(), workingDays, score: unplaced * 1000 + totalGapCount() * 300 + under20 * 40 + workingDays * 25 + totalClassGapCount() * 15 + totalLateStartSum() * 3 + spreadPenalty + koordSpreadPenalty + capPenalty };
+  const workingDayExcess = totalTeacherWorkingDayExcess();
+  return { unplaced, spread, koordSpread, under20, capPenalty, gaps: totalGapCount(), workingDays, workingDayExcess, score: unplaced * 1000 + totalGapCount() * 300 + workingDayExcess * 200 + under20 * 40 + totalClassGapCount() * 15 + totalLateStartSum() * 3 + spreadPenalty + koordSpreadPenalty + capPenalty };
 }
 
 function taskDifficulty(t) {
@@ -471,12 +486,18 @@ function distributeAllBestAsync(attempts, onDone, onProgress) {
     failed += koordFailed.length;
     failedList = failedList.concat(koordFailed.map(name => ({ isletmeName: name })));
     const q = scheduleQualityScore();
+    // Yerleşemeyen koordinatörlük ziyaretleri de arama sırasında hesaba
+    // katılmalı — yoksa "en iyi" seçilen deneme, ders saatlerini tam
+    // yerleştirdiği için eşit sayılıyor ama koordinatörlüğü gereksiz yere
+    // az yerleştirmiş olabiliyordu. Yine de ders saati eksikliğinden
+    // (unplaced*1000) daha hafif tutulur — öncelik her zaman derste kalır.
+    const combinedScore = q.score + koordFailed.length * 400;
     const snapshot = JSON.parse(JSON.stringify(S.schedule));
-    if (bestScoreValue === null || q.score < bestScoreValue) {
-      bestScoreValue = q.score;
-      candidates = [{ schedule: snapshot, result: { placed, failed, failedList, score: q.score } }];
-    } else if (q.score === bestScoreValue) {
-      if (candidates.length < 25) candidates.push({ schedule: snapshot, result: { placed, failed, failedList, score: q.score } });
+    if (bestScoreValue === null || combinedScore < bestScoreValue) {
+      bestScoreValue = combinedScore;
+      candidates = [{ schedule: snapshot, result: { placed, failed, failedList, score: combinedScore } }];
+    } else if (combinedScore === bestScoreValue) {
+      if (candidates.length < 25) candidates.push({ schedule: snapshot, result: { placed, failed, failedList, score: combinedScore } });
     }
   }
   runChunked(attempts, attempt, (done, total) => { if (onProgress) onProgress(done, total, bestScoreValue); }, () => {
