@@ -117,7 +117,8 @@ function defaultState() {
     teacherBlockedSlots: {},
     coordAssignments: [],
     isletmeler: [],
-    isletmeTeacherAssign: {}
+    isletmeTeacherAssign: {},
+    students: []
   };
 }
 
@@ -133,7 +134,8 @@ function emptyState() {
     teacherBlockedSlots: {},
     coordAssignments: [],
     isletmeler: [],
-    isletmeTeacherAssign: {}
+    isletmeTeacherAssign: {},
+    students: []
   };
 }
 
@@ -144,6 +146,74 @@ function normalizeState(s) {
   if (!s.coordAssignments) s.coordAssignments = [];
   if (!s.isletmeler) s.isletmeler = [];
   if (!s.isletmeTeacherAssign) s.isletmeTeacherAssign = {};
+  if (!Array.isArray(s.students)) s.students = [];
+  if (!s.seededIsletmeler2026) {
+    s.seededIsletmeler2026 = true;
+    const seed = [
+      ["TKİ Ege Linyitleri İşletmesi Müdürlüğü", ["psc", "cpc"]],
+      ["Defas Madencilik San. ve Tic. A.Ş.", ["psc"]],
+      ["Hidro-Gen Enerji", ["psc", "cpc"]],
+      ["Arıksan Metal", ["psc", "cpc"]],
+      ["İmbat Madencilik", ["psc", "cpc"]],
+      ["Bulut Metal", ["psc", "cpc", "mesem"]],
+      ["Zinba Makina Sanayi", ["psc"]],
+      ["Zirve Makina", ["psc", "mesem"]],
+      ["Uysal Torna (Muhammet Uysal)", ["psc"]],
+      ["Ürün Taşlama (Aycan Ürün)", ["psc"]],
+      ["Özaltınbay Mermer", ["mesem"]]
+    ];
+    seed.forEach(([name, groups]) => {
+      const existing = s.isletmeler.find(i => i.name.toLowerCase() === name.toLowerCase());
+      if (existing) {
+        groups.forEach(g => { if (!existing.groups.includes(g)) existing.groups.push(g); });
+      } else {
+        s.isletmeler.push({ id: uid("isletme"), name, groups: groups.slice() });
+      }
+    });
+    const studentSeed = [
+      ["12/A", "1008", "Zafer Sarı", "MBO", "TKİ Ege Linyitleri İşletmesi Müdürlüğü"],
+      ["12/A", "23014", "Ramazan Övek", "MBO", "TKİ Ege Linyitleri İşletmesi Müdürlüğü"],
+      ["12/A", "23100", "Mert Kocabıyık", "MBO", "TKİ Ege Linyitleri İşletmesi Müdürlüğü"],
+      ["12/A", "23107", "Hasan Mert Anaç", "MBO", "TKİ Ege Linyitleri İşletmesi Müdürlüğü"],
+      ["12/A", "23245", "Ahmet Cemil Yıldız", "MBO", "TKİ Ege Linyitleri İşletmesi Müdürlüğü"],
+      ["12/A", "23060", "Mehmet Kazım Uzun", "MBO", "Defas Madencilik San. ve Tic. A.Ş."],
+      ["12/A", "23068", "Sadettin Aksu", "MBO", ""],
+      ["12/A", "23081", "Batıkan Alemdar Taşpınar", "MBO", "Defas Madencilik San. ve Tic. A.Ş."],
+      ["12/A", "23046", "Tunahan Teker", "MBO", "Hidro-Gen Enerji"],
+      ["12/A", "23077", "Cengizhan Gezgin", "MBO", "Hidro-Gen Enerji"],
+      ["12/A", "23050", "Yaşar Arda Cal", "MBO", "Arıksan Metal"],
+      ["12/A", "23087", "Yusuf Efe Cal", "MBO", "Arıksan Metal"],
+      ["12/A", "23238", "Arda Yılmaz", "MBO", "Arıksan Metal"],
+      ["12/A", "23104", "Ali Han Çelik", "MBO", "İmbat Madencilik"],
+      ["12/A", "23117", "Salih Agcık", "MBO", "İmbat Madencilik"],
+      ["12/A", "23113", "Muhammet Emin Kılıç", "MBO", "Bulut Metal"],
+      ["12/A", "23034", "Ali Yılmaz", "MBO", "Zinba Makina Sanayi"],
+      ["12/A", "23110", "Süleyman Çoban", "MBO", "Zirve Makina"],
+      ["12/A", "23015", "İsmail Sivri", "MBO", "Uysal Torna (Muhammet Uysal)"],
+      ["12/A", "23102", "Hüseyin Yekta Şenlik", "MBO", ""],
+      ["12/A", "23112", "Emirhan Ertürk", "MBO", "Ürün Taşlama (Aycan Ürün)"],
+      ["12/A", "22", "Halil Yanık", "MBO", "Bulut Metal"],
+      ["12/B", "23010", "Emirhan Yaslan", "BMİ", "TKİ Ege Linyitleri İşletmesi Müdürlüğü"],
+      ["12/B", "23021", "Yiğit Afacan", "BMİ", "TKİ Ege Linyitleri İşletmesi Müdürlüğü"],
+      ["12/B", "23026", "Yağız Şenhan", "BMİ", "TKİ Ege Linyitleri İşletmesi Müdürlüğü"],
+      ["12/B", "23054", "Samet Yalın", "BMİ", "TKİ Ege Linyitleri İşletmesi Müdürlüğü"],
+      ["12/B", "23105", "Efe Eşref Özdılkural", "BMİ", "TKİ Ege Linyitleri İşletmesi Müdürlüğü"],
+      ["12/B", "23058", "Mehmet Can Çelebi", "BMİ", ""],
+      ["12/B", "23109", "Eren Olum", "BMİ", ""],
+      ["12/B", "23085", "Muhammet Toprak", "BMİ", "Arıksan Metal"],
+      ["12/B", "23249", "Ege Genç", "BMİ", "Arıksan Metal"],
+      ["12/B", "22117", "Hüseyin Anıl Koç", "BMİ", "Hidro-Gen Enerji"],
+      ["12/B", "23053", "Mert Berat Varlı", "BMİ", "İmbat Madencilik"],
+      ["12/B", "23093", "Fahri Can Ilgaz", "BMİ", "İmbat Madencilik"],
+      ["12/B", "22102", "Ramazan Doganer", "BMİ", "Bulut Metal"],
+      ["12/B", "23007", "Talha Ömer Yağmur", "BMİ", "Bulut Metal"],
+      ["12/B", "202501", "Bülent Alp Özkan", "BMİ", "Zirve Makina"],
+      ["11/C", "713", "Emirhan Türkmen", "MBO", "Özaltınbay Mermer"]
+    ];
+    studentSeed.forEach(([sinif, okulNo, ad, dal, isletme]) => {
+      s.students.push({ id: uid("st"), sinif, okulNo, ad, dal, isletme });
+    });
+  }
   if (s.coordAssignments.length > 0 || s.classes.some(c => c.id && c.id.startsWith("koord-"))) {
     s.coordAssignments = [];
     s.classes = s.classes.filter(c => !(c.id && c.id.startsWith("koord-")));

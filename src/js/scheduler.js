@@ -521,15 +521,22 @@ function placeCoordinatorTasks() {
   const failed = [];
   let tasks = [];
   S.isletmeler.forEach(isl => {
+    // psc/cpc birleştirme mantığı sadece bu ikisi arasında geçerli; mesem gibi
+    // üçüncü bir grup varsa (aynı işletme hem staj hem MESEM alıyor olabilir)
+    // o her zaman kendi ayrı ziyaretini alır, coin-flip'ten etkilenmez.
     const shared = isPscCpcShared(isl);
     if (shared && Math.random() < 0.5) {
       tasks.push({ isl, allowedDays: [2], label: "ortak (Çarşamba)" });
     } else {
-      isl.groups.forEach(g => {
+      ['psc', 'cpc'].forEach(g => {
+        if (!isl.groups.includes(g)) return;
         const days = shared ? GROUP_DAYS[g].filter(d => d !== 2) : GROUP_DAYS[g];
         tasks.push({ isl, allowedDays: days, label: GROUP_LABELS[g] });
       });
     }
+    isl.groups.filter(g => g !== 'psc' && g !== 'cpc').forEach(g => {
+      tasks.push({ isl, allowedDays: GROUP_DAYS[g], label: GROUP_LABELS[g] });
+    });
   });
   const buckets = {};
   tasks.forEach(t => {

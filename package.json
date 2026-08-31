@@ -1,6 +1,6 @@
 {
   "name": "alan-yonetim-sistemi",
-  "productName": "Ali Osman Koç - Alan Yönetim Sistemi",
+  "productName": "Alan Yönetim Sistemi",
   "version": "1.0.0",
   "description": "Soma Mesleki ve Teknik Anadolu Lisesi Makine Teknolojisi Alanı - Ders Programı ve Alan Yönetim Sistemi",
   "main": "electron/main.js",

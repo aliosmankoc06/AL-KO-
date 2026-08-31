@@ -61,7 +61,7 @@ function renderMain() {
   if (activeModule === "gunluk-plan") { el.innerHTML = viewPlaceholderModule("Günlük Plan", "Günlük ders planı şablonunuzu buraya birlikte kuracağız."); return; }
   if (activeModule === "okul-zumresi") { el.innerHTML = viewPlaceholderModule("Okul Zümresi", "Okul zümre toplantı tutanaklarınızı buraya birlikte kuracağız."); return; }
   if (activeModule === "il-zumresi") { el.innerHTML = viewPlaceholderModule("İl Zümresi", "İl zümre toplantı tutanaklarınızı buraya birlikte kuracağız."); return; }
-  if (activeModule === "staj-yerlestirme") { el.innerHTML = viewPlaceholderModule("Staj Yerleştirme", "Öğrencilerin işletmelere staj yerleştirme sürecini buraya birlikte kuracağız."); return; }
+  if (activeModule === "staj-yerlestirme") { el.innerHTML = viewStajYerlestirme(); return; }
   if (activeTab === "havuz") el.innerHTML = viewHavuz();
   else if (activeTab === "ogretmen") el.innerHTML = viewOgretmen();
   else if (activeTab === "sinif") el.innerHTML = viewSinif();
@@ -239,6 +239,94 @@ function renderSavedProgramsCard() {
   </div>`;
 }
 
+/* ---- Staj Yerleştirme ---- */
+function studentIsletmeOptions(selected) {
+  const names = S.isletmeler.map(i => i.name);
+  if (selected && !names.includes(selected)) names.unshift(selected);
+  return `<option value="">— seçilmedi —</option>` + names.map(n => `<option value="${n}" ${n === selected ? 'selected' : ''}>${n}</option>`).join("");
+}
+function viewStajYerlestirme() {
+  const bySinif = {};
+  S.students.forEach(st => {
+    const key = st.sinif || "—";
+    if (!bySinif[key]) bySinif[key] = [];
+    bySinif[key].push(st);
+  });
+  const sinifKeys = Object.keys(bySinif).sort();
+  const listHtml = sinifKeys.map(sinif => {
+    const rows = bySinif[sinif].map(st => `
+      <tr>
+        <td>${st.okulNo || ''}</td>
+        <td>${st.ad}</td>
+        <td>${st.dal || ''}</td>
+        <td><select onchange="setStudentIsletme('${st.id}', this.value)">${studentIsletmeOptions(st.isletme)}</select></td>
+        <td><button class="btn danger" onclick="deleteStudent('${st.id}')">Sil</button></td>
+      </tr>`).join("");
+    return `<h2 style="margin-top:16px;">${sinif}</h2><table><tr><th>Okul No</th><th>Ad Soyad</th><th>Dal</th><th>İşletme</th><th></th></tr>${rows}</table>`;
+  }).join("") || `<p class="small">Henüz öğrenci eklenmedi.</p>`;
+
+  return `
+  <div class="card">
+    <h2>Staj Yerleştirme — Öğrenci Listesi</h2>
+    <p class="small">Hangi öğrencinin hangi işletmede staj yaptığını burada takip edin. İşletme sütunundaki listeyi <b>Koordinatörlük</b> sekmesine eklediğiniz işletmeler doldurur.</p>
+    ${listHtml}
+  </div>
+  <div class="card">
+    <h2>Öğrenci Ekle</h2>
+    <div class="grid3">
+      <div><label class="small">Sınıf</label><input type="text" id="ns-sinif" placeholder="örn. 12/A" style="width:100%"></div>
+      <div><label class="small">Okul No</label><input type="text" id="ns-okulno" style="width:100%"></div>
+      <div><label class="small">Ad Soyad</label><input type="text" id="ns-ad" style="width:100%"></div>
+      <div><label class="small">Dal</label><input type="text" id="ns-dal" placeholder="örn. MBO" style="width:100%"></div>
+      <div><label class="small">İşletme</label><select id="ns-isletme" style="width:100%">${studentIsletmeOptions()}</select></div>
+    </div>
+    <div class="row" style="max-width:200px"><button class="btn primary" onclick="addStudent()">Ekle</button></div>
+  </div>
+  <div class="card">
+    <h2>Excel'den Toplu Ekle</h2>
+    <p class="small">Excel dosyanızdaki Sınıf, Okul No, Ad Soyad, Dal, İşletme sütunlarını seçip kopyalayın (Ctrl+C), aşağıya yapıştırın (Ctrl+V) ve "İçe Aktar"a basın. Her satır bir öğrenci olmalı.</p>
+    <textarea id="bulk-student-paste" style="width:100%;height:120px;font-family:monospace;font-size:11.5px;" placeholder="12/A&#9;23014&#9;Ramazan Övek&#9;MBO&#9;TKİ Ege Linyitleri İşletmesi Müdürlüğü"></textarea>
+    <div class="row" style="max-width:200px"><button class="btn primary" onclick="bulkImportStudents()">İçe Aktar</button></div>
+  </div>`;
+}
+function addStudent() {
+  const sinif = document.getElementById("ns-sinif").value.trim();
+  const okulNo = document.getElementById("ns-okulno").value.trim();
+  const ad = document.getElementById("ns-ad").value.trim();
+  const dal = document.getElementById("ns-dal").value.trim();
+  const isletme = document.getElementById("ns-isletme").value;
+  if (!ad) { alert("Öğrenci adı girin."); return; }
+  S.students.push({ id: uid("st"), sinif, okulNo, ad, dal, isletme });
+  save(); renderMain();
+}
+function deleteStudent(id) {
+  if (!confirm("Bu öğrenciyi listeden silmek istiyor musunuz?")) return;
+  S.students = S.students.filter(s => s.id !== id);
+  save(); renderMain();
+}
+function setStudentIsletme(id, isletme) {
+  const st = S.students.find(s => s.id === id);
+  if (st) st.isletme = isletme;
+  save(); renderMain();
+}
+function bulkImportStudents() {
+  const raw = document.getElementById("bulk-student-paste").value;
+  const lines = raw.split("\n").map(l => l.replace(/\r$/, "")).filter(l => l.trim());
+  let added = 0;
+  lines.forEach(line => {
+    const cols = line.split("\t");
+    if (cols.length < 3) return;
+    const [sinif, okulNo, ad, dal, isletme] = cols;
+    if (!ad || !ad.trim()) return;
+    S.students.push({ id: uid("st"), sinif: (sinif || "").trim(), okulNo: (okulNo || "").trim(), ad: ad.trim(), dal: (dal || "").trim(), isletme: (isletme || "").trim() });
+    added++;
+  });
+  save();
+  document.getElementById("bulk-student-paste").value = "";
+  renderMain();
+  alert(`${added} öğrenci eklendi.`);
+}
+
 function viewPlaceholderModule(title, hint) {
   return `
   <div class="card" style="text-align:center;padding:50px 20px;">
@@ -281,7 +369,7 @@ function systemHealthSummary() {
 function viewAna() {
   return `
   <div class="hero-card">
-    <h2>Ali Osman Koç — Alan Yönetim Sistemi</h2>
+    <h2>Alan Yönetim Sistemi</h2>
     <p class="small">Soma Mesleki ve Teknik Anadolu Lisesi · Makine Teknolojisi Alanı</p>
   </div>
   ${Object.keys(S.schedule).length > 0 ? systemHealthSummary() : ``}
@@ -294,13 +382,6 @@ function viewAna() {
     <h2>Devam edin</h2>
     <p class="small">Yukarıdaki <b>Ders Programı</b> sekmesinden çalışmaya devam edin.</p>
     <button class="btn primary" onclick="setModule('ders-programi')">Ders Programına Git</button>
-  </div>
-  <div class="card">
-    <h2>Diğer Seçenekler</h2>
-    <div class="row" style="max-width:560px;flex-wrap:wrap;">
-      <button class="btn" onclick="restoreSchoolDefaults()">${icon('school')} Okulun Ders Havuzu/Öğretmen Listesiyle Başla</button>
-      <button class="btn danger" onclick="startNewProgram()">${icon('new')} Tamamen Boş Bir Dosyayla Başla</button>
-    </div>
   </div>
   ${renderSavedProgramsCard()}
   ${renderBackupCard()}`;
