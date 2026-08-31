@@ -43,6 +43,26 @@ function shuffle(arr) {
   return a;
 }
 
+/* ------------------------------------------------------------
+   ORTAK-ZIT DERSLER (ders çakışma kuralları)
+   ------------------------------------------------------------ */
+function lunchHourIndex() { return Math.floor(S.hoursPerDay / 2); }
+function blockCrossesLunch(hour, len) {
+  const lh = lunchHourIndex();
+  return hour < lh && (hour + len) > lh;
+}
+function courseConflictPartners(courseId) {
+  const out = [];
+  (S.noSameDayPairs || []).forEach(p => {
+    if (p.courseIdA === courseId) out.push(p.courseIdB);
+    if (p.courseIdB === courseId) out.push(p.courseIdA);
+  });
+  return out;
+}
+function classHasCourseOnDay(classId, day, courseId) {
+  return Object.values(S.schedule).some(c => c.classId === classId && c.day === day && c.courseId === courseId);
+}
+
 function areRoomsFree(roomIds, day, hour, exceptKey) {
   const rooms = (roomIds || []).filter(Boolean);
   if (rooms.length === 0) return true;
@@ -216,11 +236,15 @@ function tryPlaceAssignmentWithTeam(cls, assignment, blocks, team, commit) {
     return !reservations.some(r => r.type === 'room' && rooms.includes(r.id) && r.day === day && r.hour === hour);
   }
   const schoolDays = (cls.schoolDays && cls.schoolDays.length) ? cls.schoolDays : [0, 1, 2, 3, 4];
+  const conflictPartners = courseConflictPartners(assignment.courseId);
+  const noLunchSplit = (S.noLunchSplitCourseIds || []).includes(assignment.courseId);
   const placements = [];
   for (const len of blocks) {
     let placed = false;
     for (const day of schoolDays) {
+      if (conflictPartners.some(pid => classHasCourseOnDay(cls.id, day, pid))) continue;
       for (let hour = 0; hour <= S.hoursPerDay - len; hour++) {
+        if (noLunchSplit && blockCrossesLunch(hour, len)) continue;
         let ok = true;
         for (let h = hour; h < hour + len; h++) {
           if (!classFreeSim(day, h)) { ok = false; break; }

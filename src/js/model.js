@@ -117,7 +117,9 @@ function defaultState() {
     teacherBlockedSlots: {},
     coordAssignments: [],
     isletmeler: [],
-    isletmeTeacherAssign: {}
+    isletmeTeacherAssign: {},
+    noSameDayPairs: [],
+    noLunchSplitCourseIds: []
   };
 }
 
@@ -133,7 +135,9 @@ function emptyState() {
     teacherBlockedSlots: {},
     coordAssignments: [],
     isletmeler: [],
-    isletmeTeacherAssign: {}
+    isletmeTeacherAssign: {},
+    noSameDayPairs: [],
+    noLunchSplitCourseIds: []
   };
 }
 
@@ -144,6 +148,8 @@ function normalizeState(s) {
   if (!s.coordAssignments) s.coordAssignments = [];
   if (!s.isletmeler) s.isletmeler = [];
   if (!s.isletmeTeacherAssign) s.isletmeTeacherAssign = {};
+  if (!Array.isArray(s.noSameDayPairs)) s.noSameDayPairs = [];
+  if (!Array.isArray(s.noLunchSplitCourseIds)) s.noLunchSplitCourseIds = [];
   if (s.coordAssignments.length > 0 || s.classes.some(c => c.id && c.id.startsWith("koord-"))) {
     s.coordAssignments = [];
     s.classes = s.classes.filter(c => !(c.id && c.id.startsWith("koord-")));

@@ -10,6 +10,8 @@ const DERS_PROGRAMI_TABS = [
   { id: "havuz", label: "Ders Havuzu", icon: "book" },
   { id: "ogretmen", label: "Öğretmenler", icon: "users" },
   { id: "sinif", label: "Sınıflar ve Ders Atama", icon: "school" },
+  { id: "mekanlar", label: "Fiziki Mekanlar", icon: "room" },
+  { id: "kurallar", label: "Ortak-Zıt Dersler", icon: "link" },
   { id: "koordinatorluk", label: "Koordinatörlük", icon: "building" },
   { id: "dagitim", label: "Ders Dağıtım", icon: "shuffle" },
   { id: "programlar", label: "Programlar", icon: "grid" }
@@ -61,6 +63,8 @@ function renderMain() {
   if (activeTab === "havuz") el.innerHTML = viewHavuz();
   else if (activeTab === "ogretmen") el.innerHTML = viewOgretmen();
   else if (activeTab === "sinif") el.innerHTML = viewSinif();
+  else if (activeTab === "mekanlar") el.innerHTML = viewMekanlar();
+  else if (activeTab === "kurallar") el.innerHTML = viewKurallar();
   else if (activeTab === "dagitim") el.innerHTML = viewDagitim();
   else if (activeTab === "koordinatorluk") el.innerHTML = viewKoordinatorluk();
   else if (activeTab === "programlar") el.innerHTML = viewProgramlar();
@@ -345,6 +349,17 @@ function deleteCourse(id) {
 }
 
 /* ---- Öğretmenler ---- */
+function teacherTitleLabel(teacherId) {
+  const idari = classById("cl-idari");
+  if (!idari) return "Öğretmen";
+  const a = idari.assignments.find(x => (x.eligibleTeacherIds || []).includes(teacherId));
+  if (!a) return "Öğretmen";
+  const course = courseById(a.courseId);
+  if (!course) return "Öğretmen";
+  if (course.id === "pbo-10") return "Alan Şefi";
+  if (course.id === "pbo-6") return "Atölye Şefi";
+  return "Öğretmen";
+}
 function viewOgretmen() {
   const rows = S.teachers.map(t => {
     const hrs = teacherTotalHours(t.id);
@@ -352,8 +367,9 @@ function viewOgretmen() {
     const target = (typeof t.hoursTarget === "number") ? t.hoursTarget : "";
     const mode = t.hoursMode || "min";
     const coordEligible = t.coordEligible !== false;
+    const title = teacherTitleLabel(t.id);
     return `<tr>
-      <td>${t.name}</td>
+      <td>${t.name} ${title !== 'Öğretmen' ? `<span class="pill info">${title}</span>` : ''}</td>
       <td>${dersSaat}</td>
       <td><input type="number" min="0" placeholder="—" value="${target}" style="width:70px" onchange="setTeacherHoursTarget('${t.id}',this.value)"></td>
       <td><select onchange="setTeacherHoursMode('${t.id}',this.value)">
@@ -534,6 +550,11 @@ function viewSinif() {
         </label>`).join("");
       const locked = isAssignmentLocked(cls.id, a.id);
       const placement = assignmentPlacementSummary(cls.id, a.id);
+      const roomChecks = S.rooms.map(r => `
+        <label style="margin-right:10px;font-size:12px;">
+          <input type="checkbox" ${(a.roomIds || []).includes(r.id) ? 'checked' : ''} onchange="toggleAssignmentRoom('${cls.id}','${a.id}','${r.id}')"> ${r.name}
+        </label>`).join("") || `<p class="small">Önce Fiziki Mekanlar sekmesinden mekan ekleyin.</p>`;
+      const roomNames = (a.roomIds || []).map(rid => { const r = roomById(rid); return r ? r.name : null; }).filter(Boolean);
       return `
         <div class="card" style="padding:10px 14px;margin-bottom:8px;${locked ? 'border-color:var(--teal);background:var(--teal-bg);' : ''}">
           <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
@@ -557,6 +578,10 @@ function viewSinif() {
               <button class="btn" style="padding:4px 9px;font-size:11.5px;" onclick="setAllEligible('${cls.id}','${a.id}',false)">Hepsini Kaldır (tek tek seç)</button>
               <div style="margin-top:6px;">${teacherChecks}</div>
             </div>
+          </details>
+          <details style="margin-top:6px;">
+            <summary class="small" style="cursor:pointer;color:var(--ink-soft);">Bu ders belirli bir mekana bağlansın (opsiyonel) ${roomNames.length ? '<span class="pill info">' + roomNames.join(', ') + '</span>' : ''}</summary>
+            <div style="margin-top:6px;">${roomChecks}</div>
           </details>
         </div>`;
     }).join("");
@@ -720,6 +745,141 @@ function setAllEligible(classId, assignmentId, on) {
   const cls = classById(classId);
   const a = cls.assignments.find(x => x.id === assignmentId);
   a.eligibleTeacherIds = on ? S.teachers.map(t => t.id) : [];
+  save(); renderMain();
+}
+function toggleAssignmentRoom(classId, assignmentId, roomId) {
+  const cls = classById(classId);
+  const a = cls.assignments.find(x => x.id === assignmentId);
+  if (!a.roomIds) a.roomIds = [];
+  if (a.roomIds.includes(roomId)) a.roomIds = a.roomIds.filter(x => x !== roomId);
+  else a.roomIds.push(roomId);
+  save(); renderMain();
+}
+
+/* ---- Fiziki Mekanlar ---- */
+let activeRoomId = S.rooms[0] ? S.rooms[0].id : null;
+function roomWeeklyUsage(roomId) {
+  const grid = {};
+  Object.values(S.schedule).forEach(cell => {
+    if ((cell.roomIds || []).includes(roomId)) grid[cell.day + "_" + cell.hour] = cell;
+  });
+  return grid;
+}
+function roomAssignmentCount(roomId) {
+  let n = 0;
+  S.classes.forEach(cls => cls.assignments.forEach(a => { if ((a.roomIds || []).includes(roomId)) n++; }));
+  return n;
+}
+function viewMekanlar() {
+  const rows = S.rooms.map(r => `
+    <tr>
+      <td>${r.name}</td>
+      <td>${roomAssignmentCount(r.id)} derse bağlı</td>
+      <td><button class="btn" onclick="setActiveRoom('${r.id}')">Kullanım Tablosu</button> <button class="btn danger" onclick="deleteRoom('${r.id}')">Sil</button></td>
+    </tr>`).join("") || `<tr><td colspan="3" class="small">Henüz mekan eklenmedi.</td></tr>`;
+
+  let usageHtml = `<p class="small">Kullanım tablosunu görmek için soldan bir mekan seçin.</p>`;
+  const room = roomById(activeRoomId);
+  if (room) {
+    const grid = roomWeeklyUsage(room.id);
+    let html = `<h2>${room.name} — Haftalık Kullanım</h2>`;
+    html += `<table class="sched-table"><tr><th>Saat</th>${DAYS.map(d => `<th>${d}</th>`).join("")}</tr>`;
+    for (let h = 0; h < S.hoursPerDay; h++) {
+      html += `<tr><td class="small" style="text-align:center;">${h + 1}</td>`;
+      DAYS.forEach((d, day) => {
+        const cell = grid[day + "_" + h];
+        if (cell) {
+          const course = courseById(cell.courseId);
+          const cls = classById(cell.classId);
+          html += `<td><div class="sched-cell filled"><div class="c1">${cls ? cls.name : '?'}</div><div class="c2">${course ? course.name : '?'}</div></div></td>`;
+        } else {
+          html += `<td><div class="sched-cell"></div></td>`;
+        }
+      });
+      html += "</tr>";
+    }
+    html += "</table>";
+    usageHtml = html;
+  }
+
+  return `
+  <div class="card">
+    <h2>Fiziki Mekanlar</h2>
+    <p class="small">Atölye, laboratuvar, derslik gibi mekanları buraya ekleyin. Bir dersi belirli bir mekana bağlamak için <b>Sınıflar ve Ders Atama</b> ekranındaki ilgili dersin altındaki "Bu ders belirli bir mekana bağlansın" bölümünü kullanın — dağıtım motoru o mekanı aynı saatte başka bir derse vermez.</p>
+    <table><tr><th>Mekan</th><th>Kullanım</th><th></th></tr>${rows}</table>
+    <div class="row" style="max-width:400px">
+      <input type="text" id="new-room-name" placeholder="Yeni mekan adı (örn. CNC Atölyesi)">
+      <button class="btn primary" onclick="addRoom()">Ekle</button>
+    </div>
+  </div>
+  <div class="card">${usageHtml}</div>`;
+}
+function setActiveRoom(id) { activeRoomId = id; renderMain(); }
+function addRoom() {
+  const input = document.getElementById("new-room-name");
+  const name = input.value.trim();
+  if (!name) return;
+  const r = { id: uid("r"), name };
+  S.rooms.push(r);
+  activeRoomId = r.id;
+  save(); renderMain();
+}
+function deleteRoom(id) {
+  if (!confirm("Bu mekanı silmek istiyor musunuz? Bu mekana bağlı derslerin mekan bağlantısı kaldırılır.")) return;
+  S.rooms = S.rooms.filter(r => r.id !== id);
+  S.classes.forEach(cls => cls.assignments.forEach(a => { if (a.roomIds) a.roomIds = a.roomIds.filter(x => x !== id); }));
+  Object.values(S.schedule).forEach(cell => { if (cell.roomIds) cell.roomIds = cell.roomIds.filter(x => x !== id); });
+  if (activeRoomId === id) activeRoomId = S.rooms[0] ? S.rooms[0].id : null;
+  save(); renderMain();
+}
+
+/* ---- Ortak-Zıt Dersler ---- */
+function viewKurallar() {
+  const realCourses = S.courses.filter(c => c.id !== KOORD_COURSE_ID);
+  const courseOpts = realCourses.map(c => `<option value="${c.id}">${c.name}</option>`).join("");
+  const pairRows = (S.noSameDayPairs || []).map(p => {
+    const a = courseById(p.courseIdA), b = courseById(p.courseIdB);
+    return `<tr><td>${a ? a.name : '?'}</td><td>${b ? b.name : '?'}</td><td><button class="btn danger" onclick="removeNoSameDayPair('${p.id}')">Kaldır</button></td></tr>`;
+  }).join("") || `<tr><td colspan="3" class="small">Henüz kural eklenmedi.</td></tr>`;
+
+  const lunchList = realCourses.map(c => `
+    <div class="chk-row">
+      <label style="flex:1;"><input type="checkbox" ${(S.noLunchSplitCourseIds || []).includes(c.id) ? 'checked' : ''} onchange="toggleNoLunchSplit('${c.id}')"> ${c.name}</label>
+    </div>`).join("");
+
+  return `
+  <div class="card">
+    <h2>Aynı Güne Gelmesin</h2>
+    <p class="small">Seçtiğiniz iki ders, aynı sınıfta artık aynı güne denk gelmeyecek şekilde dağıtılır (ör. iki ağır atölye dersi aynı gün üst üste binmesin). Kural, o dersi alan her sınıf için otomatik uygulanır.</p>
+    <div class="row" style="max-width:600px;">
+      <select id="nsd-a" style="width:100%">${courseOpts}</select>
+      <select id="nsd-b" style="width:100%">${courseOpts}</select>
+      <button class="btn primary" onclick="addNoSameDayPair()">Kural Ekle</button>
+    </div>
+    <table style="margin-top:10px;"><tr><th>Ders</th><th>Aynı Güne Gelmesin</th><th></th></tr>${pairRows}</table>
+  </div>
+  <div class="card">
+    <h2>Öğle Arasını Bölmesin</h2>
+    <p class="small">İşaretlediğiniz dersler, blok hâlinde yerleştirilirken öğle arasının (günün ortasının) iki yakasına bölünmeden, öğleden önce ya da öğleden sonra tek parça olarak yerleştirilir.</p>
+    ${lunchList}
+  </div>`;
+}
+function addNoSameDayPair() {
+  const a = document.getElementById("nsd-a").value;
+  const b = document.getElementById("nsd-b").value;
+  if (!a || !b || a === b) { alert("İki farklı ders seçin."); return; }
+  const exists = (S.noSameDayPairs || []).some(p => (p.courseIdA === a && p.courseIdB === b) || (p.courseIdA === b && p.courseIdB === a));
+  if (exists) { alert("Bu kural zaten ekli."); return; }
+  S.noSameDayPairs.push({ id: uid("nsd"), courseIdA: a, courseIdB: b });
+  save(); renderMain();
+}
+function removeNoSameDayPair(id) {
+  S.noSameDayPairs = S.noSameDayPairs.filter(p => p.id !== id);
+  save(); renderMain();
+}
+function toggleNoLunchSplit(courseId) {
+  if (S.noLunchSplitCourseIds.includes(courseId)) S.noLunchSplitCourseIds = S.noLunchSplitCourseIds.filter(x => x !== courseId);
+  else S.noLunchSplitCourseIds.push(courseId);
   save(); renderMain();
 }
 
