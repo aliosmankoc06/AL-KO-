@@ -26,6 +26,7 @@ let activeTeacherId = S.teachers[0] ? S.teachers[0].id : null;
 let multiSelectMode = false;
 let selectedTeacherCells = new Set();
 let activeOffTeacherId = null;
+let activePlanSistem = "maarif";
 
 function renderTabbar() {
   document.getElementById("tabbar").innerHTML = MODULES.map(m =>
@@ -57,8 +58,8 @@ function renderMain() {
   const el = document.getElementById("main");
   if (activeModule === "ana") { el.innerHTML = viewAna(); return; }
   if (activeModule === "ders-programi-secim") { el.innerHTML = viewDersProgramiChooser(); return; }
-  if (activeModule === "yillik-plan") { el.innerHTML = viewPlaceholderModule("Yıllık Plan", "Alan/dal yıllık ders planlarınızı buraya birlikte kuracağız."); return; }
-  if (activeModule === "gunluk-plan") { el.innerHTML = viewPlaceholderModule("Günlük Plan", "Günlük ders planı şablonunuzu buraya birlikte kuracağız."); return; }
+  if (activeModule === "yillik-plan") { el.innerHTML = viewPlanModule("yillik"); return; }
+  if (activeModule === "gunluk-plan") { el.innerHTML = viewPlanModule("gunluk"); return; }
   if (activeModule === "okul-zumresi") { el.innerHTML = viewPlaceholderModule("Okul Zümresi", "Okul zümre toplantı tutanaklarınızı buraya birlikte kuracağız."); return; }
   if (activeModule === "il-zumresi") { el.innerHTML = viewPlaceholderModule("İl Zümresi", "İl zümre toplantı tutanaklarınızı buraya birlikte kuracağız."); return; }
   if (activeModule === "staj-yerlestirme") { el.innerHTML = viewStajYerlestirme(); return; }
@@ -333,6 +334,60 @@ function viewPlaceholderModule(title, hint) {
     <h2>${title}</h2>
     <p class="small">Bu bölüm şimdilik boş — ${hint}</p>
     <p class="small">Kullandığınız gerçek belge/şablonu (Word, PDF, Excel — boş şablon olsa yeter) gönderin, birebir buna göre dolduralım.</p>
+  </div>`;
+}
+
+/* ---- Yıllık Plan / Günlük Plan (Eski Sistem / Maarif Model) ---- */
+function setPlanSistem(id) { activePlanSistem = id; renderMain(); }
+function removeEskiSistem() {
+  if (!confirm("Eski Sistem sekmesi Yıllık Plan ve Günlük Plan'dan kalıcı olarak kaldırılacak, sadece Maarif Model kalacak. Devam etmeden önce Dosya menüsünden yedek almanızı öneririz. Devam edilsin mi?")) return;
+  S.eskiSistemKaldirildi = true;
+  activePlanSistem = "maarif";
+  save();
+  renderMain();
+}
+function viewPlanModule(kind) {
+  const title = kind === "yillik" ? "Yıllık Plan" : "Günlük Plan";
+  const aciklama = kind === "yillik"
+    ? "Her dersin öğrenme birimlerini yıl içindeki haftalara dağıtacağımız bölüm."
+    : "Her günün hangi öğrenme birimi/kazanımı işleyeceğini gösteren günlük ders planı şablonu.";
+  if (S.eskiSistemKaldirildi) activePlanSistem = "maarif";
+  const sistemler = S.eskiSistemKaldirildi ? ["maarif"] : ["maarif", "eski"];
+  const tabs = sistemler.map(id =>
+    `<button class="btn ${activePlanSistem === id ? 'primary' : ''}" onclick="setPlanSistem('${id}')">${CURRICULUM[id].label}</button>`
+  ).join(" ");
+  const data = CURRICULUM[activePlanSistem];
+  const grades = Object.keys(data.grades).sort((a, b) => a - b);
+  const gradeCards = grades.map(g => {
+    const gr = data.grades[g];
+    const dersHtml = gr.dersler.length === 0
+      ? `<p class="small">${gr.not || "Bu sınıf seviyesi için okulda ayrı ders/öğrenme birimi bulunmuyor."}</p>`
+      : gr.dersler.map(d => `
+        <div style="margin-bottom:10px;">
+          <div class="row" style="justify-content:space-between;">
+            <b>${d.ad}</b><span class="pill info">${d.saat} sa/hafta</span>
+          </div>
+          ${d.ogrenmeBirimleri.length ? `<p class="small" style="margin-top:4px;">${d.ogrenmeBirimleri.join(" · ")}</p>` : ""}
+        </div>`).join("");
+    return `
+    <div class="card">
+      <h3>${g}. Sınıf <span class="small">(${gr.dal})</span></h3>
+      ${dersHtml}
+    </div>`;
+  }).join("");
+  const eskiSistemButon = (activePlanSistem === "eski" && !S.eskiSistemKaldirildi)
+    ? `<button class="btn danger" style="margin-left:8px;" onclick="removeEskiSistem()">Eski Sistemi Kalıcı Olarak Kaldır</button>`
+    : "";
+  return `
+  <div class="card">
+    <h2>${title}</h2>
+    <p class="small">${aciklama}</p>
+    <p class="small">MEB müfredat reformu kademeli işliyor: 2025-2026'da sadece 9. sınıf Maarif Model'e geçti, 10-12. sınıflar hâlâ eski çerçeve programa tabi. Bütün sınıflar Maarif Model'e geçtiğinde "Eski Sistem" sekmesini kalıcı olarak kaldırabilirsiniz.</p>
+    <div class="row" style="margin-top:10px;">${tabs}${eskiSistemButon}</div>
+  </div>
+  ${gradeCards}
+  <div class="card small" style="text-align:center;padding:30px 20px;">
+    Ders bilgi formlarını gönderdikçe her öğrenme birimini haftalara/günlere dağıtacak ve ölçme-değerlendirme kısmını ekleyeceğiz.
   </div>`;
 }
 

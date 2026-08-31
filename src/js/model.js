@@ -147,6 +147,7 @@ function normalizeState(s) {
   if (!s.isletmeler) s.isletmeler = [];
   if (!s.isletmeTeacherAssign) s.isletmeTeacherAssign = {};
   if (!Array.isArray(s.students)) s.students = [];
+  if (typeof s.eskiSistemKaldirildi !== "boolean") s.eskiSistemKaldirildi = false;
   if (!s.seededIsletmeler2026) {
     s.seededIsletmeler2026 = true;
     const seed = [
