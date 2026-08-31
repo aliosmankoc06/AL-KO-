@@ -63,7 +63,7 @@ function renderMain() {
   if (activeModule === "yillik-plan") { el.innerHTML = viewPlanModule("yillik"); return; }
   if (activeModule === "gunluk-plan") { el.innerHTML = viewPlanModule("gunluk"); return; }
   if (activeModule === "norm-kadro") { el.innerHTML = viewNormKadro(); return; }
-  if (activeModule === "okul-zumresi") { el.innerHTML = viewPlaceholderModule("Okul Zümresi", "Okul zümre toplantı tutanaklarınızı buraya birlikte kuracağız."); return; }
+  if (activeModule === "okul-zumresi") { el.innerHTML = viewOkulZumresi(); return; }
   if (activeModule === "il-zumresi") { el.innerHTML = viewPlaceholderModule("İl Zümresi", "İl zümre toplantı tutanaklarınızı buraya birlikte kuracağız."); return; }
   if (activeModule === "staj-yerlestirme") { el.innerHTML = viewStajYerlestirme(); return; }
   if (activeTab === "havuz") el.innerHTML = viewHavuz();
@@ -880,6 +880,288 @@ function viewNormKadro() {
       <h2 style="margin:0;">GENEL TOPLAM DERS YÜKÜ: ${genelToplam} SAAT</h2>
       <p class="small print-only" style="margin-top:16px;">Makine ve Tasarım Teknolojisi Alan Şefi<br><b>${alanSefi ? escHtml(alanSefi.name) : ''}</b></p>
     </div>
+  </div>`;
+}
+
+/* ---- Okul Zümresi (Şube Öğretmenler Kurulu + Zümre Toplantısı) ---- */
+let activeToplantiId = null;
+const SUBE_GUNDEM_STANDART = [
+  "Öğrencilerin başarı durumlarının incelenmesi ve başarıyı artırıcı önlemlerin alınması",
+  "Derslerin öğretim programlarıyla uyumlu olarak yürütülmesi",
+  "Öğrencilerin sınıf geçme ve sınıf tekrarı durumları",
+  "Özel eğitim ihtiyacı olan kaynaştırma/bütünleştirme yoluyla eğitimlerine devam eden öğrencilerin başarısının artırılması ve eğitim hizmetlerinden daha etkin yararlanmalarının sağlanması amacıyla alınacak tedbirler, yapılması gereken iş, işlem ve planlamalar",
+  "Eğitim kaynaklarıyla atölye, laboratuvar ve diğer birimlerden güvenli bir şekilde yararlanma ve planlama",
+  "Okul çevre iş birliği",
+  "Üretim etkinliklerinin eğitim ve öğretimi destekleyecek şekilde planlanması",
+  "Eğitim kurumu, ilçe, il, yurtiçi ve yurtdışında düzenlenecek bilimsel, sosyal, kültürel, sanatsal ve sportif etkinlikler ve yarışmalar ile geziler, öğrenci kulüp ve sosyal sorumluluk programı kapsamındaki çalışmaları",
+  "Öğrencilerde girişimcilik bilincinin kazandırılmasına yönelik çalışmalar",
+  "Öğrencilerin kişilik ve sosyal gelişimlerinin desteklenmesi, sağlıklarının korunması ve dengeli beslenmelerinin sağlanması",
+  "Okul sağlığı çalışmalarına yer verilmesi",
+  "Değerler eğitimi çalışmalarına yer verilmesi",
+  "İş sağlığı ve güvenliği tedbirleri doğrultusunda eğitim ve öğretim faaliyetlerinin planlanması",
+  "Temenniler ve kapanış"
+];
+const ZUMRE_GUNDEM_STANDART = [
+  "Açılış ve yoklama",
+  "Alan Şefi, Atölye/Laboratuvar Şefleri ve Öğretmenlerin görev dağılımının belirlenmesi",
+  "Öğrenci devamsızlık ve başarı takibi",
+  "Atölyelerdeki makine bakım-onarım formlarının tutulması ve arızalı tezgâhların bildirilmesi",
+  "Makine kullanma talimatlarının kontrolü ve güncellenmesi",
+  "Seçmeli derslerin belirlenmesi",
+  "Sınıf öğretmenliği (rehberlik) görevlendirmesi",
+  "Atölye İSG kuralları ve uyulmaması hâlinde uygulanacak yaptırımların belirlenmesi",
+  "Makine ve Tasarım Teknolojisi Alanı derslerinde sınav değerlendirmesi ve rotasyon uygulaması",
+  "Atölye düzeni ve kullanılan ekipmanın öğrenci tarafından temizlenmesi",
+  "Girişimcilik ve döner sermaye üretim çalışmalarının değerlendirilmesi",
+  "Alan tanıtımı (ortaokul öğrencilerine yönelik) çalışmalarının planlanması",
+  "Başarılı ve özendirici öğrenci çalışmalarının değerlendirilmesi",
+  "Dilek, temenniler ve kapanış"
+];
+function toplantiById(id) { return S.toplantilar.find(x => x.id === id); }
+function addToplanti() {
+  const root = document.getElementById("modal-root");
+  root.innerHTML = `
+    <div class="modal-bg" onclick="if(event.target===this) closeModal()">
+      <div class="modal" style="width:420px;">
+        <h3>Yeni Toplantı Ekle</h3>
+        <label class="small">Toplantı Türü</label>
+        <select id="at-tur" style="width:100%">
+          <option value="sube">Şube Öğretmenler Kurulu</option>
+          <option value="zumre">Zümre Toplantısı</option>
+        </select>
+        <label class="small">Başlık</label><input type="text" id="at-baslik" placeholder="örn. 10-A Sınıfı 1. Dönem Şube Öğretmenler Kurulu" style="width:100%">
+        <label class="small">Sınıf / Ders (opsiyonel)</label><input type="text" id="at-sinifders" style="width:100%">
+        <label class="small">Öğretim Yılı</label><input type="text" id="at-yil" value="${S.akademikTakvim ? S.akademikTakvim.ogretimYili : ''}" style="width:100%">
+        <label class="small">Dönem</label><input type="text" id="at-donem" placeholder="örn. 1. Dönem" style="width:100%">
+        <label class="small">Kurul/Zümre Başkanı</label><input type="text" id="at-baskan" style="width:100%">
+        <div class="row">
+          <button class="btn primary" onclick="saveNewToplanti()">Ekle</button>
+          <button class="btn" onclick="closeModal()">İptal</button>
+        </div>
+      </div>
+    </div>`;
+}
+function saveNewToplanti() {
+  const baslik = document.getElementById("at-baslik").value.trim();
+  if (!baslik) { alert("Başlık girin."); return; }
+  const tur = document.getElementById("at-tur").value;
+  const standart = tur === "sube" ? SUBE_GUNDEM_STANDART : ZUMRE_GUNDEM_STANDART;
+  const top = {
+    id: uid("top"), tur, baslik,
+    sinifVeyaDers: document.getElementById("at-sinifders").value.trim(),
+    ogretimYili: document.getElementById("at-yil").value.trim(),
+    donem: document.getElementById("at-donem").value.trim(),
+    baskan: document.getElementById("at-baskan").value.trim(),
+    zumreNo: "", tarih: "", yer: "", saat: "",
+    katilimcilar: [], gorevDagilimi: [],
+    gundemMaddeleri: standart.map(baslik => ({ id: uid("gm"), baslik, notlar: "" }))
+  };
+  S.toplantilar.push(top);
+  activeToplantiId = top.id;
+  save(); closeModal(); renderMain();
+}
+function editToplantiMeta(id) {
+  const top = toplantiById(id);
+  if (!top) return;
+  const root = document.getElementById("modal-root");
+  root.innerHTML = `
+    <div class="modal-bg" onclick="if(event.target===this) closeModal()">
+      <div class="modal" style="width:420px;">
+        <h3>Toplantı Bilgilerini Düzenle</h3>
+        <label class="small">Başlık</label><input type="text" id="at-baslik" value="${escHtml(top.baslik)}" style="width:100%">
+        <label class="small">Sınıf / Ders</label><input type="text" id="at-sinifders" value="${escHtml(top.sinifVeyaDers || '')}" style="width:100%">
+        <label class="small">Öğretim Yılı</label><input type="text" id="at-yil" value="${escHtml(top.ogretimYili || '')}" style="width:100%">
+        <label class="small">Dönem</label><input type="text" id="at-donem" value="${escHtml(top.donem || '')}" style="width:100%">
+        <label class="small">Kurul/Zümre Başkanı</label><input type="text" id="at-baskan" value="${escHtml(top.baskan || '')}" style="width:100%">
+        <label class="small">Zümre No</label><input type="text" id="at-zumreno" value="${escHtml(top.zumreNo || '')}" style="width:100%">
+        <label class="small">Toplantı Tarihi</label><input type="text" id="at-tarih" value="${escHtml(top.tarih || '')}" style="width:100%">
+        <label class="small">Toplantı Yeri</label><input type="text" id="at-yer" value="${escHtml(top.yer || '')}" style="width:100%">
+        <label class="small">Toplantı Saati</label><input type="text" id="at-saat" value="${escHtml(top.saat || '')}" style="width:100%">
+        <div class="row">
+          <button class="btn primary" onclick="saveToplantiMeta('${id}')">Kaydet</button>
+          <button class="btn" onclick="closeModal()">İptal</button>
+        </div>
+      </div>
+    </div>`;
+}
+function saveToplantiMeta(id) {
+  const top = toplantiById(id);
+  if (!top) return;
+  const baslik = document.getElementById("at-baslik").value.trim();
+  if (!baslik) { alert("Başlık girin."); return; }
+  top.baslik = baslik;
+  top.sinifVeyaDers = document.getElementById("at-sinifders").value.trim();
+  top.ogretimYili = document.getElementById("at-yil").value.trim();
+  top.donem = document.getElementById("at-donem").value.trim();
+  top.baskan = document.getElementById("at-baskan").value.trim();
+  top.zumreNo = document.getElementById("at-zumreno").value.trim();
+  top.tarih = document.getElementById("at-tarih").value.trim();
+  top.yer = document.getElementById("at-yer").value.trim();
+  top.saat = document.getElementById("at-saat").value.trim();
+  save(); closeModal(); renderMain();
+}
+function deleteToplanti(id) {
+  if (!confirm("Bu toplantı tutanağı silinsin mi? Bu işlem geri alınamaz.")) return;
+  S.toplantilar = S.toplantilar.filter(x => x.id !== id);
+  if (activeToplantiId === id) activeToplantiId = null;
+  save(); renderMain();
+}
+function addKatilimci(topId) {
+  const top = toplantiById(topId);
+  if (!top) return;
+  top.katilimcilar.push({ id: uid("kt"), ad: "", brans: "" });
+  save(); renderMain();
+}
+function updateKatilimci(topId, id, field, value) {
+  const top = toplantiById(topId);
+  const k = top && top.katilimcilar.find(x => x.id === id);
+  if (k) k[field] = value;
+  save();
+}
+function removeKatilimci(topId, id) {
+  if (!confirm("Bu katılımcı silinsin mi?")) return;
+  const top = toplantiById(topId);
+  if (!top) return;
+  top.katilimcilar = top.katilimcilar.filter(x => x.id !== id);
+  save(); renderMain();
+}
+function addGorevSatiri(topId) {
+  const top = toplantiById(topId);
+  if (!top) return;
+  top.gorevDagilimi.push({ id: uid("gd"), kisi: "", gorev: "", sorumluluk: "" });
+  save(); renderMain();
+}
+function updateGorevSatiri(topId, id, field, value) {
+  const top = toplantiById(topId);
+  const g = top && top.gorevDagilimi.find(x => x.id === id);
+  if (g) g[field] = value;
+  save();
+}
+function removeGorevSatiri(topId, id) {
+  if (!confirm("Bu görev satırı silinsin mi?")) return;
+  const top = toplantiById(topId);
+  if (!top) return;
+  top.gorevDagilimi = top.gorevDagilimi.filter(x => x.id !== id);
+  save(); renderMain();
+}
+function addGundemMaddesi(topId) {
+  const top = toplantiById(topId);
+  if (!top) return;
+  top.gundemMaddeleri.push({ id: uid("gm"), baslik: "", notlar: "" });
+  save(); renderMain();
+}
+function updateGundemMaddesi(topId, id, field, value) {
+  const top = toplantiById(topId);
+  const g = top && top.gundemMaddeleri.find(x => x.id === id);
+  if (g) g[field] = value;
+  save();
+}
+function removeGundemMaddesi(topId, id) {
+  if (!confirm("Bu gündem maddesi silinsin mi?")) return;
+  const top = toplantiById(topId);
+  if (!top) return;
+  top.gundemMaddeleri = top.gundemMaddeleri.filter(x => x.id !== id);
+  save(); renderMain();
+}
+function selectToplanti(id) { activeToplantiId = id; renderMain(); }
+function renderToplantiDetay(top) {
+  const katilimciRows = top.katilimcilar.map(k => `
+    <tr>
+      <td class="no-print"><input type="text" value="${escHtml(k.ad)}" placeholder="Ad Soyad" style="width:100%" onchange="updateKatilimci('${top.id}','${k.id}','ad',this.value)"></td>
+      <td class="print-only-cell">${escHtml(k.ad)}</td>
+      <td class="no-print"><input type="text" value="${escHtml(k.brans)}" placeholder="Branş/Görev" style="width:100%" onchange="updateKatilimci('${top.id}','${k.id}','brans',this.value)"></td>
+      <td class="print-only-cell">${escHtml(k.brans)}</td>
+      <td class="print-only" style="width:80px;"></td>
+      <td class="no-print"><button class="btn danger" onclick="removeKatilimci('${top.id}','${k.id}')">Sil</button></td>
+    </tr>`).join("");
+  const gorevRows = top.gorevDagilimi.map(g => `
+    <tr>
+      <td class="no-print"><input type="text" value="${escHtml(g.kisi)}" style="width:100%" onchange="updateGorevSatiri('${top.id}','${g.id}','kisi',this.value)"></td>
+      <td class="print-only-cell">${escHtml(g.kisi)}</td>
+      <td class="no-print"><input type="text" value="${escHtml(g.gorev)}" style="width:100%" onchange="updateGorevSatiri('${top.id}','${g.id}','gorev',this.value)"></td>
+      <td class="print-only-cell">${escHtml(g.gorev)}</td>
+      <td class="no-print"><textarea rows="2" style="width:100%;" onchange="updateGorevSatiri('${top.id}','${g.id}','sorumluluk',this.value)">${escHtml(g.sorumluluk)}</textarea></td>
+      <td class="print-only-cell">${escHtml(g.sorumluluk)}</td>
+      <td class="no-print"><button class="btn danger" onclick="removeGorevSatiri('${top.id}','${g.id}')">Sil</button></td>
+    </tr>`).join("");
+  const gundemHtml = top.gundemMaddeleri.map((g, i) => `
+    <div class="card" style="page-break-inside:avoid;">
+      <div class="row" style="justify-content:space-between;align-items:center;margin-top:0;">
+        <input class="no-print" type="text" value="${escHtml(g.baslik)}" style="font-weight:700;flex:1;border:1px solid var(--line);border-radius:4px;padding:4px 6px;" onchange="updateGundemMaddesi('${top.id}','${g.id}','baslik',this.value)">
+        <b class="print-only-inline">MADDE ${i + 1}: ${escHtml(g.baslik)}</b>
+        <button class="btn danger no-print" onclick="removeGundemMaddesi('${top.id}','${g.id}')">Sil</button>
+      </div>
+      <div class="small no-print" style="margin-top:4px;font-weight:600;">Görüşmeler / Alınan Kararlar</div>
+      <textarea class="no-print" rows="4" style="width:100%;margin-top:4px;border:1px solid var(--line);border-radius:4px;padding:6px;resize:vertical;font-family:inherit;font-size:11.5px;" oninput="updateGundemMaddesi('${top.id}','${g.id}','notlar',this.value)" onblur="save()">${escHtml(g.notlar)}</textarea>
+      <div class="print-only" style="margin-top:4px;">${nlToBr(g.notlar) || '<span class="small">—</span>'}</div>
+    </div>`).join("");
+
+  return `
+  <div class="card no-print">
+    <div class="row small" style="flex-wrap:wrap;gap:14px;align-items:center;">
+      <span><b>Tür:</b> ${top.tur === 'sube' ? 'Şube Öğretmenler Kurulu' : 'Zümre Toplantısı'}</span>
+      <span><b>Sınıf/Ders:</b> ${escHtml(top.sinifVeyaDers || '-')}</span>
+      <span><b>Öğretim Yılı:</b> ${escHtml(top.ogretimYili || '-')}</span>
+      <span><b>Dönem:</b> ${escHtml(top.donem || '-')}</span>
+      <span><b>Başkan:</b> ${escHtml(top.baskan || '-')}</span>
+      <span><b>Tarih:</b> ${escHtml(top.tarih || '-')}</span>
+      <span><b>Yer:</b> ${escHtml(top.yer || '-')}</span>
+      <span><b>Saat:</b> ${escHtml(top.saat || '-')}</span>
+      <button class="btn" onclick="editToplantiMeta('${top.id}')">Bilgileri Düzenle</button>
+    </div>
+  </div>
+  <div class="print-only" style="margin-bottom:10px;">
+    <b>Öğretim Yılı:</b> ${escHtml(top.ogretimYili || '-')} · <b>Dönem:</b> ${escHtml(top.donem || '-')} · <b>Başkan:</b> ${escHtml(top.baskan || '-')} ·
+    <b>Zümre No:</b> ${escHtml(top.zumreNo || '-')} · <b>Tarih:</b> ${escHtml(top.tarih || '-')} · <b>Yer:</b> ${escHtml(top.yer || '-')} · <b>Saat:</b> ${escHtml(top.saat || '-')}
+  </div>
+  <div class="card">
+    <h2>Toplantıya Katılanlar</h2>
+    <table><thead><tr><th>Ad Soyad</th><th>Branş/Görev</th><th class="print-only">İmza</th><th class="no-print"></th></tr></thead>
+    <tbody>${katilimciRows || `<tr><td colspan="4" class="small">Henüz katılımcı eklenmedi.</td></tr>`}</tbody></table>
+    <div class="row no-print"><button class="btn" onclick="addKatilimci('${top.id}')">Katılımcı Ekle</button></div>
+  </div>
+  ${top.tur === 'zumre' ? `
+  <div class="card">
+    <h2>Görev Dağılımı</h2>
+    <table><thead><tr><th>Kişi</th><th>Görev</th><th>Sorumluluk</th><th class="no-print"></th></tr></thead>
+    <tbody>${gorevRows || `<tr><td colspan="4" class="small">Henüz satır eklenmedi.</td></tr>`}</tbody></table>
+    <div class="row no-print"><button class="btn" onclick="addGorevSatiri('${top.id}')">Satır Ekle</button></div>
+  </div>` : ''}
+  <div class="card no-print">
+    <h2>Gündem Maddeleri</h2>
+    <div class="row"><button class="btn" onclick="addGundemMaddesi('${top.id}')">Gündem Maddesi Ekle</button></div>
+  </div>
+  ${gundemHtml}`;
+}
+function viewOkulZumresi() {
+  const entries = S.toplantilar.slice().sort((a, b) => (a.baslik || "").localeCompare(b.baslik || "", "tr"));
+  if (entries.length && !entries.some(e => e.id === activeToplantiId)) activeToplantiId = entries[0].id;
+  if (!entries.length) activeToplantiId = null;
+  const active = toplantiById(activeToplantiId);
+
+  const listHtml = entries.length === 0 ? "" : `
+    <div class="card no-print">
+      <div class="row" style="flex-wrap:wrap;">
+        ${entries.map(e => `<button class="btn ${e.id === activeToplantiId ? 'primary' : ''}" onclick="selectToplanti('${e.id}')">${e.tur === 'sube' ? '📋 ' : '🏭 '}${escHtml(e.baslik)}</button>`).join("")}
+      </div>
+    </div>`;
+
+  const dosyaAdi = active ? active.baslik : "Okul Zümresi";
+  const content = active ? renderToplantiDetay(active) : `<div class="card small" style="text-align:center;padding:30px 20px;">Henüz bir toplantı tutanağı eklenmedi. "Yeni Toplantı Ekle" ile Şube Öğretmenler Kurulu ya da Zümre Toplantısı tutanağı oluşturabilirsiniz — standart gündem maddeleri otomatik hazırlanır.</div>`;
+
+  return `
+  <div class="card no-print">
+    <h2>Okul Zümresi</h2>
+    <p class="small">Şube Öğretmenler Kurulu ve Zümre Toplantısı tutanaklarınızı burada tutun — katılımcılar, gündem maddeleri, görüşmeler ve kararlar. Yeni bir toplantı eklediğinizde standart gündem maddeleri otomatik geliyor, dilediğiniz gibi düzenleyip Yazdır/PDF/Excel alabilirsiniz.</p>
+    <div class="row"><button class="btn primary" onclick="addToplanti()">Yeni Toplantı Ekle</button>
+      ${active ? `<button class="btn danger" onclick="deleteToplanti('${active.id}')">Bu Toplantıyı Sil</button>` : ""}
+    </div>
+    ${belgeAracCubugu(dosyaAdi)}
+  </div>
+  ${listHtml}
+  <div class="print-area">
+    ${belgeYazdirmaBasligi(dosyaAdi)}
+    ${content}
   </div>`;
 }
 

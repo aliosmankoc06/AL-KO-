@@ -122,7 +122,8 @@ function defaultState() {
     akademikTakvim: null,
     yillikPlanlar: [],
     gunlukPlanlar: [],
-    normKadro: { ogrenciSayilari: {}, koordinatorlukSatirlari: [] }
+    normKadro: { ogrenciSayilari: {}, koordinatorlukSatirlari: [] },
+    toplantilar: []
   };
 }
 
@@ -143,7 +144,8 @@ function emptyState() {
     akademikTakvim: null,
     yillikPlanlar: [],
     gunlukPlanlar: [],
-    normKadro: { ogrenciSayilari: {}, koordinatorlukSatirlari: [] }
+    normKadro: { ogrenciSayilari: {}, koordinatorlukSatirlari: [] },
+    toplantilar: []
   };
 }
 
@@ -164,6 +166,13 @@ function normalizeState(s) {
   if (!s.normKadro || typeof s.normKadro !== "object") s.normKadro = {};
   if (!s.normKadro.ogrenciSayilari || typeof s.normKadro.ogrenciSayilari !== "object") s.normKadro.ogrenciSayilari = {};
   if (!Array.isArray(s.normKadro.koordinatorlukSatirlari)) s.normKadro.koordinatorlukSatirlari = [];
+  if (!Array.isArray(s.toplantilar)) s.toplantilar = [];
+  s.toplantilar.forEach(top => {
+    if (!top.id) top.id = uid("top");
+    if (!Array.isArray(top.katilimcilar)) top.katilimcilar = [];
+    if (!Array.isArray(top.gorevDagilimi)) top.gorevDagilimi = [];
+    if (!Array.isArray(top.gundemMaddeleri)) top.gundemMaddeleri = [];
+  });
   if (!s.seededIsletmeler2026) {
     s.seededIsletmeler2026 = true;
     const seed = [
