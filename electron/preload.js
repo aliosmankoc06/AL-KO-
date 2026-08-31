@@ -11,6 +11,7 @@ contextBridge.exposeInMainWorld("desktop", {
   writeFile: (filePath, content) => ipcRenderer.invoke("fs:write-file", filePath, content),
   readFile: (filePath) => ipcRenderer.invoke("fs:read-file", filePath),
   exportPdf: (defaultName) => ipcRenderer.invoke("export:pdf", defaultName),
+  exportExcel: (defaultName, sheets) => ipcRenderer.invoke("export:excel", defaultName, sheets),
   openXlsxDialog: () => ipcRenderer.invoke("dialog:open-xlsx"),
   importPlanXlsx: (filePath) => ipcRenderer.invoke("import:plan-xlsx", filePath)
 });

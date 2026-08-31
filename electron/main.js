@@ -102,6 +102,23 @@ ipcMain.handle("import:plan-xlsx", async (evt, filePath) => {
   return parsePlanWorkbook(filePath, XLSX);
 });
 
+ipcMain.handle("export:excel", async (evt, defaultName, sheets) => {
+  const result = await dialog.showSaveDialog(mainWindow, {
+    title: "Excel Olarak Kaydet",
+    defaultPath: defaultName,
+    filters: [{ name: "Excel Dosyası", extensions: ["xlsx"] }]
+  });
+  if (result.canceled || !result.filePath) return null;
+  const wb = XLSX.utils.book_new();
+  sheets.forEach((sheet, i) => {
+    const ws = XLSX.utils.aoa_to_sheet(sheet.rows);
+    const name = (sheet.name || ("Sayfa" + (i + 1))).slice(0, 31).replace(/[\\/*?:[\]]/g, " ");
+    XLSX.utils.book_append_sheet(wb, ws, name || ("Sayfa" + (i + 1)));
+  });
+  XLSX.writeFile(wb, result.filePath);
+  return result.filePath;
+});
+
 ipcMain.handle("export:pdf", async (evt, defaultName) => {
   const result = await dialog.showSaveDialog(mainWindow, {
     title: "PDF Olarak Kaydet",

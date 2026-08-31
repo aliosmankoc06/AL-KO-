@@ -261,21 +261,26 @@ function viewStajYerlestirme() {
     const rows = bySinif[sinif].map(st => `
       <tr>
         <td>${st.okulNo || ''}</td>
-        <td>${st.ad}</td>
+        <td>${escHtml(st.ad)}</td>
         <td>${st.dal || ''}</td>
-        <td><select onchange="setStudentIsletme('${st.id}', this.value)">${studentIsletmeOptions(st.isletme)}</select></td>
-        <td><div class="row" style="margin:0;"><button class="btn" onclick="editStudent('${st.id}')">Düzenle</button><button class="btn danger" onclick="deleteStudent('${st.id}')">Sil</button></div></td>
+        <td class="no-print"><select onchange="setStudentIsletme('${st.id}', this.value)">${studentIsletmeOptions(st.isletme)}</select></td>
+        <td class="print-only-cell">${escHtml(st.isletme || '—')}</td>
+        <td class="no-print"><div class="row" style="margin:0;"><button class="btn" onclick="editStudent('${st.id}')">Düzenle</button><button class="btn danger" onclick="deleteStudent('${st.id}')">Sil</button></div></td>
       </tr>`).join("");
-    return `<h2 style="margin-top:16px;">${sinif}</h2><table><tr><th>Okul No</th><th>Ad Soyad</th><th>Dal</th><th>İşletme</th><th></th></tr>${rows}</table>`;
+    return `<h2 style="margin-top:16px;">${escHtml(sinif)}</h2><table><tr><th>Okul No</th><th>Ad Soyad</th><th>Dal</th><th>İşletme</th><th class="no-print"></th></tr>${rows}</table>`;
   }).join("") || `<p class="small">Henüz öğrenci eklenmedi.</p>`;
 
   return `
-  <div class="card">
+  <div class="card no-print">
     <h2>Staj Yerleştirme — Öğrenci Listesi</h2>
     <p class="small">Hangi öğrencinin hangi işletmede staj yaptığını burada takip edin. İşletme sütunundaki listeyi <b>Koordinatörlük</b> sekmesine eklediğiniz işletmeler doldurur.</p>
-    ${listHtml}
+    ${belgeAracCubugu("Staj Yerleştirme - Öğrenci Listesi")}
   </div>
-  <div class="card">
+  <div class="print-area">
+    ${belgeYazdirmaBasligi("Staj Yerleştirme — Öğrenci Listesi")}
+    <div class="card">${listHtml}</div>
+  </div>
+  <div class="card no-print">
     <h2>Öğrenci Ekle</h2>
     <div class="grid3">
       <div><label class="small">Sınıf</label><input type="text" id="ns-sinif" placeholder="örn. 12/A" style="width:100%"></div>
@@ -286,7 +291,7 @@ function viewStajYerlestirme() {
     </div>
     <div class="row" style="max-width:200px"><button class="btn primary" onclick="addStudent()">Ekle</button></div>
   </div>
-  <div class="card">
+  <div class="card no-print">
     <h2>Excel'den Toplu Ekle</h2>
     <p class="small">Excel dosyanızdaki Sınıf, Okul No, Ad Soyad, Dal, İşletme sütunlarını seçip kopyalayın (Ctrl+C), aşağıya yapıştırın (Ctrl+V) ve "İçe Aktar"a basın. Her satır bir öğrenci olmalı.</p>
     <textarea id="bulk-student-paste" style="width:100%;height:120px;font-family:monospace;font-size:11.5px;" placeholder="12/A&#9;23014&#9;Ramazan Övek&#9;MBO&#9;TKİ Ege Linyitleri İşletmesi Müdürlüğü"></textarea>
@@ -372,15 +377,41 @@ function viewPlaceholderModule(title, hint) {
 
 /* ---- Belge Araç Çubuğu (Yazdır / PDF) — tüm belge görünümlerinde ortak ---- */
 function printCurrentView() { window.print(); }
+function guvenliDosyaAdi(dosyaAdi) { return dosyaAdi.replace(/[\\/:*?"<>|]/g, "-"); }
 async function exportCurrentViewAsPdf(dosyaAdi) {
   if (!window.desktop || !window.desktop.isElectron) { window.print(); return; }
-  const path = await window.desktop.exportPdf(dosyaAdi.replace(/[\\/:*?"<>|]/g, "-") + ".pdf");
+  const path = await window.desktop.exportPdf(guvenliDosyaAdi(dosyaAdi) + ".pdf");
   if (path) alert("PDF olarak kaydedildi:\n" + path);
+}
+function cellPrintText(cell) {
+  const printOnly = cell.querySelector(".print-only, .print-only-inline, .print-only-cell");
+  if (printOnly) return printOnly.innerText.trim();
+  const input = cell.querySelector("input, textarea, select");
+  if (input) return input.value;
+  return cell.innerText.trim();
+}
+function extractPrintTables() {
+  const area = document.querySelector(".print-area");
+  if (!area) return [];
+  return Array.from(area.querySelectorAll("table")).map(table =>
+    Array.from(table.rows).map(row =>
+      Array.from(row.cells).filter(cell => !cell.classList.contains("no-print")).map(cellPrintText)
+    )
+  );
+}
+async function exportCurrentViewAsExcel(dosyaAdi) {
+  if (!window.desktop || !window.desktop.isElectron) { alert("Excel olarak indirme sadece masaüstü uygulamasında çalışır."); return; }
+  const tables = extractPrintTables().filter(rows => rows.length > 0);
+  if (tables.length === 0) { alert("Bu sayfada indirilecek bir tablo bulunamadı."); return; }
+  const sheets = tables.map((rows, i) => ({ name: tables.length > 1 ? "Tablo " + (i + 1) : "Sayfa1", rows }));
+  const path = await window.desktop.exportExcel(guvenliDosyaAdi(dosyaAdi) + ".xlsx", sheets);
+  if (path) alert("Excel olarak kaydedildi:\n" + path);
 }
 function belgeAracCubugu(dosyaAdi) {
   return `<div class="row no-print" style="margin-top:10px;">
     <button class="btn primary" onclick="printCurrentView()">Yazdır</button>
     <button class="btn" onclick="exportCurrentViewAsPdf('${dosyaAdi}')">PDF Olarak Kaydet</button>
+    <button class="btn" onclick="exportCurrentViewAsExcel('${dosyaAdi}')">Excel Olarak İndir</button>
   </div>`;
 }
 function belgeYazdirmaBasligi(altBaslik) {
@@ -710,22 +741,35 @@ function viewPlanModule(kind) {
   </div>`;
 }
 
-/* ---- Norm Kadro ---- */
+/* ---- Norm Kadro ----
+   Grup sayısı öğretmenin ders programındaki fiili atama sayısına DEĞİL,
+   öğrenci sayısına endeksli resmi norm formülüne göre hesaplanır (kullanıcı
+   tarafından tarif edildi, gerçek 2026-2027 norm kadro rakamlarıyla
+   doğrulandı: 10-A 27 öğr.→3, 11-A 20 öğr.→2, 12-A 21 öğr.→2, 12-B 14 öğr.→1):
+   - 10/11/12. sınıf: 16 öğrenciye kadar 1 grup, sonra her +8 öğrencide 1 grup artar.
+   - 9. sınıf: 20 öğrenciye kadar 1 grup, sonra her +20 öğrencide 1 grup artar
+     (bu sınır kullanıcıyla netleştirilecek, bkz. sohbet).
+   ------------------------------------------------------------ */
+function normKadroGrupSayisi(grade, ogrenciSayisi) {
+  if (!ogrenciSayisi || ogrenciSayisi <= 0) return null;
+  if (grade === 9) return Math.ceil(ogrenciSayisi / 20);
+  return ogrenciSayisi <= 16 ? 1 : Math.ceil((ogrenciSayisi - 16) / 8) + 1;
+}
 function setNormKadroOgrenciSayisi(classId, value) {
   const n = parseInt(value);
   if (Number.isFinite(n) && n >= 0) S.normKadro.ogrenciSayilari[classId] = n;
   else delete S.normKadro.ogrenciSayilari[classId];
-  save();
+  save(); renderMain();
 }
 function addKoordSatir() {
-  S.normKadro.koordinatorlukSatirlari.push({ id: uid("nk"), dal: "", sinif: "", ogrenciSayisi: "", haftalikSaat: 24, grupSayisi: 1 });
+  S.normKadro.koordinatorlukSatirlari.push({ id: uid("nk"), dal: "", sinif: "", ogrenciSayisi: "", haftalikSaat: 24 });
   save(); renderMain();
 }
 function updateKoordSatir(id, field, value) {
   const row = S.normKadro.koordinatorlukSatirlari.find(r => r.id === id);
   if (!row) return;
   row[field] = (field === "dal" || field === "sinif") ? value : (parseInt(value) || 0);
-  save();
+  save(); renderMain();
 }
 function deleteKoordSatir(id) {
   if (!confirm("Bu koordinatörlük satırı silinsin mi?")) return;
@@ -739,16 +783,17 @@ function viewNormKadro() {
 
   const sinifBlocks = relevantClasses.map(cls => {
     const ogrenciSayisi = S.normKadro.ogrenciSayilari[cls.id];
+    const grup = normKadroGrupSayisi(cls.grade, ogrenciSayisi);
     const rows = cls.assignments.map(a => {
       const course = courseById(a.courseId);
       if (!course) return "";
       siraNo++;
-      const grup = a.teacherCount || 1;
-      const toplam = course.hours * grup;
-      ampToplam += toplam;
+      const toplam = grup === null ? null : course.hours * grup;
+      if (toplam !== null) ampToplam += toplam;
       return `<tr>
         <td>${siraNo}</td><td>${escHtml(cls.name)}</td><td>${escHtml(course.name)}</td>
-        <td>${course.hours}</td><td>${grup}</td><td><b>${toplam}</b></td>
+        <td>${course.hours}</td><td>${grup === null ? '<span class="pill warn">öğrenci sayısı girin</span>' : grup}</td>
+        <td><b>${toplam === null ? '—' : toplam}</b></td>
       </tr>`;
     }).join("");
     return `
@@ -757,6 +802,7 @@ function viewNormKadro() {
         <h3 style="margin:0;">${escHtml(cls.name)} Sınıfı</h3>
         <label class="small" style="margin-left:10px;">Öğrenci Sayısı:</label>
         <input type="number" min="0" value="${ogrenciSayisi !== undefined ? ogrenciSayisi : ''}" style="width:70px" onchange="setNormKadroOgrenciSayisi('${cls.id}',this.value)">
+        <span class="small">(Grup Sayısı: ${grup === null ? '—' : grup}, norm formülüne göre otomatik)</span>
       </div>
       <p class="print-only" style="font-weight:700;margin:10px 0 4px;">${escHtml(cls.name)} Sınıfı — Öğrenci Sayısı: ${ogrenciSayisi !== undefined ? ogrenciSayisi : '—'}</p>
       <table><thead><tr><th>No</th><th>Sınıf</th><th>Ders Adı</th><th>Haftalık Saat</th><th>Grup Sayısı</th><th>Toplam Ders Saati</th></tr></thead>
@@ -766,10 +812,11 @@ function viewNormKadro() {
 
   let koordToplam = 0;
   const koordRows = S.normKadro.koordinatorlukSatirlari.map(r => {
-    const toplam = (r.haftalikSaat || 0) * (r.grupSayisi || 0);
-    koordToplam += toplam;
+    const grup = normKadroGrupSayisi(sinifGrade(r.sinif) || 12, r.ogrenciSayisi);
+    const toplam = grup === null ? null : (r.haftalikSaat || 0) * grup;
+    if (toplam !== null) koordToplam += toplam;
     return `<tr>
-      <td class="no-print"><input type="text" value="${escHtml(r.sinif)}" style="width:70px" onchange="updateKoordSatir('${r.id}','sinif',this.value)"></td>
+      <td class="no-print"><input type="text" value="${escHtml(r.sinif)}" placeholder="örn. 12-A" style="width:70px" onchange="updateKoordSatir('${r.id}','sinif',this.value)"></td>
       <td class="print-only-cell">${escHtml(r.sinif)}</td>
       <td class="no-print"><input type="number" min="0" value="${r.ogrenciSayisi}" style="width:60px" onchange="updateKoordSatir('${r.id}','ogrenciSayisi',this.value)"></td>
       <td class="print-only-cell">${r.ogrenciSayisi}</td>
@@ -777,9 +824,8 @@ function viewNormKadro() {
       <td class="print-only-cell">${escHtml(r.dal)}</td>
       <td class="no-print"><input type="number" min="0" value="${r.haftalikSaat}" style="width:60px" onchange="updateKoordSatir('${r.id}','haftalikSaat',this.value)"></td>
       <td class="print-only-cell">${r.haftalikSaat}</td>
-      <td class="no-print"><input type="number" min="0" value="${r.grupSayisi}" style="width:60px" onchange="updateKoordSatir('${r.id}','grupSayisi',this.value)"></td>
-      <td class="print-only-cell">${r.grupSayisi}</td>
-      <td><b>${toplam}</b></td>
+      <td>${grup === null ? '<span class="pill warn">öğr. sayısı girin</span>' : grup} <span class="small">(otomatik)</span></td>
+      <td><b>${toplam === null ? '—' : toplam}</b></td>
       <td class="no-print"><button class="btn danger" onclick="deleteKoordSatir('${r.id}')">Sil</button></td>
     </tr>`;
   }).join("");
@@ -892,15 +938,21 @@ function viewHavuz() {
       <td>${c.grade}</td>
       <td>${c.hours}</td>
       <td>${(c.blocks || []).join("+")}</td>
-      <td><div class="row" style="margin:0;"><button class="btn" onclick="editCourse('${c.id}')">Düzenle</button><button class="btn danger" onclick="deleteCourse('${c.id}')">Sil</button></div></td>
+      <td class="no-print"><div class="row" style="margin:0;"><button class="btn" onclick="editCourse('${c.id}')">Düzenle</button><button class="btn danger" onclick="deleteCourse('${c.id}')">Sil</button></div></td>
     </tr>`).join("");
   return `
-  <div class="card">
+  <div class="card no-print">
     <h2>Ders Havuzu</h2>
     <p class="small">Çerçeve öğretim programından alınan dersler. Yeni ders ekleyebilir veya düzenleyebilirsiniz.</p>
-    <table><tr><th>Kod</th><th>Ders Adı</th><th>Dal</th><th>Sınıf</th><th>Haftalık Saat</th><th>Bloklar</th><th></th></tr>${rows}</table>
+    ${belgeAracCubugu("Ders Havuzu")}
   </div>
-  <div class="card">
+  <div class="print-area">
+    ${belgeYazdirmaBasligi("Ders Havuzu")}
+    <div class="card">
+      <table><tr><th>Kod</th><th>Ders Adı</th><th>Dal</th><th>Sınıf</th><th>Haftalık Saat</th><th>Bloklar</th><th class="no-print"></th></tr>${rows}</table>
+    </div>
+  </div>
+  <div class="card no-print">
     <h2>Yeni Ders Ekle</h2>
     <div class="grid3">
       <div><label class="small">Kod</label><input type="text" id="nc-code" style="width:100%"></div>
@@ -1014,18 +1066,24 @@ function viewOgretmen() {
             <option value="exact" ${mode === 'exact' ? 'selected' : ''}>Tam bu kadar (sabit)</option>
           </select></td>
       <td style="text-align:center;"><input type="checkbox" ${coordEligible ? 'checked' : ''} onchange="setTeacherCoordEligible('${t.id}', this.checked)"></td>
-      <td><div class="row" style="margin:0;"><button class="btn" onclick="editTeacher('${t.id}')">Düzenle</button><button class="btn danger" onclick="deleteTeacher('${t.id}')">Sil</button></div></td>
+      <td class="no-print"><div class="row" style="margin:0;"><button class="btn" onclick="editTeacher('${t.id}')">Düzenle</button><button class="btn danger" onclick="deleteTeacher('${t.id}')">Sil</button></div></td>
     </tr>`;
   }).join("");
 
   return `
-  <div class="card">
+  <div class="card no-print">
     <h2>Öğretmenler</h2>
     <p class="small">Buraya girdiğiniz saat <b>sadece ders (öğretim) saatidir</b> — koordinatörlük buna dahil değildir, "Programı Yenile" çalıştığınızda koordinatörlük saatleri bunun <b>üzerine ayrıca</b> eklenir (ör. 30 saat ders hedefi + 8 saat koordinatörlük = 38 saat genel toplam). "Koordinatörlük Alsın" kutusunu işaretlerseniz o öğretmen otomatik koordinatörlük dağıtımına dahil olur; hiç koordinatörlük almaması gerekenler için bu kutuyu boş bırakın. Belirli bir saati boşta bırakmak için <b>Programlar → Öğretmen Programı</b> ekranından ilgili hücreye tıklayıp "İzinli Yap" seçeneğini kullanın.</p>
-    <table><tr><th>Ad Soyad</th><th>Ders Saati</th><th>Saat Hedefi</th><th>Tür</th><th>Koordinatörlük Alsın</th><th></th></tr>${rows}</table>
     <div class="row" style="max-width:400px">
       <input type="text" id="new-teacher" placeholder="Yeni öğretmen adı">
       <button class="btn primary" onclick="addTeacher()">Ekle</button>
+    </div>
+    ${belgeAracCubugu("Öğretmenler")}
+  </div>
+  <div class="print-area">
+    ${belgeYazdirmaBasligi("Öğretmenler")}
+    <div class="card">
+      <table><tr><th>Ad Soyad</th><th>Ders Saati</th><th>Saat Hedefi</th><th>Tür</th><th>Koordinatörlük Alsın</th><th class="no-print"></th></tr>${rows}</table>
     </div>
   </div>`;
 }
@@ -1275,8 +1333,15 @@ function viewSinif() {
     `;
   }
 
+  const printRows = cls ? cls.assignments.map(a => {
+    const course = courseById(a.courseId);
+    if (!course) return "";
+    const teacherNames = (a.eligibleTeacherIds || []).map(id => { const t = S.teachers.find(x => x.id === id); return t ? t.name : ""; }).filter(Boolean).join(", ") || "—";
+    return `<tr><td>${escHtml(course.name)}</td><td>${course.hours}</td><td>${escHtml(teacherNames)}</td><td>${escHtml(assignmentPlacementSummary(cls.id, a.id))}</td></tr>`;
+  }).join("") : "";
+
   return `
-  <div class="two-col">
+  <div class="two-col no-print">
     <div class="card">
       <h2>Sınıflar</h2>
       ${listHtml}
@@ -1294,6 +1359,11 @@ function viewSinif() {
       ${cls ? `<div class="row"><button class="btn" onclick="editClass('${cls.id}')">Seçili Sınıfı Düzenle</button><button class="btn danger" onclick="deleteClass('${cls.id}')">Seçili Sınıfı Sil</button></div>` : ""}
     </div>
     <div class="card">${detail}</div>
+  </div>
+  <div class="card no-print">${belgeAracCubugu(cls ? "Sınıflar ve Ders Atama - " + cls.name : "Sınıflar ve Ders Atama")}</div>
+  <div class="print-area">
+    ${belgeYazdirmaBasligi(cls ? "Sınıflar ve Ders Atama · " + cls.name : "Sınıflar ve Ders Atama")}
+    ${cls ? `<div class="card"><table><tr><th>Ders</th><th>Haftalık Saat</th><th>Öğretmen(ler)</th><th>Yerleşim</th></tr>${printRows}</table></div>` : `<p class="small">Soldan bir sınıf seçin.</p>`}
   </div>`;
 }
 function setActiveClass(id) { activeClassId = id; renderMain(); }
@@ -1507,8 +1577,12 @@ function viewKoordinatorluk() {
     </tr>`;
   }).join("");
 
+  const isletmePrintRows = S.isletmeler.map(isl =>
+    `<tr><td>${escHtml(isl.name)}</td><td>${isl.groups.map(g => GROUP_LABELS[g]).join(" + ")}</td><td>${isletmeHoursEstimate(isl)}</td></tr>`
+  ).join("") || `<tr><td colspan="3" class="small">Henüz işletme eklenmedi.</td></tr>`;
+
   return `
-  <div class="card" style="background:var(--teal-bg);border-color:var(--teal);">
+  <div class="card no-print" style="background:var(--teal-bg);border-color:var(--teal);">
     <h2 style="color:var(--teal-ink);">Koordinatörlük / İşletme Listesi</h2>
     <p class="small">
       Buraya sadece o gün grubuna giden <b>işletme adlarını</b> yazın — hangi öğretmenin gideceğini yazmak zorunda değilsiniz, "Programı Yenile" bunu otomatik, en dengeli şekilde dağıtır.
@@ -1543,15 +1617,23 @@ function viewKoordinatorluk() {
       </div>
     </div>
   </div>
-  <div class="card">
+  <div class="card no-print">
     <h2>Öğretmen Ata (opsiyonel)</h2>
     <p class="small">İstemezseniz boş bırakın — "Programı Yenile" sırasında sistem her işletmeye, o günlerde tam gün müsait olan ve o an en az yüklü öğretmeni otomatik atar. Sadece belirli bir işletmeye mutlaka belirli bir öğretmenin gitmesini istiyorsanız burada seçin.</p>
     <table><tr><th>İşletme</th><th>Gün Grubu</th><th>Öğretmen</th></tr>${teacherAssignRows}</table>
+    ${belgeAracCubugu("Koordinatörlük")}
   </div>
-  <div class="card">
-    <h2>Saat Dengesi (Ders + Koordinatörlük)</h2>
-    <p class="small">Bu tablo en son "Programı Yenile" çalıştırıldığındaki sonucu gösterir. En yüksek ile en düşük genel toplam arasındaki fark: <b>${fark} saat</b> ${fark <= 3 ? '(uygun)' : '(hedef: en fazla 3 saat)'}</p>
-    <table><tr><th>Öğretmen</th><th>Ders Saati</th><th>Koordinatörlük Saati</th><th>Genel Toplam</th><th>Durum</th></tr>${summaryHtml}</table>
+  <div class="print-area">
+    ${belgeYazdirmaBasligi("Koordinatörlük / İşletme Listesi")}
+    <div class="card">
+      <h2>İşletmeler</h2>
+      <table><tr><th>İşletme</th><th>Gün Grubu</th><th>Tahmini Saat</th></tr>${isletmePrintRows}</table>
+    </div>
+    <div class="card">
+      <h2>Saat Dengesi (Ders + Koordinatörlük)</h2>
+      <p class="small">Bu tablo en son "Programı Yenile" çalıştırıldığındaki sonucu gösterir. En yüksek ile en düşük genel toplam arasındaki fark: <b>${fark} saat</b> ${fark <= 3 ? '(uygun)' : '(hedef: en fazla 3 saat)'}</p>
+      <table><tr><th>Öğretmen</th><th>Ders Saati</th><th>Koordinatörlük Saati</th><th>Genel Toplam</th><th>Durum</th></tr>${summaryHtml}</table>
+    </div>
   </div>`;
 }
 
@@ -1580,24 +1662,28 @@ function viewDagitim() {
   const allHours = S.teachers.map(t => teacherTotalHours(t.id));
   const spreadNow = allHours.length ? Math.max(...allHours) - Math.min(...allHours) : 0;
   return `
-  <div class="card">
+  <div class="card no-print">
     <h2>Ders Dağıtım</h2>
     <p class="small">Sistem tek denemeyle yetinmiyor — onlarca farklı sıralama/kombinasyon deneyip <b>en az boşta ders bırakan, en dengeli saat dağıtan</b> sonucu seçiyor. Bu birkaç saniye sürebilir. 12. sınıflar için önce "Sınıflar ve Ders Atama" ekranından okula geldikleri günleri seçmeniz gerekir. Koordinatörlük saatleri de bu dağıtıma dahildir — bkz. <b>Koordinatörlük</b> sekmesi.</p>
     <div class="row" style="max-width:460px"><button class="btn primary" onclick="refreshProgram()">Programı Yenile (baştan farklı kombinasyonla dağıt)</button>
     <button class="btn danger" onclick="resetAll()">Tüm Dağıtımı Sıfırla</button></div>
     <div id="dagitim-sonuc"></div>
     <table style="margin-top:14px;"><tr><th>Sınıf</th><th>Toplam Saat</th><th>Dağıtılmış</th><th>Durum</th><th></th></tr>${rows}</table>
+    ${belgeAracCubugu("Ders Dağıtım Durumu")}
   </div>
-  <div class="card">
-    <h2>Her Dersin Dağıtım Durumu (hangi ders kime, kaç öğretmenle atandı)</h2>
-    <table><tr><th>Sınıf</th><th>Ders</th><th>Yerleşen/Toplam Saat</th><th>Atanan Öğretmen(ler)</th><th>Durum</th></tr>${assignmentStatusRows()}</table>
+  <div class="print-area">
+    ${belgeYazdirmaBasligi("Ders Dağıtım Durumu")}
+    <div class="card">
+      <h2>Her Dersin Dağıtım Durumu (hangi ders kime, kaç öğretmenle atandı)</h2>
+      <table><tr><th>Sınıf</th><th>Ders</th><th>Yerleşen/Toplam Saat</th><th>Atanan Öğretmen(ler)</th><th>Durum</th></tr>${assignmentStatusRows()}</table>
+    </div>
+    <div class="card">
+      <h2>Öğretmen Haftalık Saat Kontrolü (ders + koordinatörlük, adalet hedefi: en fazla 3 saat fark)</h2>
+      <p class="small">En yüksek ile en düşük genel toplam saat arasındaki fark şu an: <b>${spreadNow} saat</b> ${spreadNow <= 3 ? '(uygun)' : '(hedefin üzerinde — "Programı Yenile" ile yeniden dengelenebilir)'}</p>
+      <table><tr><th>Öğretmen</th><th>Ders Saati</th><th>Koordinatörlük Saati</th><th>Genel Toplam</th><th>Hedef</th><th>Durum</th></tr>${teacherRows}</table>
+    </div>
   </div>
-  <div class="card">
-    <h2>Öğretmen Haftalık Saat Kontrolü (ders + koordinatörlük, adalet hedefi: en fazla 3 saat fark)</h2>
-    <p class="small">En yüksek ile en düşük genel toplam saat arasındaki fark şu an: <b>${spreadNow} saat</b> ${spreadNow <= 3 ? '(uygun)' : '(hedefin üzerinde — "Programı Yenile" ile yeniden dengelenebilir)'}</p>
-    <table><tr><th>Öğretmen</th><th>Ders Saati</th><th>Koordinatörlük Saati</th><th>Genel Toplam</th><th>Hedef</th><th>Durum</th></tr>${teacherRows}</table>
-  </div>
-  <div class="card">
+  <div class="card no-print">
     <h2>İsimli Bir Kopya Olarak Kaydet</h2>
     <p class="small">Örneğin dönem sonunda ya da önemli bir aşamada, o anki hâlin isimli bir kopyasını saklayın (ör. "2026-2027 Güz Dönemi"). Çalışma alanınız <b>silinmez</b>, aynı yerden çalışmaya devam edersiniz — ders havuzu, öğretmenler, koordinatörlük hep kalır. Kaydettiğiniz kopyaları Ana Sayfa'da görüp istediğiniz an açabilirsiniz.</p>
     <button class="btn primary" onclick="saveCurrentVersion()">Bu Anki Hâli Kaydet</button>
@@ -1862,9 +1948,12 @@ function viewProgramlar() {
     <h2>Programlar</h2>
     <p class="small">Boş bir hücreye tıklayın: ders ekleyin ya da o saati boşta kilitleyin. Dolu bir hücreye tıklayın: dersi kilitleyin ya da kaldırın. Bir öğretmenin programında birden fazla hücrede aynı anda işlem yapmak için o öğretmenin başlığındaki <b>Çoklu Seçim</b>'i açın.</p>
     <div style="margin-bottom:10px;">${hoursSummary}</div>
-    <div class="row" style="max-width:300px;"><button class="btn" onclick="window.print()">Yazdır</button></div>
+    ${belgeAracCubugu("Öğretmen Programları")}
   </div>
-  <div class="card">${body}</div>`;
+  <div class="print-area">
+    ${belgeYazdirmaBasligi("Öğretmen Programları")}
+    <div class="card">${body}</div>
+  </div>`;
 }
 function toggleMultiSelectFor(teacherId) {
   if (multiSelectMode && activeTeacherId === teacherId) {
