@@ -59,22 +59,54 @@ function sistemFromSinif(sinif) {
   return sinifGrade(sinif) === 9 ? "maarif" : "eski";
 }
 
+const SINAV_TARIHI_REGEX = /(\d)\.\s*Dönem\s*(\d)\.\s*Sınav\s*Tarihi/i;
+const SINAV_TARIHI_KEY = { "1-1": "d1s1", "1-2": "d1s2", "2-1": "d2s1", "2-2": "d2s2" };
+
 function parseTakvimSheet(ws, XLSX) {
   const rows = XLSX.utils.sheet_to_json(ws, { header: 1, raw: false });
   const haftalar = [];
   let ogretimYili = "";
+  const sinavTarihleri = { d1s1: "", d1s2: "", d2s1: "", d2s2: "" };
   for (const row of rows) {
     if (!row || !row.length) continue;
-    if (row[0] === "ÖĞRETİM YILI SEÇ" && row[1]) ogretimYili = cellText(row[1]);
+    for (let c = 0; c < row.length; c++) {
+      const label = cellText(row[c]);
+      if (label === "ÖĞRETİM YILI SEÇ" && !ogretimYili) {
+        for (let c2 = c + 1; c2 < row.length; c2++) {
+          const val = cellText(row[c2]);
+          if (val) { ogretimYili = val; break; }
+        }
+      }
+      const m = SINAV_TARIHI_REGEX.exec(label);
+      if (m) {
+        const key = SINAV_TARIHI_KEY[m[1] + "-" + m[2]];
+        if (key) {
+          for (let c2 = c + 1; c2 < row.length; c2++) {
+            const val = cellText(row[c2]).replace(/^:\s*/, "").trim();
+            if (val) { sinavTarihleri[key] = val; break; }
+          }
+        }
+      }
+    }
     const no = Number(row[0]);
-    if (Number.isInteger(no) && no > 0 && row[1] && /^\d{1,2}\.\d{1,2}\.\d{4}$/.test(cellText(row[1]))) {
-      haftalar.push({
-        no, pazartesi: cellText(row[1]), tarihAraligi: cellText(row[2]),
-        tatilMi: cellText(row[3]) === "EVET", tatilAdi: cellText(row[4])
-      });
+    if (Number.isInteger(no) && no > 0 && row[1]) {
+      const c1 = cellText(row[1]);
+      if (/^\d{1,2}\.\d{1,2}\.\d{4}$/.test(c1)) {
+        /* [Hafta No, Pazartesi tarihi, Tarih Aralığı, Tatil mi?, Tatil Adı] biçimi */
+        haftalar.push({
+          no, pazartesi: c1, tarihAraligi: cellText(row[2]),
+          tatilMi: cellText(row[3]) === "EVET", tatilAdi: cellText(row[4])
+        });
+      } else if (c1) {
+        /* [Hafta No, Tarih Aralığı, Tatil mi?, Tatil Adı] biçimi (Pazartesi sütunu yok) */
+        haftalar.push({
+          no, pazartesi: "", tarihAraligi: c1,
+          tatilMi: cellText(row[2]) === "EVET", tatilAdi: cellText(row[3])
+        });
+      }
     }
   }
-  return haftalar.length ? { ogretimYili, haftalar } : null;
+  return haftalar.length ? { ogretimYili, haftalar, sinavTarihleri } : null;
 }
 
 function parseGunlukSheet(ws, XLSX) {
@@ -105,19 +137,28 @@ function parseGunlukSheet(ws, XLSX) {
     dersSaati: meta.dersSaati || "", dersGunu: meta.dersGunu || "", sistem: sistemFromSinif(meta.sinif), kayitlar };
 }
 
+const YONTEM_BASLIK = "ÖĞRENME-ÖĞRETME\nYÖNTEM VE TEKNİKLERİ";
+const ARAC_BASLIK = "KULLANILAN EĞİTİM TEKNOLOJİLERİ,\nARAÇ VE GEREÇLER";
+
 function parseYillikSheet(ws, XLSX) {
   const rows = XLSX.utils.sheet_to_json(ws, { header: 1, raw: false });
   const meta = sheetMeta(rows);
   const header = findHeaderRow(rows, ["TARİH", "KAZANIMLAR", "KONULAR"]);
   if (!header || !meta.ders) return null;
   const colIndex = name => header.cols.indexOf(name);
-  const idx = { tarih: colIndex("TARİH"), kazanimlar: colIndex("KAZANIMLAR"), konular: colIndex("KONULAR") };
+  const idx = {
+    tarih: colIndex("TARİH"), kazanimlar: colIndex("KAZANIMLAR"), konular: colIndex("KONULAR"),
+    yontem: colIndex(YONTEM_BASLIK), arac: colIndex(ARAC_BASLIK), degerlendirme: colIndex("DEĞERLENDİRME")
+  };
   const haftalar = [];
   for (let r = header.rowIndex + 1; r < rows.length; r++) {
     const row = rows[r] || [];
     const tarih = cellText(row[idx.tarih]);
     if (!tarih || !AY_REGEX.test(tarih)) continue;
-    haftalar.push({ tarih, kazanimlar: cellText(row[idx.kazanimlar]), konular: cellText(row[idx.konular]) });
+    haftalar.push({
+      tarih, kazanimlar: cellText(row[idx.kazanimlar]), konular: cellText(row[idx.konular]),
+      yontem: cellText(row[idx.yontem]), arac: cellText(row[idx.arac]), degerlendirme: cellText(row[idx.degerlendirme])
+    });
   }
   if (!haftalar.length) return null;
   return { ders: meta.ders, sinif: meta.sinif || "", alanDal: meta.alanDal || "", dersSaati: meta.dersSaati || "",

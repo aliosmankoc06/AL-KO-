@@ -506,7 +506,7 @@ function deletePlanEntry(kind, id) {
 function addYillikHafta(id) {
   const p = S.yillikPlanlar.find(x => x.id === id);
   if (!p) return;
-  p.haftalar.push({ tarih: "", kazanimlar: "", konular: "" });
+  p.haftalar.push({ tarih: "", kazanimlar: "", konular: "", yontem: "", arac: "", degerlendirme: "" });
   save(); renderMain();
 }
 function removeYillikHafta(id, idx) {
@@ -558,7 +558,7 @@ function saveNewPlanEntry(kind) {
   if (kind === "yillik") {
     const haftalar = (S.akademikTakvim ? S.akademikTakvim.haftalar : [])
       .filter(h => !h.tatilMi)
-      .map(h => ({ tarih: h.tarihAraligi, kazanimlar: "", konular: "" }));
+      .map(h => ({ tarih: h.tarihAraligi, kazanimlar: "", konular: "", yontem: "", arac: "", degerlendirme: "" }));
     const p = { id: uid("yp"), ders, sinif, alanDal, dersSaati, sistem, haftalar };
     S.yillikPlanlar.push(p);
     activePlanEntryId.yillik = p.id;
@@ -657,8 +657,24 @@ function renderYillikPlanTable(p) {
       </td>
       <td><textarea class="no-print" rows="3" style="width:100%;border:none;resize:vertical;font-family:inherit;font-size:11.5px;" oninput="updateYillikHafta('${p.id}',${i},'kazanimlar',this.value)" onblur="save()">${escHtml(h.kazanimlar)}</textarea><div class="print-only">${nlToBr(h.kazanimlar)}</div></td>
       <td><textarea class="no-print" rows="3" style="width:100%;border:none;resize:vertical;font-family:inherit;font-size:11.5px;" oninput="updateYillikHafta('${p.id}',${i},'konular',this.value)" onblur="save()">${escHtml(h.konular)}</textarea><div class="print-only">${nlToBr(h.konular)}</div></td>
+      <td><textarea class="no-print" rows="3" style="width:100%;border:none;resize:vertical;font-family:inherit;font-size:11.5px;" oninput="updateYillikHafta('${p.id}',${i},'yontem',this.value)" onblur="save()">${escHtml(h.yontem)}</textarea><div class="print-only">${nlToBr(h.yontem)}</div></td>
+      <td><textarea class="no-print" rows="3" style="width:100%;border:none;resize:vertical;font-family:inherit;font-size:11.5px;" oninput="updateYillikHafta('${p.id}',${i},'arac',this.value)" onblur="save()">${escHtml(h.arac)}</textarea><div class="print-only">${nlToBr(h.arac)}</div></td>
+      <td><textarea class="no-print" rows="3" style="width:100%;border:none;resize:vertical;font-family:inherit;font-size:11.5px;" oninput="updateYillikHafta('${p.id}',${i},'degerlendirme',this.value)" onblur="save()">${escHtml(h.degerlendirme)}</textarea><div class="print-only">${nlToBr(h.degerlendirme)}</div></td>
       <td class="no-print"><button class="btn danger" onclick="removeYillikHafta('${p.id}',${i})">Sil</button></td>
     </tr>`).join("");
+  const st = S.akademikTakvim && S.akademikTakvim.sinavTarihleri;
+  const sinavHtml = st && (st.d1s1 || st.d1s2 || st.d2s1 || st.d2s2) ? `
+  <div class="card no-print" style="margin-top:10px;">
+    <div class="row small" style="flex-wrap:wrap;gap:14px;">
+      <span><b>1. Dönem 1. Sınav:</b> ${escHtml(st.d1s1 || "-")}</span>
+      <span><b>1. Dönem 2. Sınav:</b> ${escHtml(st.d1s2 || "-")}</span>
+      <span><b>2. Dönem 1. Sınav:</b> ${escHtml(st.d2s1 || "-")}</span>
+      <span><b>2. Dönem 2. Sınav:</b> ${escHtml(st.d2s2 || "-")}</span>
+    </div>
+  </div>
+  <div class="print-only" style="margin-bottom:10px;">
+    <b>1.D 1.Sınav:</b> ${escHtml(st.d1s1 || "-")} · <b>1.D 2.Sınav:</b> ${escHtml(st.d1s2 || "-")} · <b>2.D 1.Sınav:</b> ${escHtml(st.d2s1 || "-")} · <b>2.D 2.Sınav:</b> ${escHtml(st.d2s2 || "-")}
+  </div>` : "";
   return `
   <div class="card no-print">
     <div class="row small" style="flex-wrap:wrap;gap:14px;align-items:center;">
@@ -672,8 +688,9 @@ function renderYillikPlanTable(p) {
   <div class="print-only" style="margin-bottom:10px;">
     <b>Ders:</b> ${escHtml(p.ders)} · <b>Sınıf:</b> ${escHtml(p.sinif)} · <b>Ders Saati:</b> ${escHtml(p.dersSaati || "-")} · <b>Alan/Dal:</b> ${escHtml(p.alanDal || "-")}
   </div>
+  ${sinavHtml}
   <div class="card" style="overflow-x:auto;">
-    <table style="width:100%;"><thead><tr><th style="width:100px;">Tarih</th><th>Kazanımlar</th><th>Konular</th><th class="no-print"></th></tr></thead>
+    <table style="width:100%;"><thead><tr><th style="width:90px;">Tarih</th><th>Kazanımlar</th><th>Konular</th><th>Öğrenme-Öğretme Yöntem ve Teknikleri</th><th>Kullanılan Eğitim Teknolojileri, Araç ve Gereçler</th><th>Değerlendirme</th><th class="no-print"></th></tr></thead>
     <tbody>${rows}</tbody></table>
     <div class="row no-print"><button class="btn" onclick="addYillikHafta('${p.id}')">Hafta Ekle</button></div>
   </div>`;

@@ -193,9 +193,20 @@ function normalizeState(s) {
   if (!Array.isArray(s.students)) s.students = [];
   if (typeof s.eskiSistemKaldirildi !== "boolean") s.eskiSistemKaldirildi = false;
   if (s.akademikTakvim === undefined) s.akademikTakvim = null;
+  if (s.akademikTakvim && (!s.akademikTakvim.sinavTarihleri || typeof s.akademikTakvim.sinavTarihleri !== "object")) {
+    s.akademikTakvim.sinavTarihleri = { d1s1: "", d1s2: "", d2s1: "", d2s2: "" };
+  }
   if (!Array.isArray(s.yillikPlanlar)) s.yillikPlanlar = [];
   if (!Array.isArray(s.gunlukPlanlar)) s.gunlukPlanlar = [];
-  s.yillikPlanlar.forEach(p => { if (!p.id) p.id = uid("yp"); });
+  s.yillikPlanlar.forEach(p => {
+    if (!p.id) p.id = uid("yp");
+    if (!Array.isArray(p.haftalar)) p.haftalar = [];
+    p.haftalar.forEach(h => {
+      if (typeof h.yontem !== "string") h.yontem = "";
+      if (typeof h.arac !== "string") h.arac = "";
+      if (typeof h.degerlendirme !== "string") h.degerlendirme = "";
+    });
+  });
   s.gunlukPlanlar.forEach(p => { if (!p.id) p.id = uid("gp"); });
   if (!s.normKadro || typeof s.normKadro !== "object") s.normKadro = {};
   if (!s.normKadro.ogrenciSayilari || typeof s.normKadro.ogrenciSayilari !== "object") s.normKadro.ogrenciSayilari = {};
