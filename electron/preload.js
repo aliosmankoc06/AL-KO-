@@ -14,5 +14,6 @@ contextBridge.exposeInMainWorld("desktop", {
   exportExcel: (defaultName, sheets) => ipcRenderer.invoke("export:excel", defaultName, sheets),
   openXlsxDialog: () => ipcRenderer.invoke("dialog:open-xlsx"),
   importPlanXlsx: (filePath) => ipcRenderer.invoke("import:plan-xlsx", filePath),
-  importEnvanterXlsx: (filePath) => ipcRenderer.invoke("import:envanter-xlsx", filePath)
+  importEnvanterXlsx: (filePath) => ipcRenderer.invoke("import:envanter-xlsx", filePath),
+  importPerformansXlsx: (filePath) => ipcRenderer.invoke("import:performans-xlsx", filePath)
 });

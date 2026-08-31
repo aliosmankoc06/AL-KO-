@@ -125,7 +125,8 @@ function defaultState() {
     normKadro: { ogrenciSayilari: {}, koordinatorlukSatirlari: [] },
     toplantilar: [],
     envanter: { makineler: [] },
-    durumTespitFormlari: []
+    durumTespitFormlari: [],
+    performansKayitlari: []
   };
 }
 
@@ -149,7 +150,8 @@ function emptyState() {
     normKadro: { ogrenciSayilari: {}, koordinatorlukSatirlari: [] },
     toplantilar: [],
     envanter: { makineler: [] },
-    durumTespitFormlari: []
+    durumTespitFormlari: [],
+    performansKayitlari: []
   };
 }
 
@@ -195,6 +197,16 @@ function normalizeState(s) {
     if (!f.id) f.id = uid("dtf");
     if (!Array.isArray(f.satirlar)) f.satirlar = [];
     f.satirlar.forEach(r => { if (!r.id) r.id = uid("dtr"); });
+  });
+  if (!Array.isArray(s.performansKayitlari)) s.performansKayitlari = [];
+  s.performansKayitlari.forEach(k => {
+    if (!k.id) k.id = uid("pf");
+    if (k.tur !== "odev") k.tur = "dersici";
+    if (!Array.isArray(k.ogrenciler)) k.ogrenciler = [];
+    k.ogrenciler.forEach(o => {
+      if (!o.id) o.id = uid("og");
+      if (typeof o.toplamPuan !== "number") o.toplamPuan = Number(o.toplamPuan) || 0;
+    });
   });
   if (!s.seededIsletmeler2026) {
     s.seededIsletmeler2026 = true;
