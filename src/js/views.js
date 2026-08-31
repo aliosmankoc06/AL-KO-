@@ -744,15 +744,20 @@ function viewPlanModule(kind) {
 /* ---- Norm Kadro ----
    Grup sayısı öğretmenin ders programındaki fiili atama sayısına DEĞİL,
    öğrenci sayısına endeksli resmi norm formülüne göre hesaplanır (kullanıcı
-   tarafından tarif edildi, gerçek 2026-2027 norm kadro rakamlarıyla
-   doğrulandı: 10-A 27 öğr.→3, 11-A 20 öğr.→2, 12-A 21 öğr.→2, 12-B 14 öğr.→1):
-   - 10/11/12. sınıf: 16 öğrenciye kadar 1 grup, sonra her +8 öğrencide 1 grup artar.
-   - 9. sınıf: 20 öğrenciye kadar 1 grup, sonra her +20 öğrencide 1 grup artar
-     (bu sınır kullanıcıyla netleştirilecek, bkz. sohbet).
+   tarafından kesinleştirildi):
+   - 9. ve 10. sınıf: 20 öğrenciye kadar 1 grup, sonra her +10 öğrencide 1 grup artar
+     (10-20→1, 21-30→2, 31-40→3, ...).
+   - 11. ve 12. sınıf: 16 öğrenciye kadar 1 grup, sonra her +8 öğrencide 1 grup artar
+     (8-16→1, 17-24→2, 25-32→3, 33-40→4, ...).
+   NOT: Bu kural kullanıcının 10-A için gerçek 2026-2027 dosyasındaki eski
+   "27 öğrenci → 3 grup" değeriyle ÇELİŞİYOR (yeni kurala göre 27 öğrenci
+   21-30 aralığına düşüyor → 2 grup). Kullanıcı MEB kaynaklı bu tabloyu
+   kesin kural olarak onayladı, o yüzden eski dosyadaki rakamın hatalı
+   olduğu varsayılıyor -- ama bu sohbette açıkça belirtildi.
    ------------------------------------------------------------ */
 function normKadroGrupSayisi(grade, ogrenciSayisi) {
   if (!ogrenciSayisi || ogrenciSayisi <= 0) return null;
-  if (grade === 9) return Math.ceil(ogrenciSayisi / 20);
+  if (grade === 9 || grade === 10) return ogrenciSayisi <= 20 ? 1 : Math.ceil((ogrenciSayisi - 20) / 10) + 1;
   return ogrenciSayisi <= 16 ? 1 : Math.ceil((ogrenciSayisi - 16) / 8) + 1;
 }
 function setNormKadroOgrenciSayisi(classId, value) {
