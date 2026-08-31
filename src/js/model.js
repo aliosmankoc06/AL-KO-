@@ -132,6 +132,8 @@ function defaultState() {
     sinavHavuzu: { sorular: [] },
     sinavKagitlari: [],
     imzaSirkuleri: [],
+    kalfalikUstalik: { kayitlar: [] },
+    beceriSinavi: { kayitlar: [] },
     kurumBilgileri: {
       okulAdi: "Soma Mesleki ve Teknik Anadolu Lisesi",
       sehir: "SOMA",
@@ -171,6 +173,8 @@ function emptyState() {
     sinavHavuzu: { sorular: [] },
     sinavKagitlari: [],
     imzaSirkuleri: [],
+    kalfalikUstalik: { kayitlar: [] },
+    beceriSinavi: { kayitlar: [] },
     kurumBilgileri: {
       okulAdi: "Soma Mesleki ve Teknik Anadolu Lisesi",
       sehir: "SOMA",
@@ -283,6 +287,42 @@ function normalizeState(s) {
   });
   if (!Array.isArray(s.imzaSirkuleri)) s.imzaSirkuleri = [];
   s.imzaSirkuleri.forEach(k => { if (!k.id) k.id = uid("imza"); });
+  function normalizeSinavKayitListesi(liste, prefix) {
+    if (!Array.isArray(liste)) return [];
+    liste.forEach(k => {
+      if (!k.id) k.id = uid(prefix);
+      if (typeof k.ogrenciNo !== "string") k.ogrenciNo = String(k.ogrenciNo || "");
+      if (typeof k.ad !== "string") k.ad = "";
+      if (typeof k.soyad !== "string") k.soyad = "";
+      if (typeof k.kod !== "string") k.kod = "";
+      if (!k.d1 || typeof k.d1 !== "object") k.d1 = {};
+      if (!k.d2 || typeof k.d2 !== "object") k.d2 = {};
+      ["t1", "t2", "ih1", "ih2", "proje", "deney"].forEach(f => {
+        if (typeof k.d1[f] !== "string" && typeof k.d1[f] !== "number") k.d1[f] = "";
+        if (typeof k.d2[f] !== "string" && typeof k.d2[f] !== "number") k.d2[f] = "";
+      });
+      if (!k.isDosyasi || typeof k.isDosyasi !== "object") k.isDosyasi = {};
+      ["k1", "k2", "k3", "k4"].forEach(f => {
+        if (typeof k.isDosyasi[f] !== "string" && typeof k.isDosyasi[f] !== "number") k.isDosyasi[f] = "";
+      });
+      if (typeof k.isDosyasiTeslimEtmedi !== "boolean") k.isDosyasiTeslimEtmedi = false;
+      if (typeof k.sinavPuani !== "string" && typeof k.sinavPuani !== "number") k.sinavPuani = "";
+      if (typeof k.aciklama !== "string") k.aciklama = "";
+    });
+    return liste;
+  }
+  if (!s.kalfalikUstalik || typeof s.kalfalikUstalik !== "object") s.kalfalikUstalik = { kayitlar: [] };
+  s.kalfalikUstalik.kayitlar = normalizeSinavKayitListesi(s.kalfalikUstalik.kayitlar, "ku").map(k => {
+    if (k.tur !== "kalfalik" && k.tur !== "ustalik") k.tur = "kalfalik";
+    if (typeof k.dal !== "string" || !k.dal) k.dal = "MBO";
+    return k;
+  });
+  if (!s.beceriSinavi || typeof s.beceriSinavi !== "object") s.beceriSinavi = { kayitlar: [] };
+  s.beceriSinavi.kayitlar = normalizeSinavKayitListesi(s.beceriSinavi.kayitlar, "bs").map(k => {
+    if (typeof k.sinif !== "string" || !k.sinif) k.sinif = "12-A";
+    if (typeof k.dal !== "string" || !k.dal) k.dal = "MBO";
+    return k;
+  });
   if (!s.kurumBilgileri || typeof s.kurumBilgileri !== "object") s.kurumBilgileri = {};
   {
     const kb = s.kurumBilgileri;

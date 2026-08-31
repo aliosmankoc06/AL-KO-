@@ -13,6 +13,8 @@ const MODULES = [
   { id: "staj-yerlestirme", label: "Staj Yerleştirme", icon: "briefcase" },
   { id: "atolye-envanter", label: "Atölye / Envanter", icon: "tool" },
   { id: "performans", label: "Performans Kriterleri", icon: "star" },
+  { id: "kalfalik-ustalik", label: "Kalfalık / Ustalık Sınavı", icon: "medal" },
+  { id: "beceri-sinavi", label: "Beceri Sınavı", icon: "clipboardCheck" },
   { id: "donem-raporlari", label: "Ders Kesim / Yazılı Teslim", icon: "report" },
   { id: "sinav-havuzu", label: "Sınav Havuzu", icon: "question" },
   { id: "ayarlar", label: "Ayarlar", icon: "settings" }
@@ -73,6 +75,8 @@ function renderMain() {
   if (activeModule === "staj-yerlestirme") { el.innerHTML = viewStajYerlestirme(); return; }
   if (activeModule === "atolye-envanter") { el.innerHTML = viewAtolyeEnvanter(); return; }
   if (activeModule === "performans") { el.innerHTML = viewPerformans(); return; }
+  if (activeModule === "kalfalik-ustalik") { el.innerHTML = viewKalfalikUstalik(); return; }
+  if (activeModule === "beceri-sinavi") { el.innerHTML = viewBeceriSinavi(); return; }
   if (activeModule === "donem-raporlari") { el.innerHTML = viewDonemRaporlari(); return; }
   if (activeModule === "sinav-havuzu") { el.innerHTML = viewSinavHavuzu(); return; }
   if (activeModule === "ayarlar") { el.innerHTML = viewAyarlar(); return; }
@@ -2163,6 +2167,252 @@ function viewPerformans() {
   ];
   const tabBar = `<div class="row no-print" style="flex-wrap:wrap;">${tabs.map(t => `<button class="btn ${t.id === activePerformansTab ? 'primary' : ''}" onclick="setPerformansTab('${t.id}')">${escHtml(t.label)}</button>`).join("")}</div>`;
   return tabBar + viewPerformansBolum(activePerformansTab);
+}
+
+/* ---- Kalfalık/Ustalık Sınavı ve Beceri Sınavı (ortak hesaplama motoru) ----
+   MEB Mesleki Eğitim Genel Müdürlüğü'nün gerçek "Kalfalık/Ustalık Beceri Sınavı
+   Değerlendirme Çizelgesi" ve "İşletmelerde Beceri Eğitimi Yıl Sonu Beceri Sınavı
+   Değerlendirme Çizelgesi" belgelerindeki formüller birebir uygulanır:
+   Dönem Ort. = 6 işletme notunun (Temrin1/2, İş-Hizmet1/2, Proje, Deney) ortalaması;
+   Genel Dönem Ort. = (1.Dönem Ort.+2.Dönem Ort.)/2; İş Dosyası Puanı = 4 kriterin
+   (her biri max 25) toplamı; Beceri Sınav Puanı = İş Dosyası×%20 + Sınav Puanı×%80;
+   Yıl Sonu = (Genel Dönem Ort.+Beceri Sınav Puanı)/2; Sonuç, Beceri Sınav Puanı
+   50 ve üzeriyse BAŞARILI sayılır (devamsızsa doğrudan DEVAMSIZLIK). */
+function snSayi(v) { const n = Number(v); return v === "" || v === null || v === undefined || isNaN(n) ? null : n; }
+function snOrtalama(vals) {
+  const nums = vals.map(snSayi).filter(v => v !== null);
+  return nums.length ? nums.reduce((a, b) => a + b, 0) / nums.length : 0;
+}
+function snDonemOrt(d) { return snOrtalama([d.t1, d.t2, d.ih1, d.ih2, d.proje, d.deney]); }
+function snIsDosyasiPuani(k) {
+  if (k.isDosyasiTeslimEtmedi) return 0;
+  return ["k1", "k2", "k3", "k4"].reduce((sum, f) => sum + (snSayi(k.isDosyasi[f]) || 0), 0);
+}
+function snKayitHesapla(k) {
+  const ort1 = snDonemOrt(k.d1), ort2 = snDonemOrt(k.d2);
+  const genelOrt = (ort1 + ort2) / 2;
+  const isDosyasiPuani = snIsDosyasiPuani(k);
+  const sinavPuani = snSayi(k.sinavPuani) || 0;
+  const beceriPuani = isDosyasiPuani * 0.2 + sinavPuani * 0.8;
+  const yilSonu = (genelOrt + beceriPuani) / 2;
+  const yilSonuYazi = yilSonu >= 85 ? "PEKİYİ" : yilSonu >= 70 ? "İYİ" : yilSonu >= 50 ? "ORTA" : "BAŞARISIZ";
+  const sonuc = k.kod === "D" ? "DEVAMSIZLIK" : (beceriPuani >= 50 ? "BAŞARILI" : "BAŞARISIZ");
+  return { ort1, ort2, genelOrt, isDosyasiPuani, beceriPuani, yilSonu, yilSonuYazi, sonuc };
+}
+function snSonucRengi(sonuc) {
+  if (sonuc === "BAŞARILI") return "background:var(--teal-bg);color:var(--teal-ink);";
+  if (sonuc === "DEVAMSIZLIK") return "background:var(--panel-2);color:var(--ink-soft);";
+  return "background:var(--warn-bg);color:var(--warn);";
+}
+function snDeposu(kind) { return kind === "ku" ? S.kalfalikUstalik : S.beceriSinavi; }
+function snEkleKayit(kind, ekAlanlar) {
+  const dep = snDeposu(kind);
+  dep.kayitlar.push(Object.assign({
+    id: uid(kind), ogrenciNo: "", ad: "", soyad: "", kod: "",
+    d1: { t1: "", t2: "", ih1: "", ih2: "", proje: "", deney: "" },
+    d2: { t1: "", t2: "", ih1: "", ih2: "", proje: "", deney: "" },
+    isDosyasi: { k1: "", k2: "", k3: "", k4: "" }, isDosyasiTeslimEtmedi: false,
+    sinavPuani: "", aciklama: ""
+  }, ekAlanlar));
+  save(); renderMain();
+}
+function snSilKayit(kind, id) {
+  if (!confirm("Bu öğrencinin kaydı silinsin mi?")) return;
+  const dep = snDeposu(kind);
+  dep.kayitlar = dep.kayitlar.filter(k => k.id !== id);
+  save(); renderMain();
+}
+function snGuncelleAlan(kind, id, path, value) {
+  const dep = snDeposu(kind);
+  const k = dep.kayitlar.find(x => x.id === id);
+  if (!k) return;
+  const parts = path.split(".");
+  let obj = k;
+  for (let i = 0; i < parts.length - 1; i++) obj = obj[parts[i]];
+  obj[parts[parts.length - 1]] = value;
+  save();
+}
+function snGuncelleCheckbox(kind, id, field, checked) {
+  const dep = snDeposu(kind);
+  const k = dep.kayitlar.find(x => x.id === id);
+  if (!k) return;
+  k[field] = checked;
+  save(); renderMain();
+}
+function snRosterTablo(kind, kayitlar) {
+  const numCell = (kind2, id, path, value, w) =>
+    `<input class="no-print sn-cell" type="number" value="${value === "" ? "" : escHtml(String(value))}" style="width:${w || 46}px" onchange="snGuncelleAlan('${kind2}','${id}','${path}',this.value)">` +
+    `<span class="print-only-inline">${value === "" || value === null || value === undefined ? "-" : escHtml(String(value))}</span>`;
+  const rows = kayitlar.map((k, i) => {
+    const h = snKayitHesapla(k);
+    return `
+    <tr>
+      <td>${i + 1}</td>
+      <td><input class="no-print sn-cell" type="text" value="${escHtml(k.ogrenciNo)}" style="width:52px" onchange="snGuncelleAlan('${kind}','${k.id}','ogrenciNo',this.value)"><span class="print-only-inline">${escHtml(k.ogrenciNo || "-")}</span></td>
+      <td class="no-print"><input type="text" placeholder="Adı" value="${escHtml(k.ad)}" style="width:90px" onchange="snGuncelleAlan('${kind}','${k.id}','ad',this.value)"></td>
+      <td class="no-print"><input type="text" placeholder="Soyadı" value="${escHtml(k.soyad)}" style="width:90px" onchange="snGuncelleAlan('${kind}','${k.id}','soyad',this.value)"></td>
+      <td class="print-only-cell">${escHtml(k.ad)} ${escHtml(k.soyad)}</td>
+      <td class="no-print"><select onchange="snGuncelleAlan('${kind}','${k.id}','kod',this.value); renderMain();" style="width:44px">
+        <option value="" ${k.kod === "" ? "selected" : ""}>-</option>
+        <option value="D" ${k.kod === "D" ? "selected" : ""}>D</option>
+        <option value="M" ${k.kod === "M" ? "selected" : ""}>M</option>
+      </select></td>
+      <td class="print-only-cell">${escHtml(k.kod || "-")}</td>
+      <td>${numCell(kind, k.id, "d1.t1", k.d1.t1)}</td>
+      <td>${numCell(kind, k.id, "d1.t2", k.d1.t2)}</td>
+      <td>${numCell(kind, k.id, "d1.ih1", k.d1.ih1)}</td>
+      <td>${numCell(kind, k.id, "d1.ih2", k.d1.ih2)}</td>
+      <td>${numCell(kind, k.id, "d1.proje", k.d1.proje)}</td>
+      <td>${numCell(kind, k.id, "d1.deney", k.d1.deney)}</td>
+      <td style="font-weight:600;">${h.ort1.toFixed(1)}</td>
+      <td>${numCell(kind, k.id, "d2.t1", k.d2.t1)}</td>
+      <td>${numCell(kind, k.id, "d2.t2", k.d2.t2)}</td>
+      <td>${numCell(kind, k.id, "d2.ih1", k.d2.ih1)}</td>
+      <td>${numCell(kind, k.id, "d2.ih2", k.d2.ih2)}</td>
+      <td>${numCell(kind, k.id, "d2.proje", k.d2.proje)}</td>
+      <td>${numCell(kind, k.id, "d2.deney", k.d2.deney)}</td>
+      <td style="font-weight:600;">${h.ort2.toFixed(1)}</td>
+      <td style="font-weight:600;">${h.genelOrt.toFixed(1)}</td>
+      <td>${numCell(kind, k.id, "isDosyasi.k1", k.isDosyasi.k1, 40)}</td>
+      <td>${numCell(kind, k.id, "isDosyasi.k2", k.isDosyasi.k2, 40)}</td>
+      <td>${numCell(kind, k.id, "isDosyasi.k3", k.isDosyasi.k3, 40)}</td>
+      <td>${numCell(kind, k.id, "isDosyasi.k4", k.isDosyasi.k4, 40)}</td>
+      <td class="no-print" style="text-align:center;"><input type="checkbox" title="İş dosyasını teslim etmedi" ${k.isDosyasiTeslimEtmedi ? "checked" : ""} onchange="snGuncelleCheckbox('${kind}','${k.id}','isDosyasiTeslimEtmedi',this.checked)"></td>
+      <td style="font-weight:600;">${h.isDosyasiPuani.toFixed(1)}</td>
+      <td>${numCell(kind, k.id, "sinavPuani", k.sinavPuani, 46)}</td>
+      <td style="font-weight:600;">${h.beceriPuani.toFixed(1)}</td>
+      <td style="font-weight:700;">${h.yilSonu.toFixed(1)}</td>
+      <td>${h.yilSonuYazi}</td>
+      <td><span class="pill" style="${snSonucRengi(h.sonuc)}">${h.sonuc}</span></td>
+      <td class="no-print"><input type="text" value="${escHtml(k.aciklama)}" style="width:100px" onchange="snGuncelleAlan('${kind}','${k.id}','aciklama',this.value)"></td>
+      <td class="no-print"><button class="btn danger" onclick="snSilKayit('${kind}','${k.id}')">Sil</button></td>
+    </tr>`;
+  }).join("");
+  return `
+  <div class="card" style="overflow-x:auto;">
+    <table style="width:100%;font-size:11px;">
+      <thead>
+        <tr>
+          <th rowspan="2">Sıra</th>
+          <th rowspan="2">Öğr. No</th>
+          <th colspan="2" class="no-print">Adı Soyadı</th>
+          <th class="print-only-cell" rowspan="2">Adı Soyadı</th>
+          <th rowspan="2">Kod<br>D/M</th>
+          <th colspan="6">◀ 1. Dönem İşletme Notları ▶</th>
+          <th rowspan="2">1.D<br>Ort.</th>
+          <th colspan="6">◀ 2. Dönem İşletme Notları ▶</th>
+          <th rowspan="2">2.D<br>Ort.</th>
+          <th rowspan="2">Genel<br>Dönem<br>Ort.</th>
+          <th colspan="4">İş Dosyası (Kriter 1-4, max 25)</th>
+          <th class="no-print" rowspan="2">Teslim<br>Etmedi</th>
+          <th rowspan="2">İş Dosy.<br>Puanı</th>
+          <th rowspan="2">Sınav<br>Puanı</th>
+          <th rowspan="2">Beceri<br>Sınav<br>Puanı<br>(%20+%80)</th>
+          <th rowspan="2">Yıl Sonu<br>(Sayı)</th>
+          <th rowspan="2">Yıl Sonu<br>(Yazı)</th>
+          <th rowspan="2">Sonuç</th>
+          <th class="no-print" rowspan="2">Açıklama</th>
+          <th class="no-print" rowspan="2"></th>
+        </tr>
+        <tr>
+          <th>Temrin1</th><th>Temrin2</th><th>İş/Hzm1</th><th>İş/Hzm2</th><th>Proje</th><th>Deney</th>
+          <th>Temrin1</th><th>Temrin2</th><th>İş/Hzm1</th><th>İş/Hzm2</th><th>Proje</th><th>Deney</th>
+          <th>K1</th><th>K2</th><th>K3</th><th>K4</th>
+        </tr>
+      </thead>
+      <tbody>${rows || `<tr><td colspan="30" class="small">Henüz öğrenci eklenmedi.</td></tr>`}</tbody>
+    </table>
+    <div class="row no-print" style="margin-top:8px;">
+      <p class="small">Kod: D = Devamsız, M = Mazeretli. Sonuç, Beceri Sınav Puanı 50 ve üzeriyse BAŞARILI sayılır (kritik beceriler hariç — komisyon kararına göre elle de düzeltebilirsiniz).</p>
+    </div>
+  </div>`;
+}
+function snIsDosyasiKriterAciklamasi() {
+  return `
+  <div class="card no-print">
+    <h3>İş Dosyası (Staj Defteri) Derecelendirme Ölçütleri</h3>
+    <p class="small"><b>Kriter 1 — Sayfa Düzeni ve Temizliği:</b> 0-5 Çok dağınık ve kirli · 6-12 Kısmen düzenli · 13-19 Büyük ölçüde düzenli · 20-24 Düzenli ve temiz · 25 Mükemmel düzen</p>
+    <p class="small"><b>Kriter 2 — Teknik Resim ve Çizim Kuralları:</b> 0-5 Hiç kural yok · 6-12 Kısmen uygun · 13-19 Büyük ölçüde uygun · 20-24 Kurallara uygun · 25 Tam ve eksiksiz</p>
+    <p class="small"><b>Kriter 3 — Yapılan İşlerin Anlatımı:</b> 0-5 Yok / çok yetersiz · 6-12 Kısmen açıklama var · 13-19 Yeterli açıklama · 20-24 Detaylı anlatım · 25 Eksiksiz ve detaylı</p>
+    <p class="small"><b>Kriter 4 — Usta Öğretici İmzaları:</b> 0-5 İmza çok eksik · 6-12 Kısmen imzalı · 13-19 Büyük bölümü imzalı · 20-24 Neredeyse tamamı · 25 Tamamı imzalı</p>
+  </div>`;
+}
+
+/* ---- Kalfalık / Ustalık Sınavı (MESEM öğrencileri) ---- */
+let activeKuTur = "kalfalik";
+let activeKuDal = "MBO";
+function setKuTur(t) { activeKuTur = t; renderMain(); }
+function setKuDal(d) { activeKuDal = d; renderMain(); }
+function viewKalfalikUstalik() {
+  const turlar = [{ id: "kalfalik", label: "Kalfalık Sınavı" }, { id: "ustalik", label: "Ustalık Sınavı" }];
+  const dallar = [{ id: "MBO", label: DAL_LABELS.MBO }, { id: "BMI", label: DAL_LABELS.BMI }];
+  const turBar = `<div class="row no-print" style="flex-wrap:wrap;">${turlar.map(t => `<button class="btn ${t.id === activeKuTur ? 'primary' : ''}" onclick="setKuTur('${t.id}')">${t.label}</button>`).join("")}</div>`;
+  const dalBar = `<div class="row no-print" style="flex-wrap:wrap;margin-top:6px;">${dallar.map(d => `<button class="btn ${d.id === activeKuDal ? 'primary' : ''}" onclick="setKuDal('${d.id}')">${d.label}</button>`).join("")}</div>`;
+  const kayitlar = S.kalfalikUstalik.kayitlar.filter(k => k.tur === activeKuTur && k.dal === activeKuDal);
+  const baslik = (activeKuTur === "kalfalik" ? "MESEM Kalfalık" : "MESEM Ustalık") + " Beceri Sınavı Değerlendirme Çizelgesi — " + DAL_LABELS[activeKuDal];
+  const dosyaAdi = baslik;
+  return `
+  <div class="card no-print">
+    <h2>Kalfalık / Ustalık Sınavı</h2>
+    <p class="small">MESEM (mesleki eğitim merkezi) öğrencilerinin Kalfalık ve Ustalık Beceri Sınavı değerlendirme çizelgesi. Meslek dalına ve sınav seviyesine göre öğrenci ekleyip işletme dönem notlarını, iş dosyası puanını ve sınav puanını girin — genel ortalama, beceri sınav puanı, yıl sonu notu ve sonuç MEB formülüyle otomatik hesaplanır.</p>
+    ${turBar}
+    ${dalBar}
+    <div class="row" style="margin-top:8px;">
+      <button class="btn primary" onclick="snEkleKayit('ku',{tur:activeKuTur,dal:activeKuDal})">Öğrenci Ekle</button>
+    </div>
+    ${belgeAracCubugu(dosyaAdi)}
+  </div>
+  ${snIsDosyasiKriterAciklamasi()}
+  <div class="print-area">
+    ${belgeYazdirmaBasligi(baslik)}
+    ${snRosterTablo("ku", kayitlar)}
+  </div>`;
+}
+
+/* ---- Beceri Sınavı (İşletmelerde Beceri Eğitimi — AMP 12. sınıf) ---- */
+let activeBeceriSinif = "12-A";
+function setBeceriSinif(s) { activeBeceriSinif = s; renderMain(); }
+function viewBeceriSinavi() {
+  const siniflarKaynagi = S.classes.filter(c => c.grade === 12 && !c.excludeFromDistribution);
+  const siniflar = siniflarKaynagi.length ? siniflarKaynagi.map(c => ({ id: c.name, dal: c.dal })) : [{ id: "12-A", dal: "MBO" }, { id: "12-B", dal: "BMI" }];
+  if (!siniflar.some(s => s.id === activeBeceriSinif)) activeBeceriSinif = siniflar[0].id;
+  const aktifSinifTanimi = siniflar.find(s => s.id === activeBeceriSinif) || siniflar[0];
+  const sinifBar = `<div class="row no-print" style="flex-wrap:wrap;">${siniflar.map(s => `<button class="btn ${s.id === activeBeceriSinif ? 'primary' : ''}" onclick="setBeceriSinif('${jsq(s.id)}')">${escHtml(s.id)} — ${DAL_LABELS[s.dal] || s.dal}</button>`).join("")}</div>`;
+  const kayitlar = S.beceriSinavi.kayitlar.filter(k => k.sinif === activeBeceriSinif);
+  const baslik = "İşletmelerde Beceri Eğitimi Yıl Sonu Beceri Sınavı Değerlendirme Çizelgesi — " + activeBeceriSinif + " — " + (DAL_LABELS[aktifSinifTanimi.dal] || aktifSinifTanimi.dal);
+  const dosyaAdi = baslik;
+  return `
+  <div class="card no-print">
+    <h2>Beceri Sınavı</h2>
+    <p class="small">İşletmelerde beceri eğitimi gören 12. sınıf (AMP) öğrencilerinin yıl sonu beceri sınavı değerlendirme çizelgesi. Sınıfa göre öğrenci ekleyip işletme dönem notlarını, iş dosyası puanını ve sınav puanını girin — genel ortalama, beceri sınav puanı, yıl sonu notu ve sonuç MEB formülüyle otomatik hesaplanır.</p>
+    ${sinifBar}
+    <div class="row" style="margin-top:8px;">
+      <button class="btn primary" onclick="snEkleKayit('bs',{sinif:activeBeceriSinif,dal:aktifDalIcinEkle()})">Öğrenci Ekle</button>
+    </div>
+    ${belgeAracCubugu(dosyaAdi)}
+  </div>
+  ${snIsDosyasiKriterAciklamasi()}
+  ${beceriKomisyonKararKarti(activeBeceriSinif, aktifSinifTanimi.dal)}
+  <div class="print-area">
+    ${belgeYazdirmaBasligi(baslik)}
+    ${snRosterTablo("bs", kayitlar)}
+  </div>`;
+}
+function aktifDalIcinEkle() {
+  const siniflarKaynagi = S.classes.filter(c => c.grade === 12 && !c.excludeFromDistribution);
+  const siniflar = siniflarKaynagi.length ? siniflarKaynagi.map(c => ({ id: c.name, dal: c.dal })) : [{ id: "12-A", dal: "MBO" }, { id: "12-B", dal: "BMI" }];
+  const t = siniflar.find(s => s.id === activeBeceriSinif);
+  return t ? t.dal : "MBO";
+}
+function beceriKomisyonKararKarti(sinif, dal) {
+  const k = S.kurumBilgileri;
+  return `
+  <div class="card no-print">
+    <h3>Beceri Sınavı Komisyonu Karar Tutanağı (Yazdırma Önizlemesi)</h3>
+    <p class="small">${escHtml(k.okulAdi)} ${escHtml(k.alanAdi)} ${escHtml(dal ? (DAL_LABELS[dal] || dal) + " Dalı" : "")} ${escHtml(sinif)} sınıfı öğrencilerinin ${escHtml(S.akademikTakvim ? S.akademikTakvim.ogretimYili : "")} Eğitim-Öğretim Yılı İşletmelerde Beceri Eğitimi Yıl Sonu Beceri Sınavının, Millî Eğitim Bakanlığı Ortaöğretim Kurumları Yönetmeliği'nin 46. maddesinin 1. fıkrası hükmü uyarınca komisyonumuzun takdir yetkisi dahilinde yazılı sınav biçiminde yapılmasına; söz konusu sınavın 9, 10, 11 ve 12. sınıf öğretim programlarını kapsayan konulardan oluşan 50 (elli) soruluk çoktan seçmeli (4 şıklı) olarak uygulanmasına ve değerlendirmenin 100 (yüz) tam puan üzerinden yapılmasına komisyonumuzca oybirliği ile karar verilmiştir.</p>
+    <p class="small">Dayanak: MEB Ortaöğretim Kurumları Yönetmeliği Madde 46/1 — "Bu sınav, dersin özelliğine göre komisyonca alınacak karar doğrultusunda uygulamalı ve/veya yazılı olarak yapılır."</p>
+    <p class="small">İmza için Ayarlar &gt; İmza Sirküsü'nden komisyon üyelerini ekleyip belgeyi yazdırırken elle tamamlayabilirsiniz.</p>
+  </div>`;
 }
 
 /* ---- Ders Kesim Raporu / Yazılı Kağıtları Teslim Raporu ---- */
