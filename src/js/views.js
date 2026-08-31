@@ -397,6 +397,7 @@ function belgeYazdirmaBasligi(altBaslik) {
 /* ---- Yıllık Plan / Günlük Plan (Eski Sistem / Maarif Model) ---- */
 function escHtml(s) { return String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
 function nlToBr(s) { return escHtml(s).replace(/\n/g, "<br>"); }
+function sinifGrade(sinif) { const m = /(\d{1,2})/.exec(sinif || ""); return m ? Number(m[1]) : null; }
 
 function setPlanSistem(id) { activePlanSistem = id; renderMain(); }
 function removeEskiSistem() {
@@ -422,6 +423,114 @@ function deletePlanEntry(kind, id) {
   if (activePlanEntryId[kind] === id) activePlanEntryId[kind] = null;
   save();
   renderMain();
+}
+function addYillikHafta(id) {
+  const p = S.yillikPlanlar.find(x => x.id === id);
+  if (!p) return;
+  p.haftalar.push({ tarih: "", kazanimlar: "", konular: "" });
+  save(); renderMain();
+}
+function removeYillikHafta(id, idx) {
+  if (!confirm("Bu hafta satırı silinsin mi?")) return;
+  const p = S.yillikPlanlar.find(x => x.id === id);
+  if (!p) return;
+  p.haftalar.splice(idx, 1);
+  save(); renderMain();
+}
+function addGunlukKayit(id) {
+  const p = S.gunlukPlanlar.find(x => x.id === id);
+  if (!p) return;
+  p.kayitlar.push({ tarih: "", konu: "", kazanim: "", giris: "", gelisme: "", sonuc: "", yontem: "", arac: "", olcme: "" });
+  save(); renderMain();
+}
+function removeGunlukKayit(id, idx) {
+  if (!confirm("Bu ders kaydı silinsin mi?")) return;
+  const p = S.gunlukPlanlar.find(x => x.id === id);
+  if (!p) return;
+  p.kayitlar.splice(idx, 1);
+  save(); renderMain();
+}
+function addPlanEntry(kind) {
+  const root = document.getElementById("modal-root");
+  root.innerHTML = `
+    <div class="modal-bg" onclick="if(event.target===this) closeModal()">
+      <div class="modal" style="width:400px;">
+        <h3>Yeni ${kind === 'yillik' ? 'Yıllık' : 'Günlük'} Plan Ekle</h3>
+        <label class="small">Ders Adı</label><input type="text" id="ap-ders" style="width:100%">
+        <label class="small">Sınıf (örn. 9-A, AMP 10-A)</label><input type="text" id="ap-sinif" style="width:100%">
+        <label class="small">Alan/Dal</label><input type="text" id="ap-alandal" value="Makine ve Tasarım Teknolojisi Alanı" style="width:100%">
+        <label class="small">Ders Saati</label><input type="text" id="ap-dershaat" style="width:100%">
+        ${kind === 'gunluk' ? `<label class="small">Öğretmen</label><input type="text" id="ap-ogretmen" style="width:100%">
+        <label class="small">Ders Günü</label><input type="text" id="ap-dersgunu" style="width:100%">` : ''}
+        <div class="row">
+          <button class="btn primary" onclick="saveNewPlanEntry('${kind}')">Ekle</button>
+          <button class="btn" onclick="closeModal()">İptal</button>
+        </div>
+      </div>
+    </div>`;
+}
+function saveNewPlanEntry(kind) {
+  const ders = document.getElementById("ap-ders").value.trim();
+  const sinif = document.getElementById("ap-sinif").value.trim();
+  if (!ders || !sinif) { alert("Ders adı ve sınıf girin."); return; }
+  const alanDal = document.getElementById("ap-alandal").value.trim();
+  const dersSaati = document.getElementById("ap-dershaat").value.trim();
+  const sistem = sinifGrade(sinif) === 9 ? "maarif" : "eski";
+  if (kind === "yillik") {
+    const haftalar = (S.akademikTakvim ? S.akademikTakvim.haftalar : [])
+      .filter(h => !h.tatilMi)
+      .map(h => ({ tarih: h.tarihAraligi, kazanimlar: "", konular: "" }));
+    const p = { id: uid("yp"), ders, sinif, alanDal, dersSaati, sistem, haftalar };
+    S.yillikPlanlar.push(p);
+    activePlanEntryId.yillik = p.id;
+  } else {
+    const ogretmen = document.getElementById("ap-ogretmen").value.trim();
+    const dersGunu = document.getElementById("ap-dersgunu").value.trim();
+    const p = { id: uid("gp"), ders, sinif, ogretmen, alanDal, dersSaati, dersGunu, sistem, kayitlar: [] };
+    S.gunlukPlanlar.push(p);
+    activePlanEntryId.gunluk = p.id;
+  }
+  activePlanSistem = sistem;
+  save(); closeModal(); renderMain();
+}
+function editPlanEntryMeta(kind, id) {
+  const p = (kind === "yillik" ? S.yillikPlanlar : S.gunlukPlanlar).find(x => x.id === id);
+  if (!p) return;
+  const root = document.getElementById("modal-root");
+  root.innerHTML = `
+    <div class="modal-bg" onclick="if(event.target===this) closeModal()">
+      <div class="modal" style="width:400px;">
+        <h3>Plan Bilgilerini Düzenle</h3>
+        <label class="small">Ders Adı</label><input type="text" id="ap-ders" value="${escHtml(p.ders)}" style="width:100%">
+        <label class="small">Sınıf</label><input type="text" id="ap-sinif" value="${escHtml(p.sinif)}" style="width:100%">
+        <label class="small">Alan/Dal</label><input type="text" id="ap-alandal" value="${escHtml(p.alanDal || '')}" style="width:100%">
+        <label class="small">Ders Saati</label><input type="text" id="ap-dershaat" value="${escHtml(p.dersSaati || '')}" style="width:100%">
+        ${kind === 'gunluk' ? `<label class="small">Öğretmen</label><input type="text" id="ap-ogretmen" value="${escHtml(p.ogretmen || '')}" style="width:100%">
+        <label class="small">Ders Günü</label><input type="text" id="ap-dersgunu" value="${escHtml(p.dersGunu || '')}" style="width:100%">` : ''}
+        <div class="row">
+          <button class="btn primary" onclick="saveEditedPlanEntry('${kind}','${id}')">Kaydet</button>
+          <button class="btn" onclick="closeModal()">İptal</button>
+        </div>
+      </div>
+    </div>`;
+}
+function saveEditedPlanEntry(kind, id) {
+  const p = (kind === "yillik" ? S.yillikPlanlar : S.gunlukPlanlar).find(x => x.id === id);
+  if (!p) return;
+  const ders = document.getElementById("ap-ders").value.trim();
+  const sinif = document.getElementById("ap-sinif").value.trim();
+  if (!ders || !sinif) { alert("Ders adı ve sınıf girin."); return; }
+  p.ders = ders;
+  p.sinif = sinif;
+  p.alanDal = document.getElementById("ap-alandal").value.trim();
+  p.dersSaati = document.getElementById("ap-dershaat").value.trim();
+  p.sistem = sinifGrade(sinif) === 9 ? "maarif" : "eski";
+  if (kind === "gunluk") {
+    p.ogretmen = document.getElementById("ap-ogretmen").value.trim();
+    p.dersGunu = document.getElementById("ap-dersgunu").value.trim();
+  }
+  activePlanSistem = p.sistem;
+  save(); closeModal(); renderMain();
 }
 function mergePlanImportResult(result) {
   if (result.takvim) S.akademikTakvim = result.takvim;
@@ -463,22 +572,31 @@ function importPlanFromExcel() {
 function renderYillikPlanTable(p) {
   const rows = p.haftalar.map((h, i) => `
     <tr>
-      <td style="white-space:nowrap;">${escHtml(h.tarih)}</td>
+      <td style="white-space:nowrap;">
+        <input class="no-print" type="text" value="${escHtml(h.tarih)}" style="width:100px;border:none;font-family:inherit;font-size:11.5px;" onchange="updateYillikHafta('${p.id}',${i},'tarih',this.value); renderMain();">
+        <span class="print-only-inline">${escHtml(h.tarih)}</span>
+      </td>
       <td><textarea class="no-print" rows="3" style="width:100%;border:none;resize:vertical;font-family:inherit;font-size:11.5px;" oninput="updateYillikHafta('${p.id}',${i},'kazanimlar',this.value)" onblur="save()">${escHtml(h.kazanimlar)}</textarea><div class="print-only">${nlToBr(h.kazanimlar)}</div></td>
       <td><textarea class="no-print" rows="3" style="width:100%;border:none;resize:vertical;font-family:inherit;font-size:11.5px;" oninput="updateYillikHafta('${p.id}',${i},'konular',this.value)" onblur="save()">${escHtml(h.konular)}</textarea><div class="print-only">${nlToBr(h.konular)}</div></td>
+      <td class="no-print"><button class="btn danger" onclick="removeYillikHafta('${p.id}',${i})">Sil</button></td>
     </tr>`).join("");
   return `
-  <div class="card">
-    <div class="row small" style="flex-wrap:wrap;gap:14px;">
+  <div class="card no-print">
+    <div class="row small" style="flex-wrap:wrap;gap:14px;align-items:center;">
       <span><b>Ders:</b> ${escHtml(p.ders)}</span>
       <span><b>Sınıf:</b> ${escHtml(p.sinif)}</span>
       <span><b>Ders Saati:</b> ${escHtml(p.dersSaati || "-")}</span>
       <span><b>Alan/Dal:</b> ${escHtml(p.alanDal || "-")}</span>
+      <button class="btn" onclick="editPlanEntryMeta('yillik','${p.id}')">Bilgileri Düzenle</button>
     </div>
   </div>
+  <div class="print-only" style="margin-bottom:10px;">
+    <b>Ders:</b> ${escHtml(p.ders)} · <b>Sınıf:</b> ${escHtml(p.sinif)} · <b>Ders Saati:</b> ${escHtml(p.dersSaati || "-")} · <b>Alan/Dal:</b> ${escHtml(p.alanDal || "-")}
+  </div>
   <div class="card" style="overflow-x:auto;">
-    <table style="width:100%;"><thead><tr><th style="width:100px;">Tarih</th><th>Kazanımlar</th><th>Konular</th></tr></thead>
+    <table style="width:100%;"><thead><tr><th style="width:100px;">Tarih</th><th>Kazanımlar</th><th>Konular</th><th class="no-print"></th></tr></thead>
     <tbody>${rows}</tbody></table>
+    <div class="row no-print"><button class="btn" onclick="addYillikHafta('${p.id}')">Hafta Ekle</button></div>
   </div>`;
 }
 function renderGunlukPlanTable(p) {
@@ -488,7 +606,11 @@ function renderGunlukPlanTable(p) {
   ];
   const kayitlarHtml = p.kayitlar.map((k, i) => `
     <div class="card" style="page-break-inside:avoid;">
-      <div class="row small" style="justify-content:space-between;"><b>${escHtml(k.tarih)}</b></div>
+      <div class="row small" style="justify-content:space-between;align-items:center;">
+        <input class="no-print" type="text" value="${escHtml(k.tarih)}" style="font-weight:600;border:1px solid var(--line);border-radius:4px;padding:3px 6px;" onchange="updateGunlukKayit('${p.id}',${i},'tarih',this.value); renderMain();">
+        <b class="print-only-inline">${escHtml(k.tarih)}</b>
+        <button class="btn danger no-print" onclick="removeGunlukKayit('${p.id}',${i})">Sil</button>
+      </div>
       ${alanlar.map(([field, label]) => `
         <div style="margin-top:6px;">
           <div class="small" style="font-weight:600;">${label}</div>
@@ -497,16 +619,21 @@ function renderGunlukPlanTable(p) {
         </div>`).join("")}
     </div>`).join("");
   return `
-  <div class="card">
-    <div class="row small" style="flex-wrap:wrap;gap:14px;">
+  <div class="card no-print">
+    <div class="row small" style="flex-wrap:wrap;gap:14px;align-items:center;">
       <span><b>Ders:</b> ${escHtml(p.ders)}</span>
       <span><b>Sınıf:</b> ${escHtml(p.sinif)}</span>
       <span><b>Öğretmen:</b> ${escHtml(p.ogretmen || "-")}</span>
       <span><b>Ders Saati:</b> ${escHtml(p.dersSaati || "-")}</span>
       <span><b>Ders Günü:</b> ${escHtml(p.dersGunu || "-")}</span>
+      <button class="btn" onclick="editPlanEntryMeta('gunluk','${p.id}')">Bilgileri Düzenle</button>
     </div>
   </div>
-  ${kayitlarHtml}`;
+  <div class="print-only" style="margin-bottom:10px;">
+    <b>Ders:</b> ${escHtml(p.ders)} · <b>Sınıf:</b> ${escHtml(p.sinif)} · <b>Öğretmen:</b> ${escHtml(p.ogretmen || "-")} · <b>Ders Saati:</b> ${escHtml(p.dersSaati || "-")} · <b>Ders Günü:</b> ${escHtml(p.dersGunu || "-")}
+  </div>
+  ${kayitlarHtml}
+  <div class="row no-print"><button class="btn" onclick="addGunlukKayit('${p.id}')">Ders Kaydı Ekle</button></div>`;
 }
 function viewPlanModule(kind) {
   const title = kind === "yillik" ? "Yıllık Plan" : "Günlük Plan";
@@ -570,6 +697,7 @@ function viewPlanModule(kind) {
     <p class="small">MEB müfredat reformu kademeli işliyor: 2025-2026'da sadece 9. sınıf Maarif Model'e geçti, 10-12. sınıflar hâlâ eski çerçeve programa tabi. Bütün sınıflar Maarif Model'e geçtiğinde "Eski Sistem" sekmesini kalıcı olarak kaldırabilirsiniz.</p>
     <div class="row" style="margin-top:10px;">${tabs}${eskiSistemButon}</div>
     <div class="row" style="margin-top:8px;">
+      <button class="btn primary" onclick="addPlanEntry('${kind}')">Yeni Ders Planı Ekle</button>
       <button class="btn" onclick="importPlanFromExcel()">Excel'den İçe Aktar</button>
       ${activeEntry ? `<button class="btn danger" onclick="deletePlanEntry('${kind}','${activeEntry.id}')">Bu Planı Sil</button>` : ""}
     </div>

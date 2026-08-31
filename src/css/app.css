@@ -157,6 +157,7 @@ tbody tr:nth-child(even){background:rgba(20,30,50,0.015);}
 .print-doc-header{display:none;}
 .print-only{display:none;}
 .print-only-cell{display:none;}
+.print-only-inline{display:none;}
 
 @media print{
   .sidebar,.no-print{display:none !important;}
@@ -167,6 +168,7 @@ tbody tr:nth-child(even){background:rgba(20,30,50,0.015);}
   .print-area{display:block;}
   .print-only{display:block;}
   .print-only-cell{display:table-cell;}
+  .print-only-inline{display:inline;}
   .card{box-shadow:none;border:1px solid #999;border-radius:0;page-break-inside:avoid;margin-bottom:10px;}
   .print-doc-header{
     display:flex;justify-content:space-between;align-items:flex-start;gap:10px;
