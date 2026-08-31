@@ -10,5 +10,7 @@ contextBridge.exposeInMainWorld("desktop", {
   openBackupDialog: () => ipcRenderer.invoke("dialog:open-backup"),
   writeFile: (filePath, content) => ipcRenderer.invoke("fs:write-file", filePath, content),
   readFile: (filePath) => ipcRenderer.invoke("fs:read-file", filePath),
-  exportPdf: (defaultName) => ipcRenderer.invoke("export:pdf", defaultName)
+  exportPdf: (defaultName) => ipcRenderer.invoke("export:pdf", defaultName),
+  openXlsxDialog: () => ipcRenderer.invoke("dialog:open-xlsx"),
+  importPlanXlsx: (filePath) => ipcRenderer.invoke("import:plan-xlsx", filePath)
 });

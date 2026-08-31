@@ -21,10 +21,21 @@
     "files": [
       "electron/**/*",
       "src/**/*",
-      "package.json"
+      "package.json",
+      "node_modules/**/*"
     ],
-    "win": { "target": "portable", "signAndEditExecutable": false },
-    "linux": { "target": "AppImage" },
-    "mac": { "target": "dmg" }
+    "win": {
+      "target": "portable",
+      "signAndEditExecutable": false
+    },
+    "linux": {
+      "target": "AppImage"
+    },
+    "mac": {
+      "target": "dmg"
+    }
+  },
+  "dependencies": {
+    "xlsx": "^0.18.5"
   }
 }

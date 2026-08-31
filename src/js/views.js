@@ -27,6 +27,7 @@ let multiSelectMode = false;
 let selectedTeacherCells = new Set();
 let activeOffTeacherId = null;
 let activePlanSistem = "maarif";
+let activePlanEntryId = { yillik: null, gunluk: null };
 
 function renderTabbar() {
   document.getElementById("tabbar").innerHTML = MODULES.map(m =>
@@ -362,6 +363,9 @@ function belgeYazdirmaBasligi(altBaslik) {
 }
 
 /* ---- Yıllık Plan / Günlük Plan (Eski Sistem / Maarif Model) ---- */
+function escHtml(s) { return String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+function nlToBr(s) { return escHtml(s).replace(/\n/g, "<br>"); }
+
 function setPlanSistem(id) { activePlanSistem = id; renderMain(); }
 function removeEskiSistem() {
   if (!confirm("Eski Sistem sekmesi Yıllık Plan ve Günlük Plan'dan kalıcı olarak kaldırılacak, sadece Maarif Model kalacak. Devam etmeden önce Dosya menüsünden yedek almanızı öneririz. Devam edilsin mi?")) return;
@@ -370,52 +374,179 @@ function removeEskiSistem() {
   save();
   renderMain();
 }
+function selectPlanEntry(kind, id) { activePlanEntryId[kind] = id; renderMain(); }
+function updateYillikHafta(id, idx, field, value) {
+  const p = S.yillikPlanlar.find(x => x.id === id);
+  if (p && p.haftalar[idx]) p.haftalar[idx][field] = value;
+}
+function updateGunlukKayit(id, idx, field, value) {
+  const p = S.gunlukPlanlar.find(x => x.id === id);
+  if (p && p.kayitlar[idx]) p.kayitlar[idx][field] = value;
+}
+function deletePlanEntry(kind, id) {
+  if (!confirm("Bu plan silinsin mi? Bu işlem geri alınamaz.")) return;
+  if (kind === "yillik") S.yillikPlanlar = S.yillikPlanlar.filter(x => x.id !== id);
+  else S.gunlukPlanlar = S.gunlukPlanlar.filter(x => x.id !== id);
+  if (activePlanEntryId[kind] === id) activePlanEntryId[kind] = null;
+  save();
+  renderMain();
+}
+function mergePlanImportResult(result) {
+  if (result.takvim) S.akademikTakvim = result.takvim;
+  let yillik = 0, gunluk = 0;
+  (result.yillikPlanlar || []).forEach(p => {
+    const existing = S.yillikPlanlar.find(x => x.ders.toLowerCase() === p.ders.toLowerCase() && x.sinif.toLowerCase() === p.sinif.toLowerCase());
+    if (existing) Object.assign(existing, p);
+    else S.yillikPlanlar.push(Object.assign({ id: uid("yp") }, p));
+    yillik++;
+  });
+  (result.gunlukPlanlar || []).forEach(p => {
+    const existing = S.gunlukPlanlar.find(x => x.ders.toLowerCase() === p.ders.toLowerCase() && x.sinif.toLowerCase() === p.sinif.toLowerCase());
+    if (existing) Object.assign(existing, p);
+    else S.gunlukPlanlar.push(Object.assign({ id: uid("gp") }, p));
+    gunluk++;
+  });
+  return { yillik, gunluk };
+}
+function importPlanFromExcel() {
+  if (!window.desktop || !window.desktop.isElectron) { alert("Excel'den içe aktarma sadece masaüstü uygulamasında çalışır."); return; }
+  window.desktop.openXlsxDialog().then(filePath => {
+    if (!filePath) return;
+    window.desktop.importPlanXlsx(filePath).then(result => {
+      const eklenen = mergePlanImportResult(result);
+      if (eklenen.yillik === 0 && eklenen.gunluk === 0 && !result.takvim) {
+        alert("Bu dosyada tanıdığım bir Yıllık Plan / Günlük Plan / Takvim sayfası bulunamadı.");
+        return;
+      }
+      save();
+      renderMain();
+      const parcalar = [];
+      if (eklenen.yillik) parcalar.push(eklenen.yillik + " yıllık plan");
+      if (eklenen.gunluk) parcalar.push(eklenen.gunluk + " günlük plan");
+      if (result.takvim) parcalar.push("akademik takvim (" + result.takvim.haftalar.length + " hafta)");
+      alert("İçe aktarıldı: " + parcalar.join(", ") + ".");
+    }).catch(e => alert("İçe aktarma hatası: " + e.message));
+  });
+}
+function renderYillikPlanTable(p) {
+  const rows = p.haftalar.map((h, i) => `
+    <tr>
+      <td style="white-space:nowrap;">${escHtml(h.tarih)}</td>
+      <td><textarea class="no-print" rows="3" style="width:100%;border:none;resize:vertical;font-family:inherit;font-size:11.5px;" oninput="updateYillikHafta('${p.id}',${i},'kazanimlar',this.value)" onblur="save()">${escHtml(h.kazanimlar)}</textarea><div class="print-only">${nlToBr(h.kazanimlar)}</div></td>
+      <td><textarea class="no-print" rows="3" style="width:100%;border:none;resize:vertical;font-family:inherit;font-size:11.5px;" oninput="updateYillikHafta('${p.id}',${i},'konular',this.value)" onblur="save()">${escHtml(h.konular)}</textarea><div class="print-only">${nlToBr(h.konular)}</div></td>
+    </tr>`).join("");
+  return `
+  <div class="card">
+    <div class="row small" style="flex-wrap:wrap;gap:14px;">
+      <span><b>Ders:</b> ${escHtml(p.ders)}</span>
+      <span><b>Sınıf:</b> ${escHtml(p.sinif)}</span>
+      <span><b>Ders Saati:</b> ${escHtml(p.dersSaati || "-")}</span>
+      <span><b>Alan/Dal:</b> ${escHtml(p.alanDal || "-")}</span>
+    </div>
+  </div>
+  <div class="card" style="overflow-x:auto;">
+    <table style="width:100%;"><thead><tr><th style="width:100px;">Tarih</th><th>Kazanımlar</th><th>Konular</th></tr></thead>
+    <tbody>${rows}</tbody></table>
+  </div>`;
+}
+function renderGunlukPlanTable(p) {
+  const alanlar = [
+    ["konu", "Konu"], ["kazanim", "Kazanım"], ["giris", "Giriş"], ["gelisme", "Gelişme"],
+    ["sonuc", "Sonuç"], ["yontem", "Yöntem ve Teknikler"], ["arac", "Araç ve Gereçler"], ["olcme", "Ölçme-Değerlendirme"]
+  ];
+  const kayitlarHtml = p.kayitlar.map((k, i) => `
+    <div class="card" style="page-break-inside:avoid;">
+      <div class="row small" style="justify-content:space-between;"><b>${escHtml(k.tarih)}</b></div>
+      ${alanlar.map(([field, label]) => `
+        <div style="margin-top:6px;">
+          <div class="small" style="font-weight:600;">${label}</div>
+          <textarea class="no-print" rows="${field === "konu" || field === "kazanim" ? 2 : 3}" style="width:100%;border:1px solid var(--line);border-radius:4px;padding:4px;resize:vertical;font-family:inherit;font-size:11.5px;" oninput="updateGunlukKayit('${p.id}',${i},'${field}',this.value)" onblur="save()">${escHtml(k[field])}</textarea>
+          <div class="print-only" style="font-size:10.5px;">${nlToBr(k[field])}</div>
+        </div>`).join("")}
+    </div>`).join("");
+  return `
+  <div class="card">
+    <div class="row small" style="flex-wrap:wrap;gap:14px;">
+      <span><b>Ders:</b> ${escHtml(p.ders)}</span>
+      <span><b>Sınıf:</b> ${escHtml(p.sinif)}</span>
+      <span><b>Öğretmen:</b> ${escHtml(p.ogretmen || "-")}</span>
+      <span><b>Ders Saati:</b> ${escHtml(p.dersSaati || "-")}</span>
+      <span><b>Ders Günü:</b> ${escHtml(p.dersGunu || "-")}</span>
+    </div>
+  </div>
+  ${kayitlarHtml}`;
+}
 function viewPlanModule(kind) {
   const title = kind === "yillik" ? "Yıllık Plan" : "Günlük Plan";
   const aciklama = kind === "yillik"
-    ? "Her dersin öğrenme birimlerini yıl içindeki haftalara dağıtacağımız bölüm."
-    : "Her günün hangi öğrenme birimi/kazanımı işleyeceğini gösteren günlük ders planı şablonu.";
+    ? "Her dersin haftalık kazanım/konu dağılımı. Kendi Excel dosyanızı içe aktararak veya elle düzenleyerek doldurabilirsiniz."
+    : "Her dersin konu/kazanım/giriş-gelişme-sonuç/yöntem/ölçme-değerlendirme detayları. Kendi Excel dosyanızı içe aktararak veya elle düzenleyerek doldurabilirsiniz.";
   if (S.eskiSistemKaldirildi) activePlanSistem = "maarif";
   const sistemler = S.eskiSistemKaldirildi ? ["maarif"] : ["maarif", "eski"];
   const tabs = sistemler.map(id =>
     `<button class="btn ${activePlanSistem === id ? 'primary' : ''}" onclick="setPlanSistem('${id}')">${CURRICULUM[id].label}</button>`
   ).join(" ");
-  const data = CURRICULUM[activePlanSistem];
-  const grades = Object.keys(data.grades).sort((a, b) => a - b);
-  const gradeCards = grades.map(g => {
-    const gr = data.grades[g];
-    const dersHtml = gr.dersler.length === 0
-      ? `<p class="small">${gr.not || "Bu sınıf seviyesi için okulda ayrı ders/öğrenme birimi bulunmuyor."}</p>`
-      : gr.dersler.map(d => `
-        <div style="margin-bottom:10px;">
-          <div class="row" style="justify-content:space-between;">
-            <b>${d.ad}</b><span class="pill info">${d.saat} sa/hafta</span>
-          </div>
-          ${d.ogrenmeBirimleri.length ? `<p class="small" style="margin-top:4px;">${d.ogrenmeBirimleri.join(" · ")}</p>` : ""}
-        </div>`).join("");
-    return `
-    <div class="card">
-      <h3>${g}. Sınıf <span class="small">(${gr.dal})</span></h3>
-      ${dersHtml}
-    </div>`;
-  }).join("");
   const eskiSistemButon = (activePlanSistem === "eski" && !S.eskiSistemKaldirildi)
     ? `<button class="btn danger" style="margin-left:8px;" onclick="removeEskiSistem()">Eski Sistemi Kalıcı Olarak Kaldır</button>`
     : "";
+
+  const allEntries = kind === "yillik" ? S.yillikPlanlar : S.gunlukPlanlar;
+  const entries = allEntries.filter(p => p.sistem === activePlanSistem)
+    .sort((a, b) => (a.sinif + a.ders).localeCompare(b.sinif + b.ders, "tr"));
+  if (entries.length && !entries.some(e => e.id === activePlanEntryId[kind])) activePlanEntryId[kind] = entries[0].id;
+  if (!entries.length) activePlanEntryId[kind] = null;
+  const activeEntry = entries.find(e => e.id === activePlanEntryId[kind]) || null;
+
+  const listHtml = entries.length === 0 ? "" : `
+    <div class="card no-print">
+      <div class="row" style="flex-wrap:wrap;">
+        ${entries.map(e => `<button class="btn ${e.id === activePlanEntryId[kind] ? 'primary' : ''}" onclick="selectPlanEntry('${kind}','${e.id}')">${escHtml(e.sinif)} — ${escHtml(e.ders)}</button>`).join("")}
+      </div>
+    </div>`;
+
+  let contentHtml;
+  if (activeEntry) {
+    contentHtml = kind === "yillik" ? renderYillikPlanTable(activeEntry) : renderGunlukPlanTable(activeEntry);
+  } else {
+    const data = CURRICULUM[activePlanSistem];
+    const grades = Object.keys(data.grades).sort((a, b) => a - b);
+    const gradeCards = grades.map(g => {
+      const gr = data.grades[g];
+      const dersHtml = gr.dersler.length === 0
+        ? `<p class="small">${gr.not || "Bu sınıf seviyesi için okulda ayrı ders/öğrenme birimi bulunmuyor."}</p>`
+        : gr.dersler.map(d => `
+          <div style="margin-bottom:10px;">
+            <div class="row" style="justify-content:space-between;">
+              <b>${d.ad}</b><span class="pill info">${d.saat} sa/hafta</span>
+            </div>
+            ${d.ogrenmeBirimleri.length ? `<p class="small" style="margin-top:4px;">${d.ogrenmeBirimleri.join(" · ")}</p>` : ""}
+          </div>`).join("");
+      return `<div class="card"><h3>${g}. Sınıf <span class="small">(${gr.dal})</span></h3>${dersHtml}</div>`;
+    }).join("");
+    const kaynakDosya = kind === "yillik" ? "YILLIK_PLANLAR.xlsx" : "GÜNLÜK_PLANLAR.xlsx";
+    contentHtml = gradeCards + `<div class="card small no-print" style="text-align:center;padding:30px 20px;">
+      Bu sistem için henüz içe aktarılmış ${title.toLowerCase()} yok — yukarıda öğrenme birimi özetini görüyorsunuz. "Excel'den İçe Aktar" ile kendi ${kaynakDosya} dosyanızı yükleyerek tam, düzenlenebilir planı oluşturabilirsiniz.
+    </div>`;
+  }
+
+  const dosyaAdi = activeEntry ? (title + " - " + activeEntry.sinif + " - " + activeEntry.ders) : title;
+
   return `
   <div class="card no-print">
     <h2>${title}</h2>
     <p class="small">${aciklama}</p>
     <p class="small">MEB müfredat reformu kademeli işliyor: 2025-2026'da sadece 9. sınıf Maarif Model'e geçti, 10-12. sınıflar hâlâ eski çerçeve programa tabi. Bütün sınıflar Maarif Model'e geçtiğinde "Eski Sistem" sekmesini kalıcı olarak kaldırabilirsiniz.</p>
     <div class="row" style="margin-top:10px;">${tabs}${eskiSistemButon}</div>
-    ${belgeAracCubugu(title + " - " + data.label)}
+    <div class="row" style="margin-top:8px;">
+      <button class="btn" onclick="importPlanFromExcel()">Excel'den İçe Aktar</button>
+      ${activeEntry ? `<button class="btn danger" onclick="deletePlanEntry('${kind}','${activeEntry.id}')">Bu Planı Sil</button>` : ""}
+    </div>
+    ${belgeAracCubugu(dosyaAdi)}
   </div>
+  ${listHtml}
   <div class="print-area">
-    ${belgeYazdirmaBasligi(title + " · " + data.label)}
-    ${gradeCards}
-  </div>
-  <div class="card small no-print" style="text-align:center;padding:30px 20px;">
-    Ders bilgi formlarını gönderdikçe her öğrenme birimini haftalara/günlere dağıtacak ve ölçme-değerlendirme kısmını ekleyeceğiz.
+    ${belgeYazdirmaBasligi(dosyaAdi)}
+    ${contentHtml}
   </div>`;
 }
 

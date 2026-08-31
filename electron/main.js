@@ -1,6 +1,8 @@
 const { app, BrowserWindow, Menu, dialog, ipcMain } = require("electron");
 const path = require("path");
 const fs = require("fs");
+const XLSX = require("xlsx");
+const { parsePlanWorkbook } = require("./xlsx-plan-parser");
 
 let mainWindow;
 
@@ -84,6 +86,19 @@ ipcMain.handle("fs:write-file", async (evt, filePath, content) => {
 
 ipcMain.handle("fs:read-file", async (evt, filePath) => {
   return fs.readFileSync(filePath, "utf-8");
+});
+
+ipcMain.handle("dialog:open-xlsx", async () => {
+  const result = await dialog.showOpenDialog(mainWindow, {
+    title: "Excel Dosyası Seç",
+    properties: ["openFile"],
+    filters: [{ name: "Excel Dosyası", extensions: ["xlsx", "xls"] }]
+  });
+  return result.canceled || result.filePaths.length === 0 ? null : result.filePaths[0];
+});
+
+ipcMain.handle("import:plan-xlsx", async (evt, filePath) => {
+  return parsePlanWorkbook(filePath, XLSX);
 });
 
 ipcMain.handle("export:pdf", async (evt, defaultName) => {
