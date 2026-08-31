@@ -371,20 +371,18 @@ function viewAna() {
   <div class="hero-card">
     <h2>Alan Yönetim Sistemi</h2>
     <p class="small">Soma Mesleki ve Teknik Anadolu Lisesi · Makine Teknolojisi Alanı</p>
-  </div>
-  ${Object.keys(S.schedule).length > 0 ? systemHealthSummary() : ``}
-  <div class="grid3">
-    <div class="stat-card"><div class="dash-num">${S.classes.length}</div><div class="dash-lbl">Sınıf</div></div>
-    <div class="stat-card"><div class="dash-num">${S.teachers.length}</div><div class="dash-lbl">Öğretmen</div></div>
-    <div class="stat-card"><div class="dash-num">${S.isletmeler.length}</div><div class="dash-lbl">İşletme</div></div>
-  </div>
-  <div class="card">
-    <h2>Devam edin</h2>
-    <p class="small">Yukarıdaki <b>Ders Programı</b> sekmesinden çalışmaya devam edin.</p>
-    <button class="btn primary" onclick="setModule('ders-programi')">Ders Programına Git</button>
-  </div>
-  ${renderSavedProgramsCard()}
-  ${renderBackupCard()}`;
+    <button class="btn primary" style="margin-top:14px;" onclick="setModule('ders-programi')">Ders Programına Git</button>
+  </div>`;
+}
+function openSavedProgramsModal() {
+  const root = document.getElementById("modal-root");
+  root.innerHTML = `
+    <div class="modal-bg" onclick="if(event.target===this) closeModal()">
+      <div class="modal" style="width:520px;">
+        ${renderSavedProgramsCard()}
+        <div class="row"><button class="btn" onclick="closeModal()">Kapat</button></div>
+      </div>
+    </div>`;
 }
 
 /* ---- Ders Havuzu ---- */
@@ -1036,7 +1034,7 @@ function refreshProgram() {
   showPreDistributionWarnings(() => {
     showWorkingOverlay("Program hesaplanıyor…");
     setTimeout(() => {
-      distributeAllBestAsync(450,
+      distributeAllBestAsync(900,
         (r) => {
           hideWorkingOverlay();
           activeTab = "programlar";

@@ -33,6 +33,7 @@ function buildMenu() {
       submenu: [
         { label: "Verilerimi Dışa Aktar (Yedek Al)", click: () => mainWindow.webContents.send("menu:export-backup") },
         { label: "Yedek Dosyasından Yükle", click: () => mainWindow.webContents.send("menu:import-backup") },
+        { label: "Kayıtlı Programlarım", click: () => mainWindow.webContents.send("menu:saved-programs") },
         { type: "separator" },
         { label: "Yazdır", click: () => mainWindow.webContents.print() },
         { type: "separator" },

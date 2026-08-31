@@ -346,7 +346,7 @@ function scheduleQualityScore() {
   });
   const spreadPenalty = spread <= 3 ? spread : (spread - 3) * 120 + 3;
   const koordSpreadPenalty = koordSpread <= 4 ? koordSpread * 2 : (koordSpread - 4) * 100 + 8;
-  return { unplaced, spread, koordSpread, under20, capPenalty, gaps: totalGapCount(), score: unplaced * 1000 + totalGapCount() * 80 + under20 * 40 + totalClassGapCount() * 15 + totalLateStartSum() * 3 + spreadPenalty + koordSpreadPenalty + capPenalty };
+  return { unplaced, spread, koordSpread, under20, capPenalty, gaps: totalGapCount(), score: unplaced * 1000 + totalGapCount() * 300 + under20 * 40 + totalClassGapCount() * 15 + totalLateStartSum() * 3 + spreadPenalty + koordSpreadPenalty + capPenalty };
 }
 
 function taskDifficulty(t) {
