@@ -82,18 +82,21 @@ function defaultState() {
         { id: "a-9a-2", courseId: "c9-3", eligibleTeacherIds: ["t1", "t5"], teacherCount: 2, roomIds: [] },
         { id: "a-9a-3", courseId: "c9-1", eligibleTeacherIds: ["t1", "t5"], teacherCount: 2, roomIds: [] }
       ] },
+      { id: "cl-9b", name: "9-B", grade: 9, dal: "ORTAK9", maxTeachersPerCourse: 2, excludeFromDistribution: true, assignments: [] },
       { id: "cl-10a", name: "10-A", grade: 10, dal: "MBO", maxTeachersPerCourse: 3, assignments: [
         { id: "a-10a-1", courseId: "c10mbo-1", eligibleTeacherIds: ["t3", "t2", "t4"], teacherCount: 3, roomIds: [] },
         { id: "a-10a-2", courseId: "c10mbo-2", eligibleTeacherIds: ["t3", "t6"], teacherCount: 2, roomIds: [] },
         { id: "a-10a-3", courseId: "c10mbo-3", eligibleTeacherIds: ["t3", "t2", "t4"], teacherCount: 3, roomIds: [] },
         { id: "a-10a-4", courseId: "c10mbo-4", eligibleTeacherIds: ["t3", "t2", "t4"], teacherCount: 3, roomIds: [] }
       ] },
+      { id: "cl-10b", name: "10-B", grade: 10, dal: "MBO", maxTeachersPerCourse: 3, excludeFromDistribution: true, assignments: [] },
       { id: "cl-11a", name: "11-A", grade: 11, dal: "MBO", maxTeachersPerCourse: 2, assignments: [
         { id: "a-11a-1", courseId: "c11mbo-1", eligibleTeacherIds: ["t1", "t5"], teacherCount: 2, roomIds: [] },
         { id: "a-11a-2", courseId: "c11mbo-2", eligibleTeacherIds: ["t2", "t4"], teacherCount: 2, roomIds: [] },
         { id: "a-11a-3", courseId: "c11mbo-3", eligibleTeacherIds: ["t5", "t6"], teacherCount: 2, roomIds: [] },
         { id: "a-11a-4", courseId: "c11mbo-4", eligibleTeacherIds: ["t1", "t5"], teacherCount: 2, roomIds: [] }
       ] },
+      { id: "cl-11b", name: "11-B", grade: 11, dal: "MBO", maxTeachersPerCourse: 2, excludeFromDistribution: true, assignments: [] },
       { id: "cl-12a", name: "12-A", grade: 12, dal: "MBO", schoolDays: [], maxTeachersPerCourse: 2, assignments: [
         { id: "a-12a-1", courseId: "sec-3", eligibleTeacherIds: ["t3", "t2"], teacherCount: 2, roomIds: [] },
         { id: "a-12a-2", courseId: "sec-4", eligibleTeacherIds: ["t2", "t4"], teacherCount: 2, roomIds: [] }
@@ -226,6 +229,11 @@ function normalizeState(s) {
     const id = "c-reh-" + grade;
     if (!s.courses.find(c => c.id === id)) {
       s.courses.push({ id, code: "REH", name: "Rehberlik", dal: "ORTAK", grade, hours: 1, blocks: [1] });
+    }
+  });
+  [["cl-9b", "9-B", 9, "ORTAK9", 2], ["cl-10b", "10-B", 10, "MBO", 3], ["cl-11b", "11-B", 11, "MBO", 2]].forEach(([id, name, grade, dal, maxT]) => {
+    if (!s.classes.find(c => c.id === id)) {
+      s.classes.push({ id, name, grade, dal, maxTeachersPerCourse: maxT, excludeFromDistribution: true, assignments: [] });
     }
   });
   s.teachers.forEach(t => {
