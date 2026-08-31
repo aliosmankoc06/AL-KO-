@@ -2750,6 +2750,45 @@ function renderSidebarBrand() {
       : `<svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z"/><path d="M19.4 13.5c.1-.5.1-1 0-1.5l1.6-1.2-1.5-2.6-1.9.6a5.7 5.7 0 0 0-1.3-.8l-.3-2H10l-.3 2c-.5.2-.9.5-1.3.8l-1.9-.6-1.5 2.6L6.6 12c-.1.5-.1 1 0 1.5l-1.6 1.2 1.5 2.6 1.9-.6c.4.3.8.6 1.3.8l.3 2h4l.3-2c.5-.2.9-.5 1.3-.8l1.9.6 1.5-2.6-1.6-1.2Z"/></svg>`;
   }
 }
+/* ---- Karanlık Mod ---- */
+const THEME_KEY = "aok-theme-v1";
+function currentTheme() {
+  try { return localStorage.getItem(THEME_KEY) || "light"; } catch (e) { return "light"; }
+}
+function applyTheme(theme) {
+  document.documentElement.setAttribute("data-theme", theme);
+  const icon = document.getElementById("theme-toggle-icon");
+  if (icon) {
+    icon.innerHTML = theme === "dark"
+      ? '<circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M3 12h2M19 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"/>'
+      : '<path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5Z"/>';
+  }
+}
+function toggleTheme() {
+  const next = currentTheme() === "dark" ? "light" : "dark";
+  try { localStorage.setItem(THEME_KEY, next); } catch (e) {}
+  applyTheme(next);
+}
+
+/* ---- Kaydedildi Bildirimi / Geri Al ---- */
+function showSaveToast(offerUndo) {
+  const root = document.getElementById("toast-root");
+  if (!root) return;
+  let el = document.getElementById("save-toast");
+  if (!el) {
+    el = document.createElement("div");
+    el.id = "save-toast";
+    el.className = "toast";
+    root.appendChild(el);
+  }
+  el.innerHTML = offerUndo
+    ? `<span class="check">✓</span> Kaydedildi <button class="toast-undo" onclick="undoLastChange()">Geri Al</button>`
+    : `<span class="check">✓</span> Kaydedildi`;
+  requestAnimationFrame(() => el.classList.add("show"));
+  clearTimeout(el._hideTimer);
+  el._hideTimer = setTimeout(() => { el.classList.remove("show"); }, offerUndo ? 5000 : 1400);
+}
+
 /* ---- Genel Arama ---- */
 let globalSearchResults = [];
 function trLower(s) { return String(s || "").toLocaleLowerCase("tr-TR"); }

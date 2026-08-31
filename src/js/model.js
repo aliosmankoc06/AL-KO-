@@ -402,7 +402,31 @@ function loadState() {
 }
 
 let S = loadState();
-function save() { localStorage.setItem(LS_KEY, JSON.stringify(S)); }
+let lastSnapshot = null;
+let lastSnapshotWasDelete = false;
+let undoing = false;
+function save() {
+  const prevRaw = localStorage.getItem(LS_KEY);
+  if (!undoing) {
+    lastSnapshot = prevRaw;
+    lastSnapshotWasDelete = !!window.__lastActionWasDelete;
+  }
+  window.__lastActionWasDelete = false;
+  localStorage.setItem(LS_KEY, JSON.stringify(S));
+  if (typeof showSaveToast === "function") showSaveToast(!undoing && lastSnapshotWasDelete);
+}
+function undoLastChange() {
+  if (!lastSnapshot) return;
+  let restored;
+  try { restored = normalizeState(JSON.parse(lastSnapshot)); } catch (e) { return; }
+  S = restored;
+  lastSnapshot = null;
+  undoing = true;
+  save();
+  undoing = false;
+  if (typeof renderTabbar === "function") renderTabbar();
+  if (typeof renderMain === "function") renderMain();
+}
 
 function loadVersions() {
   try { return JSON.parse(localStorage.getItem(VERSIONS_KEY)) || []; } catch (e) { return []; }

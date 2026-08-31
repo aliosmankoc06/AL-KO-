@@ -5,6 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Alan Yönetim Sistemi</title>
 <link rel="stylesheet" href="css/app.css">
+<script>
+  (function () {
+    try {
+      var t = localStorage.getItem("aok-theme-v1") || "light";
+      document.documentElement.setAttribute("data-theme", t);
+    } catch (e) {}
+  })();
+</script>
 </head>
 <body>
 <div class="app-shell">
@@ -20,6 +28,9 @@
         <div class="title">Alan Yönetim Sistemi</div>
         <div class="subtitle" id="sidebar-subtitle">Ali Osman Koç</div>
       </div>
+      <button id="theme-toggle-btn" class="theme-toggle-btn no-print" onclick="toggleTheme()" title="Karanlık / Aydınlık Mod">
+        <svg id="theme-toggle-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
+      </button>
     </div>
     <div class="school-line" id="sidebar-school-line">Soma Mesleki ve Teknik Anadolu Lisesi<br>Makine Teknolojisi Alanı</div>
     <div class="sidebar-search">
@@ -34,6 +45,7 @@
   </div>
 </div>
 <div id="modal-root"></div>
+<div id="toast-root" class="no-print"></div>
 
 <script src="js/icons.js"></script>
 <script src="js/curriculum-data.js"></script>
