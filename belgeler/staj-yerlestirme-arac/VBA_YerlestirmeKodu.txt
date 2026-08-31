@@ -1,0 +1,420 @@
+Sub YerlestirmeYap()
+
+    Dim wsOgrenci As Worksheet
+    Dim wsTercih As Worksheet
+    Dim wsIsletme As Worksheet
+    Dim wsSonuc As Worksheet
+
+    Set wsOgrenci = ThisWorkbook.Sheets("1-Ogrenci")
+    Set wsTercih = ThisWorkbook.Sheets("2-Tercih")
+    Set wsIsletme = ThisWorkbook.Sheets("3-Isletme")
+    Set wsSonuc = ThisWorkbook.Sheets("4-Sonuc")
+
+    Dim cevap As Integer
+    cevap = MsgBox("Yerlestirme baslatilacak. Devam?", vbYesNo, "YERLESTIRME")
+    If cevap = vbNo Then Exit Sub
+
+    Application.ScreenUpdating = False
+
+    Dim i As Integer, t As Integer, isl As Integer
+    Dim j As Integer, tmp As Integer, sr As Integer
+    Dim siraIdx As Integer, tercih As String, satir As Integer
+    Dim renk1 As Long, renk2 As Long
+
+    ' === ISLETME VERILERI (Sayfa3, satir 5-24, maks 20) ===
+    Dim isletmeAd(20) As String
+    Dim mboKalan(20) As Integer
+    Dim bmiKalan(20) As Integer
+    Dim talepli(20) As String
+    Dim islAdet As Integer
+    islAdet = 0
+
+    For isl = 1 To 20
+        Dim islAd As String
+        islAd = Trim(wsIsletme.Cells(4 + isl, 2).Value)
+        If islAd <> "" Then
+            islAdet = islAdet + 1
+            isletmeAd(islAdet) = islAd
+            mboKalan(islAdet) = Val(wsIsletme.Cells(4 + isl, 3).Value)
+            bmiKalan(islAdet) = Val(wsIsletme.Cells(4 + isl, 4).Value)
+            talepli(islAdet) = UCase(Trim(wsIsletme.Cells(4 + isl, 7).Value))
+        End If
+    Next isl
+
+    ' === SONUC SAYFASINI TEMIZLE ===
+    ' MBO: satir 7-38, BMI: satir 42-73, sutun 16-18
+    For sr = 7 To 38
+        wsSonuc.Cells(sr, 16).Value = ""
+        wsSonuc.Cells(sr, 17).Value = ""
+        wsSonuc.Cells(sr, 18).Value = ""
+        wsSonuc.Cells(sr, 16).Interior.ColorIndex = xlNone
+        wsSonuc.Cells(sr, 17).Interior.ColorIndex = xlNone
+        wsSonuc.Cells(sr, 18).Interior.ColorIndex = xlNone
+    Next sr
+    For sr = 42 To 73
+        wsSonuc.Cells(sr, 16).Value = ""
+        wsSonuc.Cells(sr, 17).Value = ""
+        wsSonuc.Cells(sr, 18).Value = ""
+        wsSonuc.Cells(sr, 16).Interior.ColorIndex = xlNone
+        wsSonuc.Cells(sr, 17).Interior.ColorIndex = xlNone
+        wsSonuc.Cells(sr, 18).Interior.ColorIndex = xlNone
+    Next sr
+
+    ' === MBO OGRENCILERI ===
+    ' Sayfa1: isim=C(3), not=D(4), satir 6-37
+    ' Sayfa2: tercih=E-N(5-14), istemiyor=O(15), satir 6-37
+    Dim mboIsim(32) As String
+    Dim mboNot(32) As Double
+    Dim mboTercih(32, 10) As String
+    Dim mboIstemiyor(32) As String
+    Dim mboYerlesti(32) As Boolean
+    Dim mboIsletme(32) As String
+    Dim mboSira(32) As String
+    Dim mboAdet As Integer
+    mboAdet = 0
+
+    For i = 1 To 32
+        Dim mboAd As String
+        mboAd = Trim(wsOgrenci.Cells(5 + i, 3).Value)
+        If mboAd <> "" Then
+            mboAdet = mboAdet + 1
+            mboIsim(mboAdet) = UCase(mboAd)
+            mboNot(mboAdet) = Val(wsOgrenci.Cells(5 + i, 4).Value)
+            For t = 1 To 10
+                mboTercih(mboAdet, t) = UCase(Trim(wsTercih.Cells(5 + i, 4 + t).Value))
+            Next t
+            mboIstemiyor(mboAdet) = UCase(Trim(wsTercih.Cells(5 + i, 15).Value))
+            mboYerlesti(mboAdet) = False
+            mboIsletme(mboAdet) = ""
+            mboSira(mboAdet) = ""
+        End If
+    Next i
+
+    ' === BMI OGRENCILERI ===
+    ' Sayfa1: isim=I(9), not=J(10), satir 6-37
+    ' Sayfa2: tercih=E-N(5-14), istemiyor=O(15), satir 41-72
+    Dim bmiIsim(32) As String
+    Dim bmiNot(32) As Double
+    Dim bmiTercih(32, 10) As String
+    Dim bmiIstemiyor(32) As String
+    Dim bmiYerlesti(32) As Boolean
+    Dim bmiIsletme(32) As String
+    Dim bmiSira(32) As String
+    Dim bmiAdet As Integer
+    bmiAdet = 0
+
+    For i = 1 To 32
+        Dim bmiAd As String
+        bmiAd = Trim(wsOgrenci.Cells(5 + i, 9).Value)
+        If bmiAd <> "" Then
+            bmiAdet = bmiAdet + 1
+            bmiIsim(bmiAdet) = UCase(bmiAd)
+            bmiNot(bmiAdet) = Val(wsOgrenci.Cells(5 + i, 10).Value)
+            For t = 1 To 10
+                bmiTercih(bmiAdet, t) = UCase(Trim(wsTercih.Cells(40 + i, 4 + t).Value))
+            Next t
+            bmiIstemiyor(bmiAdet) = UCase(Trim(wsTercih.Cells(40 + i, 15).Value))
+            bmiYerlesti(bmiAdet) = False
+            bmiIsletme(bmiAdet) = ""
+            bmiSira(bmiAdet) = ""
+        End If
+    Next i
+
+    ' === ADIM 1: ISLETME TALEP OGRENCILERI ===
+    Dim parcalar() As String
+    Dim p As Integer
+    Dim aranan As String
+
+    For isl = 1 To islAdet
+        If talepli(isl) = "" Then GoTo AtlaIsletme
+        parcalar = Split(talepli(isl), ",")
+        For p = 0 To UBound(parcalar)
+            aranan = Trim(parcalar(p))
+            If aranan = "" Then GoTo AtlaParca
+            For i = 1 To mboAdet
+                If InStr(mboIsim(i), aranan) > 0 And Not mboYerlesti(i) Then
+                    mboYerlesti(i) = True
+                    mboIsletme(i) = isletmeAd(isl)
+                    mboSira(i) = "Isletme Talebi"
+                    If mboKalan(isl) > 0 Then mboKalan(isl) = mboKalan(isl) - 1
+                    GoTo AtlaParca
+                End If
+            Next i
+            For i = 1 To bmiAdet
+                If InStr(bmiIsim(i), aranan) > 0 And Not bmiYerlesti(i) Then
+                    bmiYerlesti(i) = True
+                    bmiIsletme(i) = isletmeAd(isl)
+                    bmiSira(i) = "Isletme Talebi"
+                    If bmiKalan(isl) > 0 Then bmiKalan(isl) = bmiKalan(isl) - 1
+                    GoTo AtlaParca
+                End If
+            Next i
+AtlaParca:
+        Next p
+AtlaIsletme:
+    Next isl
+
+    ' === ADIM 2: MBO PUANA GORE SIRALI YERLESTIRME (10 tercih) ===
+    Dim siraMBO(32) As Integer
+    For i = 1 To mboAdet: siraMBO(i) = i: Next i
+    For i = 1 To mboAdet - 1
+        For j = i + 1 To mboAdet
+            If mboNot(siraMBO(j)) > mboNot(siraMBO(i)) Then
+                tmp = siraMBO(i): siraMBO(i) = siraMBO(j): siraMBO(j) = tmp
+            End If
+        Next j
+    Next i
+
+    For siraIdx = 1 To mboAdet
+        i = siraMBO(siraIdx)
+        If mboYerlesti(i) Then GoTo AtlaMBO
+        For t = 1 To 10
+            tercih = mboTercih(i, t)
+            If tercih = "" Then GoTo AtlaTercihMBO
+            For isl = 1 To islAdet
+                If InStr(UCase(isletmeAd(isl)), tercih) > 0 Or InStr(tercih, UCase(isletmeAd(isl))) > 0 Then
+                    If mboKalan(isl) > 0 Then
+                        mboYerlesti(i) = True
+                        mboIsletme(i) = isletmeAd(isl)
+                        mboSira(i) = t & ". Tercih"
+                        mboKalan(isl) = mboKalan(isl) - 1
+                        GoTo AtlaMBO
+                    End If
+                End If
+            Next isl
+AtlaTercihMBO:
+        Next t
+AtlaMBO:
+    Next siraIdx
+
+    ' === ADIM 3: BMI PUANA GORE SIRALI YERLESTIRME (10 tercih) ===
+    Dim siraBMI(32) As Integer
+    For i = 1 To bmiAdet: siraBMI(i) = i: Next i
+    For i = 1 To bmiAdet - 1
+        For j = i + 1 To bmiAdet
+            If bmiNot(siraBMI(j)) > bmiNot(siraBMI(i)) Then
+                tmp = siraBMI(i): siraBMI(i) = siraBMI(j): siraBMI(j) = tmp
+            End If
+        Next j
+    Next i
+
+    For siraIdx = 1 To bmiAdet
+        i = siraBMI(siraIdx)
+        If bmiYerlesti(i) Then GoTo AtlaBMI
+        For t = 1 To 10
+            tercih = bmiTercih(i, t)
+            If tercih = "" Then GoTo AtlaTercihBMI
+            For isl = 1 To islAdet
+                If InStr(UCase(isletmeAd(isl)), tercih) > 0 Or InStr(tercih, UCase(isletmeAd(isl))) > 0 Then
+                    If bmiKalan(isl) > 0 Then
+                        bmiYerlesti(i) = True
+                        bmiIsletme(i) = isletmeAd(isl)
+                        bmiSira(i) = t & ". Tercih"
+                        bmiKalan(isl) = bmiKalan(isl) - 1
+                        GoTo AtlaBMI
+                    End If
+                End If
+            Next isl
+AtlaTercihBMI:
+        Next t
+AtlaBMI:
+    Next siraIdx
+
+    ' === ADIM 4: YERLESMEYENLERI DONGUSEL DAGIT (ISTEMIYORU DIKKATE AL) ===
+    Dim mboOto As Integer: mboOto = 1
+    Dim bmiOto As Integer: bmiOto = 1
+    Dim araIdx As Integer, bulunan As Boolean
+    Dim istemiyorMu As Boolean
+
+    For i = 1 To mboAdet
+        If Not mboYerlesti(i) Then
+            bulunan = False
+            Dim deneme As Integer
+            For deneme = 0 To islAdet - 1
+                araIdx = ((mboOto - 1 + deneme) Mod islAdet) + 1
+                If mboKalan(araIdx) > 0 Then
+                    istemiyorMu = False
+                    If mboIstemiyor(i) <> "" Then
+                        Dim ip() As String
+                        ip = Split(mboIstemiyor(i), ",")
+                        Dim k As Integer
+                        For k = 0 To UBound(ip)
+                            If Trim(ip(k)) <> "" Then
+                                If InStr(UCase(isletmeAd(araIdx)), Trim(ip(k))) > 0 Or InStr(Trim(ip(k)), UCase(isletmeAd(araIdx))) > 0 Then
+                                    istemiyorMu = True
+                                    Exit For
+                                End If
+                            End If
+                        Next k
+                    End If
+                    If Not istemiyorMu Then
+                        mboYerlesti(i) = True
+                        mboIsletme(i) = isletmeAd(araIdx)
+                        mboSira(i) = "Otomatik"
+                        mboKalan(araIdx) = mboKalan(araIdx) - 1
+                        mboOto = (araIdx Mod islAdet) + 1
+                        bulunan = True
+                        Exit For
+                    End If
+                End If
+            Next deneme
+            If Not bulunan Then
+                For deneme = 0 To islAdet - 1
+                    araIdx = ((mboOto - 1 + deneme) Mod islAdet) + 1
+                    If mboKalan(araIdx) > 0 Then
+                        mboYerlesti(i) = True
+                        mboIsletme(i) = isletmeAd(araIdx)
+                        mboSira(i) = "Zorunlu Atama"
+                        mboKalan(araIdx) = mboKalan(araIdx) - 1
+                        mboOto = (araIdx Mod islAdet) + 1
+                        Exit For
+                    End If
+                Next deneme
+            End If
+        End If
+    Next i
+
+    Dim araIdx2 As Integer, bulunan2 As Boolean
+    For i = 1 To bmiAdet
+        If Not bmiYerlesti(i) Then
+            bulunan2 = False
+            Dim deneme2 As Integer
+            For deneme2 = 0 To islAdet - 1
+                araIdx2 = ((bmiOto - 1 + deneme2) Mod islAdet) + 1
+                If bmiKalan(araIdx2) > 0 Then
+                    istemiyorMu = False
+                    If bmiIstemiyor(i) <> "" Then
+                        Dim ip2() As String
+                        ip2 = Split(bmiIstemiyor(i), ",")
+                        Dim k2 As Integer
+                        For k2 = 0 To UBound(ip2)
+                            If Trim(ip2(k2)) <> "" Then
+                                If InStr(UCase(isletmeAd(araIdx2)), Trim(ip2(k2))) > 0 Or InStr(Trim(ip2(k2)), UCase(isletmeAd(araIdx2))) > 0 Then
+                                    istemiyorMu = True
+                                    Exit For
+                                End If
+                            End If
+                        Next k2
+                    End If
+                    If Not istemiyorMu Then
+                        bmiYerlesti(i) = True
+                        bmiIsletme(i) = isletmeAd(araIdx2)
+                        bmiSira(i) = "Otomatik"
+                        bmiKalan(araIdx2) = bmiKalan(araIdx2) - 1
+                        bmiOto = (araIdx2 Mod islAdet) + 1
+                        bulunan2 = True
+                        Exit For
+                    End If
+                End If
+            Next deneme2
+            If Not bulunan2 Then
+                For deneme2 = 0 To islAdet - 1
+                    araIdx2 = ((bmiOto - 1 + deneme2) Mod islAdet) + 1
+                    If bmiKalan(araIdx2) > 0 Then
+                        bmiYerlesti(i) = True
+                        bmiIsletme(i) = isletmeAd(araIdx2)
+                        bmiSira(i) = "Zorunlu Atama"
+                        bmiKalan(araIdx2) = bmiKalan(araIdx2) - 1
+                        bmiOto = (araIdx2 Mod islAdet) + 1
+                        Exit For
+                    End If
+                Next deneme2
+            End If
+        End If
+    Next i
+
+    ' === ADIM 5: SONUCLARI YAZ (sutun 16=isletme, 17=sira, 18=durum) ===
+    Dim mboSayac As Integer: mboSayac = 0
+    Dim i_ws As Integer
+    For i_ws = 1 To 32
+        If Trim(wsOgrenci.Cells(5 + i_ws, 3).Value) <> "" Then
+            mboSayac = mboSayac + 1
+            satir = 6 + i_ws
+            Call RenkBelirle(mboSira(mboSayac), renk1, renk2)
+            Call SonucYaz(wsSonuc, satir, mboIsletme(mboSayac), mboSira(mboSayac), renk1, renk2)
+        End If
+    Next i_ws
+
+    Dim bmiSayac As Integer: bmiSayac = 0
+    For i_ws = 1 To 32
+        If Trim(wsOgrenci.Cells(5 + i_ws, 9).Value) <> "" Then
+            bmiSayac = bmiSayac + 1
+            satir = 41 + i_ws
+            Call RenkBelirle(bmiSira(bmiSayac), renk1, renk2)
+            Call SonucYaz(wsSonuc, satir, bmiIsletme(bmiSayac), bmiSira(bmiSayac), renk1, renk2)
+        End If
+    Next i_ws
+
+    Application.ScreenUpdating = True
+    MsgBox "Yerlestirme tamamlandi!" & Chr(10) & Chr(10) & _
+           "MBO: " & mboAdet & " ogrenci" & Chr(10) & _
+           "BMI: " & bmiAdet & " ogrenci" & Chr(10) & _
+           "Aktif isletme sayisi: " & islAdet & Chr(10) & Chr(10) & _
+           "4-Sonuc sayfasini kontrol ediniz.", vbInformation, "TAMAM"
+End Sub
+
+Sub RenkBelirle(sira As String, r1 As Long, r2 As Long)
+    Select Case sira
+        Case "1. Tercih":      r1 = RGB(112,173,71):  r2 = RGB(226,239,218)
+        Case "2. Tercih":      r1 = RGB(46,117,182):  r2 = RGB(222,234,246)
+        Case "3. Tercih":      r1 = RGB(255,192,0):   r2 = RGB(255,250,205)
+        Case "4. Tercih":      r1 = RGB(237,125,49):  r2 = RGB(252,228,214)
+        Case "5. Tercih":      r1 = RGB(192,0,0):     r2 = RGB(255,218,217)
+        Case "6. Tercih":      r1 = RGB(112,48,160):  r2 = RGB(234,209,255)
+        Case "7. Tercih":      r1 = RGB(0,112,192):   r2 = RGB(217,240,255)
+        Case "8. Tercih":      r1 = RGB(255,140,0):   r2 = RGB(255,240,217)
+        Case "9. Tercih":      r1 = RGB(55,86,35):    r2 = RGB(232,255,217)
+        Case "10. Tercih":     r1 = RGB(192,0,90):    r2 = RGB(255,232,240)
+        Case "Isletme Talebi": r1 = RGB(237,125,49):  r2 = RGB(255,230,153)
+        Case "Otomatik":       r1 = RGB(150,150,150): r2 = RGB(240,240,240)
+        Case "Zorunlu Atama":  r1 = RGB(123,0,0):     r2 = RGB(255,224,224)
+        Case Else:             r1 = RGB(150,150,150): r2 = RGB(240,240,240)
+    End Select
+End Sub
+
+Sub SonucYaz(ws As Worksheet, satir As Integer, isletme As String, sira As String, r1 As Long, r2 As Long)
+    ws.Cells(satir, 16).Value = isletme
+    ws.Cells(satir, 16).Interior.Color = r2
+    ws.Cells(satir, 16).Font.Bold = True
+
+    ws.Cells(satir, 17).Value = sira
+    ws.Cells(satir, 17).Interior.Color = r1
+    ws.Cells(satir, 17).Font.Color = RGB(255,255,255)
+    ws.Cells(satir, 17).Font.Bold = True
+    ws.Cells(satir, 17).HorizontalAlignment = xlCenter
+
+    Dim durum As String
+    Select Case sira
+        Case "Isletme Talebi": durum = "ISLETME TALEBI"
+        Case "Otomatik":       durum = "OTOMATIK"
+        Case "Zorunlu Atama":  durum = "ZORUNLU ATAMA"
+        Case Else:             durum = "YERLESTI"
+    End Select
+    ws.Cells(satir, 18).Value = durum
+    ws.Cells(satir, 18).Interior.Color = r1
+    ws.Cells(satir, 18).Font.Color = RGB(255,255,255)
+    ws.Cells(satir, 18).Font.Bold = True
+    ws.Cells(satir, 18).HorizontalAlignment = xlCenter
+End Sub
+
+Sub SonuclariSifirla()
+    Dim cevap As Integer
+    cevap = MsgBox("Sonuclar silinecek. Emin misiniz?", vbYesNo, "SIFIRLA")
+    If cevap = vbNo Then Exit Sub
+    Dim ws As Worksheet
+    Set ws = ThisWorkbook.Sheets("4-Sonuc")
+    Dim sr As Integer
+    For sr = 7 To 38
+        ws.Cells(sr, 16).Value = "": ws.Cells(sr, 17).Value = "": ws.Cells(sr, 18).Value = ""
+        ws.Cells(sr, 16).Interior.ColorIndex = xlNone
+        ws.Cells(sr, 17).Interior.ColorIndex = xlNone
+        ws.Cells(sr, 18).Interior.ColorIndex = xlNone
+    Next sr
+    For sr = 42 To 73
+        ws.Cells(sr, 16).Value = "": ws.Cells(sr, 17).Value = "": ws.Cells(sr, 18).Value = ""
+        ws.Cells(sr, 16).Interior.ColorIndex = xlNone
+        ws.Cells(sr, 17).Interior.ColorIndex = xlNone
+        ws.Cells(sr, 18).Interior.ColorIndex = xlNone
+    Next sr
+    MsgBox "Sifirlandi.", vbInformation, "TAMAM"
+End Sub

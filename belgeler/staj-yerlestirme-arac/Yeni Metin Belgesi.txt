@@ -1,0 +1,5 @@
+1-excel dosyası aç ve  Alt + F11 bas → VBA'nın açılması
+2. Sol panelde VBAProject üzerine sağ tıklayın → Ekle → Modül
+3. VBA_YerlestirmeKodu.txt Günlerinin Notepad ile aç → Ctrl+A → Ctrl+C → VBA bilgisayarına Ctrl+V
+4.  Ctrl+S ile kaydet → pencereyi kapat
+5. Çalıştırmak için: Alt+F8 → YerleştirmeYap → Çalıştır
