@@ -1,0 +1,30 @@
+{
+  "name": "alan-yonetim-sistemi",
+  "productName": "Ali Osman Koç - Alan Yönetim Sistemi",
+  "version": "1.0.0",
+  "description": "Soma Mesleki ve Teknik Anadolu Lisesi Makine Teknolojisi Alanı - Ders Programı ve Alan Yönetim Sistemi",
+  "main": "electron/main.js",
+  "author": "Ali Osman Koç",
+  "license": "UNLICENSED",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder"
+  },
+  "devDependencies": {
+    "electron": "^31.0.0",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "com.aliosmankoc.alanyonetim",
+    "productName": "Alan Yönetim Sistemi",
+    "files": [
+      "electron/**/*",
+      "src/**/*",
+      "package.json"
+    ],
+    "win": { "target": "nsis" },
+    "linux": { "target": "AppImage" },
+    "mac": { "target": "dmg" }
+  }
+}
