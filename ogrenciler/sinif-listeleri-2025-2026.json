@@ -1,0 +1,111 @@
+{
+  "kaynak": "e-okul Sınıf Listesi çıktısı, Soma Mesleki ve Teknik Anadolu Lisesi, alınma tarihi 29/08/2026",
+  "not": "9-A listesi 'eksik' -- kayıt/nakil süreci henüz tamamlanmadığı için şu an sadece 1 öğrenci görünüyor, ileride güncellenecek.",
+  "siniflar": {
+    "9-A": {
+      "durum": "eksik (kayıt devam ediyor)",
+      "ogrenciler": [
+        { "no": "25029", "ad": "SAIDALO BAKHTIYOROV", "cinsiyet": "Erkek" }
+      ]
+    },
+    "10-A": {
+      "ogrenciler": [
+        { "no": "57", "ad": "ALİ RIZA YETİM", "cinsiyet": "Erkek" },
+        { "no": "68", "ad": "ALİ ARMAN", "cinsiyet": "Erkek" },
+        { "no": "75", "ad": "ARDA ÇAKIR", "cinsiyet": "Erkek" },
+        { "no": "617", "ad": "ÇAĞATAY EGE ŞAHİN", "cinsiyet": "Erkek" },
+        { "no": "25001", "ad": "HABİL EFE BİTİREN", "cinsiyet": "Erkek" },
+        { "no": "25002", "ad": "OZAN DÖNMEZ", "cinsiyet": "Erkek" },
+        { "no": "25007", "ad": "HÜSEYİN ALİ KARACA", "cinsiyet": "Erkek" },
+        { "no": "25008", "ad": "EMRE YARDIMCI", "cinsiyet": "Erkek" },
+        { "no": "25009", "ad": "CEMİL ABDURRAHMAN BİRİNCİ", "cinsiyet": "Erkek" },
+        { "no": "25010", "ad": "SERCAN KÖSE", "cinsiyet": "Erkek" },
+        { "no": "25012", "ad": "ALAADDİN KOSTAK", "cinsiyet": "Erkek" },
+        { "no": "25013", "ad": "MEHMET EMİR DAVUTLU", "cinsiyet": "Erkek" },
+        { "no": "25014", "ad": "SEMİH DEMİR", "cinsiyet": "Erkek" },
+        { "no": "25015", "ad": "BEDİRHAN ÖLMEZ", "cinsiyet": "Erkek" },
+        { "no": "25016", "ad": "AYBARS CAN", "cinsiyet": "Erkek" },
+        { "no": "25017", "ad": "EGE AYDOĞAN", "cinsiyet": "Erkek" },
+        { "no": "25019", "ad": "MERT İŞBİLEN", "cinsiyet": "Erkek" },
+        { "no": "25020", "ad": "HAMZA BİLİR", "cinsiyet": "Erkek" },
+        { "no": "25023", "ad": "MUSTAFA BURAK", "cinsiyet": "Erkek" },
+        { "no": "25024", "ad": "RAMAZAN EMİR UÇAR", "cinsiyet": "Erkek" },
+        { "no": "25027", "ad": "MUHAMMED GÜNDÜZ", "cinsiyet": "Erkek" },
+        { "no": "25028", "ad": "YUSUF AK", "cinsiyet": "Erkek" },
+        { "no": "25031", "ad": "EMİR HALİT KANDEMİR", "cinsiyet": "Erkek" },
+        { "no": "25032", "ad": "FATİH ADIGÜZEL", "cinsiyet": "Erkek" },
+        { "no": "25301", "ad": "ARİF BERK İPEK", "cinsiyet": "Erkek" },
+        { "no": "25777", "ad": "ÖMER DEMİRCİOĞLU", "cinsiyet": "Erkek" }
+      ]
+    },
+    "11-A": {
+      "ogrenciler": [
+        { "no": "71", "ad": "MEHMET MAMAK", "cinsiyet": "Erkek", "pansiyon": "Yatılı" },
+        { "no": "80", "ad": "ARDA SARAÇ", "cinsiyet": "Erkek" },
+        { "no": "92", "ad": "SÜLEYMAN TAHA YILMAZ", "cinsiyet": "Erkek" },
+        { "no": "111", "ad": "CEMALİ SARIKAYA", "cinsiyet": "Erkek" },
+        { "no": "619", "ad": "KADİR AKKURT", "cinsiyet": "Erkek" },
+        { "no": "712", "ad": "ALİ DOĞAN", "cinsiyet": "Erkek" },
+        { "no": "713", "ad": "BURAK SARIKAYA", "cinsiyet": "Erkek" },
+        { "no": "715", "ad": "ŞERİF ÇALIŞKAN", "cinsiyet": "Erkek" },
+        { "no": "740", "ad": "HALİL İBRAHİM İLTER", "cinsiyet": "Erkek" },
+        { "no": "741", "ad": "UFUK ÖZGÜR MARANGOZ", "cinsiyet": "Erkek" },
+        { "no": "755", "ad": "KENAN ÇELİK", "cinsiyet": "Erkek" },
+        { "no": "769", "ad": "MEHMET ARDA DURGUT", "cinsiyet": "Erkek" },
+        { "no": "781", "ad": "EMİR TETİK", "cinsiyet": "Erkek" },
+        { "no": "797", "ad": "YAKUP KOCAGEDİK", "cinsiyet": "Erkek" },
+        { "no": "811", "ad": "FEVZİ AYBERK DAĞBAŞI", "cinsiyet": "Erkek" },
+        { "no": "815", "ad": "MEHMET FİKRET GÜNGÖR", "cinsiyet": "Erkek" },
+        { "no": "819", "ad": "AHMET EGE TOPAL", "cinsiyet": "Erkek" },
+        { "no": "826", "ad": "AHMET CAN YÖRÜK", "cinsiyet": "Erkek" },
+        { "no": "834", "ad": "BEDİRHAN AKSOY", "cinsiyet": "Erkek" },
+        { "no": "842", "ad": "ALPEREN İLTER", "cinsiyet": "Erkek" }
+      ]
+    },
+    "12-A": {
+      "ogrenciler": [
+        { "no": "1008", "ad": "ZAFER SARI", "cinsiyet": "Erkek", "pansiyon": "Yatılı" },
+        { "no": "22094", "ad": "KADİR EFE KURMALI", "cinsiyet": "Erkek" },
+        { "no": "23014", "ad": "RAMAZAN ÖVEK", "cinsiyet": "Erkek" },
+        { "no": "23015", "ad": "İSMAİL SİVRİ", "cinsiyet": "Erkek" },
+        { "no": "23034", "ad": "ALİ YILMAZ", "cinsiyet": "Erkek" },
+        { "no": "23046", "ad": "TUNAHAN TEKER", "cinsiyet": "Erkek" },
+        { "no": "23050", "ad": "YAŞAR ARDA ÇAL", "cinsiyet": "Erkek" },
+        { "no": "23060", "ad": "MEHMET KAZIM UZUN", "cinsiyet": "Erkek" },
+        { "no": "23068", "ad": "SADETTİN AKSU", "cinsiyet": "Erkek" },
+        { "no": "23077", "ad": "CENGİZHAN GEZGİN", "cinsiyet": "Erkek" },
+        { "no": "23081", "ad": "BATIKAN ALEMDAR TAŞPINAR", "cinsiyet": "Erkek" },
+        { "no": "23087", "ad": "YUSUF EFE ÇAL", "cinsiyet": "Erkek" },
+        { "no": "23100", "ad": "MERT KOCABIYIK", "cinsiyet": "Erkek" },
+        { "no": "23102", "ad": "HÜSEYİN YEKTA ŞENLİK", "cinsiyet": "Erkek" },
+        { "no": "23104", "ad": "ALİ HAN ÇELİK", "cinsiyet": "Erkek" },
+        { "no": "23107", "ad": "HASAN MERT ANAÇ", "cinsiyet": "Erkek" },
+        { "no": "23110", "ad": "SÜLEYMAN ÇOBAN", "cinsiyet": "Erkek" },
+        { "no": "23112", "ad": "EMİRHAN ERTÜRK", "cinsiyet": "Erkek" },
+        { "no": "23113", "ad": "MUHAMMET EMİN KILIÇ", "cinsiyet": "Erkek" },
+        { "no": "23117", "ad": "SALİH AĞCIK", "cinsiyet": "Erkek" },
+        { "no": "23238", "ad": "ARDA YILMAZ", "cinsiyet": "Erkek" },
+        { "no": "23245", "ad": "AHMET CEMİL YILDIZ", "cinsiyet": "Erkek" }
+      ]
+    },
+    "12-B": {
+      "ogrenciler": [
+        { "no": "22102", "ad": "RAMAZAN DOĞANER", "cinsiyet": "Erkek" },
+        { "no": "22117", "ad": "HÜSEYİN ANIL KOÇ", "cinsiyet": "Erkek" },
+        { "no": "23007", "ad": "TALHA ÖMER YAĞMUR", "cinsiyet": "Erkek" },
+        { "no": "23010", "ad": "EMİRHAN YASLAM", "cinsiyet": "Erkek" },
+        { "no": "23021", "ad": "YİĞİT AFACAN", "cinsiyet": "Erkek" },
+        { "no": "23026", "ad": "YAĞIZ ŞENHAN", "cinsiyet": "Erkek" },
+        { "no": "23053", "ad": "MERT BERAT VARLI", "cinsiyet": "Erkek" },
+        { "no": "23054", "ad": "SAMET YALIN", "cinsiyet": "Erkek" },
+        { "no": "23058", "ad": "MEHMET CAN ÇELEBİ", "cinsiyet": "Erkek" },
+        { "no": "23085", "ad": "MUHAMMET TOPRAK", "cinsiyet": "Erkek" },
+        { "no": "23093", "ad": "FAHRİ CAN ILGAZ", "cinsiyet": "Erkek" },
+        { "no": "23105", "ad": "EFE EŞREF ÖZDİLKURAL", "cinsiyet": "Erkek" },
+        { "no": "23109", "ad": "EREN OLUM", "cinsiyet": "Erkek" },
+        { "no": "23249", "ad": "EGE GENÇ", "cinsiyet": "Erkek" }
+      ]
+    }
+  },
+  "ozet": { "9-A": 1, "10-A": 26, "11-A": 20, "12-A": 22, "12-B": 14 }
+}
