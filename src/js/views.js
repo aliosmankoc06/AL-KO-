@@ -12,7 +12,8 @@ const MODULES = [
   { id: "il-zumresi", label: "İl Zümresi", icon: "building" },
   { id: "staj-yerlestirme", label: "Staj Yerleştirme", icon: "briefcase" },
   { id: "atolye-envanter", label: "Atölye / Envanter", icon: "tool" },
-  { id: "performans", label: "Performans Kriterleri", icon: "star" }
+  { id: "performans", label: "Performans Kriterleri", icon: "star" },
+  { id: "donem-raporlari", label: "Ders Kesim / Yazılı Teslim", icon: "report" }
 ];
 const DERS_PROGRAMI_TABS = [
   { id: "havuz", label: "Ders Havuzu", icon: "book" },
@@ -70,6 +71,7 @@ function renderMain() {
   if (activeModule === "staj-yerlestirme") { el.innerHTML = viewStajYerlestirme(); return; }
   if (activeModule === "atolye-envanter") { el.innerHTML = viewAtolyeEnvanter(); return; }
   if (activeModule === "performans") { el.innerHTML = viewPerformans(); return; }
+  if (activeModule === "donem-raporlari") { el.innerHTML = viewDonemRaporlari(); return; }
   if (activeTab === "havuz") el.innerHTML = viewHavuz();
   else if (activeTab === "ogretmen") el.innerHTML = viewOgretmen();
   else if (activeTab === "sinif") el.innerHTML = viewSinif();
@@ -2039,6 +2041,255 @@ function viewPerformans() {
   ];
   const tabBar = `<div class="row no-print" style="flex-wrap:wrap;">${tabs.map(t => `<button class="btn ${t.id === activePerformansTab ? 'primary' : ''}" onclick="setPerformansTab('${t.id}')">${escHtml(t.label)}</button>`).join("")}</div>`;
   return tabBar + viewPerformansBolum(activePerformansTab);
+}
+
+/* ---- Ders Kesim Raporu / Yazılı Kağıtları Teslim Raporu ---- */
+let activeDonemRaporTab = "dersKesim";
+let activeDonemRaporId = { dersKesim: null, yaziliTeslim: null };
+
+function ogretmenSiniflariDersler(ogretmenId) {
+  const sonuc = [];
+  S.classes.forEach(cls => {
+    if (!cls.grade) return;
+    (cls.assignments || []).forEach(a => {
+      if (!(a.eligibleTeacherIds || []).includes(ogretmenId)) return;
+      const course = courseById(a.courseId);
+      if (course) sonuc.push({ sinif: cls.name, ders: course.name });
+    });
+  });
+  return sonuc;
+}
+function donemRaporListesi(tur) { return tur === "yaziliTeslim" ? S.donemRaporlari.yaziliTeslim : S.donemRaporlari.dersKesim; }
+function donemRaporById(tur, id) { return donemRaporListesi(tur).find(x => x.id === id); }
+function addDonemRapor(tur) {
+  const root = document.getElementById("modal-root");
+  root.innerHTML = `
+    <div class="modal-bg" onclick="if(event.target===this) closeModal()">
+      <div class="modal" style="width:420px;">
+        <h3>${tur === 'yaziliTeslim' ? 'Yeni Yazılı Kağıtları Teslim Raporu' : 'Yeni Ders Kesim Raporu'}</h3>
+        <input type="hidden" id="dr-tur" value="${tur}">
+        <label class="small">Öğretmen</label>
+        <select id="dr-ogretmen" style="width:100%">
+          ${S.teachers.map(t => `<option value="${t.id}">${escHtml(t.name)}</option>`).join("")}
+        </select>
+        <label class="small">Unvan</label><input type="text" id="dr-unvan" placeholder="örn. Mak. ve Tek. Tas. Öğrt." style="width:100%">
+        <label class="small">Öğretim Yılı</label><input type="text" id="dr-yil" value="${S.akademikTakvim ? escHtml(S.akademikTakvim.ogretimYili) : ''}" style="width:100%">
+        <label class="small">Dönem</label>
+        <select id="dr-donem" style="width:100%">
+          <option value="1. Dönem">1. Dönem</option>
+          <option value="2. Dönem" selected>2. Dönem</option>
+        </select>
+        <label class="small">Tarih</label><input type="text" id="dr-tarih" placeholder="örn. 20.06.2025" style="width:100%">
+        <div class="row">
+          <button class="btn primary" onclick="saveNewDonemRapor()">Oluştur</button>
+          <button class="btn" onclick="closeModal()">İptal</button>
+        </div>
+      </div>
+    </div>`;
+}
+function saveNewDonemRapor() {
+  const tur = document.getElementById("dr-tur").value;
+  const ogretmenId = document.getElementById("dr-ogretmen").value;
+  const ogretmen = teacherById(ogretmenId);
+  if (!ogretmen) { alert("Öğretmen seçin."); return; }
+  const dersSinif = ogretmenSiniflariDersler(ogretmenId);
+  const satirlar = dersSinif.map(x => tur === "yaziliTeslim"
+    ? { id: uid("ytr"), sinif: x.sinif, ders: x.ders, yazili1: "", yazili2: "" }
+    : { id: uid("dkr"), sinif: x.sinif, ders: x.ders, durum: "TAMAMLANDI" });
+  const rapor = {
+    id: uid(tur === "yaziliTeslim" ? "yt" : "dk"),
+    ogretmenId, ogretmenAdi: ogretmen.name,
+    unvan: document.getElementById("dr-unvan").value.trim(),
+    ogretimYili: document.getElementById("dr-yil").value.trim(),
+    donem: document.getElementById("dr-donem").value,
+    tarih: document.getElementById("dr-tarih").value.trim(),
+    satirlar
+  };
+  donemRaporListesi(tur).push(rapor);
+  activeDonemRaporId[tur] = rapor.id;
+  save(); closeModal(); renderMain();
+}
+function editDonemRaporMeta(tur, id) {
+  const r = donemRaporById(tur, id);
+  if (!r) return;
+  const root = document.getElementById("modal-root");
+  root.innerHTML = `
+    <div class="modal-bg" onclick="if(event.target===this) closeModal()">
+      <div class="modal" style="width:420px;">
+        <h3>Rapor Bilgilerini Düzenle</h3>
+        <label class="small">Öğretmen</label>
+        <select id="dr-ogretmen" style="width:100%">
+          ${S.teachers.map(t => `<option value="${t.id}" ${t.id === r.ogretmenId ? 'selected' : ''}>${escHtml(t.name)}</option>`).join("")}
+        </select>
+        <label class="small">Unvan</label><input type="text" id="dr-unvan" value="${escHtml(r.unvan || '')}" style="width:100%">
+        <label class="small">Öğretim Yılı</label><input type="text" id="dr-yil" value="${escHtml(r.ogretimYili || '')}" style="width:100%">
+        <label class="small">Dönem</label>
+        <select id="dr-donem" style="width:100%">
+          <option value="1. Dönem" ${r.donem === '1. Dönem' ? 'selected' : ''}>1. Dönem</option>
+          <option value="2. Dönem" ${r.donem === '2. Dönem' ? 'selected' : ''}>2. Dönem</option>
+        </select>
+        <label class="small">Tarih</label><input type="text" id="dr-tarih" value="${escHtml(r.tarih || '')}" style="width:100%">
+        <div class="row">
+          <button class="btn primary" onclick="saveDonemRaporMeta('${tur}','${id}')">Kaydet</button>
+          <button class="btn" onclick="closeModal()">İptal</button>
+        </div>
+      </div>
+    </div>`;
+}
+function saveDonemRaporMeta(tur, id) {
+  const r = donemRaporById(tur, id);
+  if (!r) return;
+  const ogretmenId = document.getElementById("dr-ogretmen").value;
+  const ogretmen = teacherById(ogretmenId);
+  r.ogretmenId = ogretmenId;
+  r.ogretmenAdi = ogretmen ? ogretmen.name : r.ogretmenAdi;
+  r.unvan = document.getElementById("dr-unvan").value.trim();
+  r.ogretimYili = document.getElementById("dr-yil").value.trim();
+  r.donem = document.getElementById("dr-donem").value;
+  r.tarih = document.getElementById("dr-tarih").value.trim();
+  save(); closeModal(); renderMain();
+}
+function deleteDonemRapor(tur, id) {
+  if (!confirm("Bu rapor silinsin mi? Bu işlem geri alınamaz.")) return;
+  const arr = donemRaporListesi(tur);
+  const idx = arr.findIndex(x => x.id === id);
+  if (idx >= 0) arr.splice(idx, 1);
+  if (activeDonemRaporId[tur] === id) activeDonemRaporId[tur] = null;
+  save(); renderMain();
+}
+function selectDonemRapor(tur, id) { activeDonemRaporId[tur] = id; renderMain(); }
+function donemRaporSatirlariYenile(tur, id) {
+  const r = donemRaporById(tur, id);
+  if (!r) return;
+  const guncel = ogretmenSiniflariDersler(r.ogretmenId);
+  let eklendi = 0;
+  guncel.forEach(g => {
+    const varMi = r.satirlar.some(s => s.sinif === g.sinif && s.ders === g.ders);
+    if (!varMi) {
+      r.satirlar.push(tur === "yaziliTeslim"
+        ? { id: uid("ytr"), sinif: g.sinif, ders: g.ders, yazili1: "", yazili2: "" }
+        : { id: uid("dkr"), sinif: g.sinif, ders: g.ders, durum: "TAMAMLANDI" });
+      eklendi++;
+    }
+  });
+  save(); renderMain();
+  alert(eklendi ? ("Ders programından " + eklendi + " yeni satır eklendi.") : "Ders programında bu rapora eklenecek yeni bir sınıf/ders bulunamadı.");
+}
+function addDonemRaporSatir(tur, id) {
+  const r = donemRaporById(tur, id);
+  if (!r) return;
+  r.satirlar.push(tur === "yaziliTeslim"
+    ? { id: uid("ytr"), sinif: "", ders: "", yazili1: "", yazili2: "" }
+    : { id: uid("dkr"), sinif: "", ders: "", durum: "TAMAMLANDI" });
+  save(); renderMain();
+}
+function updateDonemRaporSatir(tur, raporId, satirId, field, value) {
+  const r = donemRaporById(tur, raporId);
+  const s = r && r.satirlar.find(x => x.id === satirId);
+  if (s) s[field] = value;
+  save();
+}
+function removeDonemRaporSatir(tur, raporId, satirId) {
+  if (!confirm("Bu satır silinsin mi?")) return;
+  const r = donemRaporById(tur, raporId);
+  if (!r) return;
+  r.satirlar = r.satirlar.filter(x => x.id !== satirId);
+  save(); renderMain();
+}
+function renderDonemRaporDetay(tur, r) {
+  const isYazili = tur === "yaziliTeslim";
+  const rows = r.satirlar.map(s => `
+    <tr>
+      <td class="no-print"><input type="text" value="${escHtml(s.sinif)}" style="width:70px" onchange="updateDonemRaporSatir('${tur}','${r.id}','${s.id}','sinif',this.value)"></td>
+      <td class="print-only-cell">${escHtml(s.sinif)}</td>
+      <td class="no-print"><input type="text" value="${escHtml(s.ders)}" style="width:220px" onchange="updateDonemRaporSatir('${tur}','${r.id}','${s.id}','ders',this.value)"></td>
+      <td class="print-only-cell">${escHtml(s.ders)}</td>
+      ${isYazili ? `
+      <td class="no-print"><input type="text" value="${escHtml(s.yazili1)}" placeholder="örn. 1 ADET" style="width:90px" onchange="updateDonemRaporSatir('${tur}','${r.id}','${s.id}','yazili1',this.value)"></td>
+      <td class="print-only-cell">${escHtml(s.yazili1)}</td>
+      <td class="no-print"><input type="text" value="${escHtml(s.yazili2)}" placeholder="örn. 1 ADET" style="width:90px" onchange="updateDonemRaporSatir('${tur}','${r.id}','${s.id}','yazili2',this.value)"></td>
+      <td class="print-only-cell">${escHtml(s.yazili2)}</td>` : `
+      <td class="no-print"><input type="text" value="${escHtml(s.durum)}" placeholder="TAMAMLANDI" style="width:160px" onchange="updateDonemRaporSatir('${tur}','${r.id}','${s.id}','durum',this.value)"></td>
+      <td class="print-only-cell">${escHtml(s.durum)}</td>`}
+      <td class="no-print"><button class="btn danger" onclick="removeDonemRaporSatir('${tur}','${r.id}','${s.id}')">Sil</button></td>
+    </tr>`).join("");
+
+  const toplam = isYazili ? r.satirlar.reduce((a, s) => a + (parseInt(s.yazili1) || 0) + (parseInt(s.yazili2) || 0), 0) : null;
+  const paragraf = isYazili
+    ? `${escHtml(r.ogretimYili || '.......')} Eğitim ve Öğretim yılında dersine girdiğim sınıflarda müfredat programına ve Zümre toplantı kararlarına uygun olarak toplam yazılı adetleri aşağıya çıkarılmıştır. Gereğini bilgilerinize arz ederim.`
+    : `${escHtml(r.ogretimYili || '.......')} Eğitim ve Öğretim Yılı ${escHtml(r.donem || '')}inde dersine girdiğim sınıflarda müfredat programının bitirilip bitirilmediğine ait bilgiler aşağıya çıkarılmıştır. Gereğini bilgilerinize arz ederim.`;
+
+  return `
+  <div class="card no-print">
+    <div class="row small" style="flex-wrap:wrap;gap:14px;align-items:center;">
+      <span><b>Öğretmen:</b> ${escHtml(r.ogretmenAdi)}</span>
+      <span><b>Unvan:</b> ${escHtml(r.unvan || '-')}</span>
+      <span><b>Öğretim Yılı:</b> ${escHtml(r.ogretimYili || '-')}</span>
+      <span><b>Dönem:</b> ${escHtml(r.donem || '-')}</span>
+      <span><b>Tarih:</b> ${escHtml(r.tarih || '-')}</span>
+      <button class="btn" onclick="editDonemRaporMeta('${tur}','${r.id}')">Bilgileri Düzenle</button>
+      <button class="btn" onclick="donemRaporSatirlariYenile('${tur}','${r.id}')">Ders Programından Yenile</button>
+    </div>
+  </div>
+  <div style="margin-bottom:14px;">
+    <div>SOMA MESLEKİ VE TEKNİK ANADOLU LİSESİ MÜDÜRLÜĞÜ'NE</div>
+    <div>SOMA</div>
+  </div>
+  <p class="small" style="margin-bottom:14px;">${paragraf}</p>
+  <table><thead><tr>
+    <th>Sınıfı</th><th>Dersi</th>
+    ${isYazili ? '<th>1. Yazılı</th><th>2. Yazılı</th>' : '<th>Konular</th>'}
+    <th class="no-print"></th>
+  </tr></thead>
+  <tbody>${rows || `<tr><td colspan="${isYazili ? 5 : 4}" class="small">Henüz satır yok. "Ders Programından Yenile" ile öğretmenin ders atamalarından otomatik doldurabilirsiniz.</td></tr>`}</tbody></table>
+  ${isYazili ? `<div class="small" style="margin-top:8px;font-weight:600;">TOPLAM ${toplam} ADET</div>` : ''}
+  <div class="row no-print" style="margin-top:10px;"><button class="btn" onclick="addDonemRaporSatir('${tur}','${r.id}')">Satır Ekle</button></div>
+  <div style="margin-top:36px;text-align:right;">
+    <div>${escHtml(r.tarih || '')}</div>
+    <div style="margin-top:30px;font-weight:600;">${escHtml(r.ogretmenAdi)}</div>
+    <div>${escHtml(r.unvan || '')}</div>
+  </div>`;
+}
+function viewDonemRaporBolum(tur) {
+  const entries = donemRaporListesi(tur).slice().sort((a, b) => (a.ogretmenAdi || "").localeCompare(b.ogretmenAdi || "", "tr") || (b.ogretimYili || "").localeCompare(a.ogretimYili || "", "tr"));
+  if (entries.length && !entries.some(e => e.id === activeDonemRaporId[tur])) activeDonemRaporId[tur] = entries[0].id;
+  if (!entries.length) activeDonemRaporId[tur] = null;
+  const active = donemRaporById(tur, activeDonemRaporId[tur]);
+
+  const baslik = tur === "yaziliTeslim" ? "Yazılı Kağıtları Teslim Raporu" : "Ders Kesim Raporu";
+  const listHtml = entries.length === 0 ? "" : `
+    <div class="card no-print">
+      <div class="row" style="flex-wrap:wrap;">
+        ${entries.map(e => `<button class="btn ${e.id === activeDonemRaporId[tur] ? 'primary' : ''}" onclick="selectDonemRapor('${tur}','${e.id}')">${escHtml(e.ogretmenAdi)} · ${escHtml(e.donem || '')} ${escHtml(e.ogretimYili || '')}</button>`).join("")}
+      </div>
+    </div>`;
+
+  const dosyaAdi = active ? baslik + " - " + active.ogretmenAdi + " " + active.donem : baslik;
+  const content = active ? renderDonemRaporDetay(tur, active) : `<div class="card small" style="text-align:center;padding:30px 20px;">Henüz rapor oluşturulmadı. "Yeni Rapor Oluştur" ile öğretmen seçip oluşturun — sınıf/ders satırları ders programından otomatik gelir.</div>`;
+
+  return `
+  <div class="card no-print">
+    <h2>${escHtml(baslik)}</h2>
+    <p class="small">Okul müdürlüğüne sunulan resmi rapor formatında — sınıf/ders satırları öğretmenin ders programındaki atamalarından otomatik gelir, dilediğiniz gibi düzenleyip Yazdır/PDF/Excel alabilirsiniz.</p>
+    <div class="row">
+      <button class="btn primary" onclick="addDonemRapor('${tur}')">Yeni Rapor Oluştur</button>
+      ${active ? `<button class="btn danger" onclick="deleteDonemRapor('${tur}','${active.id}')">Bu Raporu Sil</button>` : ""}
+    </div>
+    ${belgeAracCubugu(dosyaAdi)}
+  </div>
+  ${listHtml}
+  <div class="print-area">
+    ${content}
+  </div>`;
+}
+function setDonemRaporTab(id) { activeDonemRaporTab = id; renderMain(); }
+function viewDonemRaporlari() {
+  const tabs = [
+    { id: "dersKesim", label: "Ders Kesim Raporu" },
+    { id: "yaziliTeslim", label: "Yazılı Kağıtları Teslim Raporu" }
+  ];
+  const tabBar = `<div class="row no-print" style="flex-wrap:wrap;">${tabs.map(t => `<button class="btn ${t.id === activeDonemRaporTab ? 'primary' : ''}" onclick="setDonemRaporTab('${t.id}')">${escHtml(t.label)}</button>`).join("")}</div>`;
+  return tabBar + viewDonemRaporBolum(activeDonemRaporTab);
 }
 
 /* ---- Ana Sayfa ---- */

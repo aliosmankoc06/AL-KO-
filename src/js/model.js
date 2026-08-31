@@ -127,7 +127,8 @@ function defaultState() {
     envanter: { makineler: [] },
     durumTespitFormlari: [],
     performansKayitlari: [],
-    performansAgirliklari: { dersici: [10, 10, 10, 10, 10, 30, 10, 10], odev: [10, 10, 10, 10, 10, 30, 10, 10] }
+    performansAgirliklari: { dersici: [10, 10, 10, 10, 10, 30, 10, 10], odev: [10, 10, 10, 10, 10, 30, 10, 10] },
+    donemRaporlari: { dersKesim: [], yaziliTeslim: [] }
   };
 }
 
@@ -153,7 +154,8 @@ function emptyState() {
     envanter: { makineler: [] },
     durumTespitFormlari: [],
     performansKayitlari: [],
-    performansAgirliklari: { dersici: [10, 10, 10, 10, 10, 30, 10, 10], odev: [10, 10, 10, 10, 10, 30, 10, 10] }
+    performansAgirliklari: { dersici: [10, 10, 10, 10, 10, 30, 10, 10], odev: [10, 10, 10, 10, 10, 30, 10, 10] },
+    donemRaporlari: { dersKesim: [], yaziliTeslim: [] }
   };
 }
 
@@ -216,6 +218,19 @@ function normalizeState(s) {
     if (!Array.isArray(arr) || arr.length !== 8 || arr.some(v => typeof v !== "number")) {
       s.performansAgirliklari[tur] = [10, 10, 10, 10, 10, 30, 10, 10];
     }
+  });
+  if (!s.donemRaporlari || typeof s.donemRaporlari !== "object") s.donemRaporlari = {};
+  if (!Array.isArray(s.donemRaporlari.dersKesim)) s.donemRaporlari.dersKesim = [];
+  if (!Array.isArray(s.donemRaporlari.yaziliTeslim)) s.donemRaporlari.yaziliTeslim = [];
+  s.donemRaporlari.dersKesim.forEach(r => {
+    if (!r.id) r.id = uid("dk");
+    if (!Array.isArray(r.satirlar)) r.satirlar = [];
+    r.satirlar.forEach(x => { if (!x.id) x.id = uid("dkr"); });
+  });
+  s.donemRaporlari.yaziliTeslim.forEach(r => {
+    if (!r.id) r.id = uid("yt");
+    if (!Array.isArray(r.satirlar)) r.satirlar = [];
+    r.satirlar.forEach(x => { if (!x.id) x.id = uid("ytr"); });
   });
   if (!s.seededIsletmeler2026) {
     s.seededIsletmeler2026 = true;
