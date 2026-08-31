@@ -42,13 +42,8 @@ function renderSubTabbar() {
   }
 }
 function setModule(id) {
-  if (id === "ders-programi") {
-    activeModule = "ders-programi-secim";
-    renderTabbar();
-    renderMain();
-    return;
-  }
   activeModule = id;
+  if (id === "ders-programi" && !DERS_PROGRAMI_TABS.some(t => t.id === activeTab)) activeTab = "havuz";
   selectedTeacherCells.clear();
   multiSelectMode = false;
   renderTabbar();
@@ -285,7 +280,16 @@ function viewAna() {
     <h2>Devam edin</h2>
     <p class="small">Yukarıdaki <b>Ders Programı</b> sekmesinden çalışmaya devam edin.</p>
     <button class="btn primary" onclick="setModule('ders-programi')">Ders Programına Git</button>
-  </div>`;
+  </div>
+  <div class="card">
+    <h2>Diğer Seçenekler</h2>
+    <div class="row" style="max-width:560px;flex-wrap:wrap;">
+      <button class="btn" onclick="restoreSchoolDefaults()">${icon('school')} Okulun Ders Havuzu/Öğretmen Listesiyle Başla</button>
+      <button class="btn danger" onclick="startNewProgram()">${icon('new')} Tamamen Boş Bir Dosyayla Başla</button>
+    </div>
+  </div>
+  ${renderSavedProgramsCard()}
+  ${renderBackupCard()}`;
 }
 
 /* ---- Ders Havuzu ---- */
