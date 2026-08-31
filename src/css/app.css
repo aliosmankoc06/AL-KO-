@@ -97,9 +97,28 @@ th{background:var(--panel-2);font-weight:600;}
 .spinner{width:36px;height:36px;border:4px solid var(--line);border-top-color:var(--navy);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 10px;}
 @keyframes spin{to{transform:rotate(360deg);}}
 
+/* ---- Belge/Yazdırma alanı (ekranda görünmez, sadece yazdır/PDF'te kullanılır) ---- */
+.print-doc-header{display:none;}
+.print-only{display:none;}
+
 @media print{
   .sidebar,.no-print{display:none !important;}
   .app-shell{display:block;}
-  body{background:#fff;}
+  body{background:#fff;color:#000;font-size:11.5px;}
+  .content{display:block;}
   .content main{padding:0;max-width:100%;}
+  .print-area{display:block;}
+  .print-only{display:block;}
+  .card{box-shadow:none;border:1px solid #999;border-radius:0;page-break-inside:avoid;margin-bottom:10px;}
+  .print-doc-header{
+    display:flex;justify-content:space-between;align-items:flex-start;gap:10px;
+    border-bottom:2px solid #000;padding-bottom:8px;margin-bottom:14px;
+  }
+  .print-doc-header .okul{font-weight:700;font-size:13px;}
+  .print-doc-header .alan{font-size:11px;color:#333;}
+  .print-doc-header .tarih{font-size:10.5px;color:#333;text-align:right;}
+  table{page-break-inside:auto;}
+  tr{page-break-inside:avoid;page-break-after:auto;}
+  a[href]:after{content:"";}
+  @page{size:A4;margin:14mm 12mm;}
 }

@@ -86,6 +86,18 @@ ipcMain.handle("fs:read-file", async (evt, filePath) => {
   return fs.readFileSync(filePath, "utf-8");
 });
 
+ipcMain.handle("export:pdf", async (evt, defaultName) => {
+  const result = await dialog.showSaveDialog(mainWindow, {
+    title: "PDF Olarak Kaydet",
+    defaultPath: defaultName,
+    filters: [{ name: "PDF Belgesi", extensions: ["pdf"] }]
+  });
+  if (result.canceled || !result.filePath) return null;
+  const data = await mainWindow.webContents.printToPDF({ printBackground: true, pageSize: "A4" });
+  fs.writeFileSync(result.filePath, data);
+  return result.filePath;
+});
+
 app.whenReady().then(() => {
   createWindow();
   app.on("activate", () => {

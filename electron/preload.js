@@ -9,5 +9,6 @@ contextBridge.exposeInMainWorld("desktop", {
   saveBackupDialog: (defaultName) => ipcRenderer.invoke("dialog:save-backup", defaultName),
   openBackupDialog: () => ipcRenderer.invoke("dialog:open-backup"),
   writeFile: (filePath, content) => ipcRenderer.invoke("fs:write-file", filePath, content),
-  readFile: (filePath) => ipcRenderer.invoke("fs:read-file", filePath)
+  readFile: (filePath) => ipcRenderer.invoke("fs:read-file", filePath),
+  exportPdf: (defaultName) => ipcRenderer.invoke("export:pdf", defaultName)
 });

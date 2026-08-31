@@ -337,6 +337,30 @@ function viewPlaceholderModule(title, hint) {
   </div>`;
 }
 
+/* ---- Belge Araç Çubuğu (Yazdır / PDF) — tüm belge görünümlerinde ortak ---- */
+function printCurrentView() { window.print(); }
+async function exportCurrentViewAsPdf(dosyaAdi) {
+  if (!window.desktop || !window.desktop.isElectron) { window.print(); return; }
+  const path = await window.desktop.exportPdf(dosyaAdi.replace(/[\\/:*?"<>|]/g, "-") + ".pdf");
+  if (path) alert("PDF olarak kaydedildi:\n" + path);
+}
+function belgeAracCubugu(dosyaAdi) {
+  return `<div class="row no-print" style="margin-top:10px;">
+    <button class="btn primary" onclick="printCurrentView()">Yazdır</button>
+    <button class="btn" onclick="exportCurrentViewAsPdf('${dosyaAdi}')">PDF Olarak Kaydet</button>
+  </div>`;
+}
+function belgeYazdirmaBasligi(altBaslik) {
+  const tarih = new Date().toLocaleDateString("tr-TR");
+  return `<div class="print-doc-header print-only">
+    <div>
+      <div class="okul">Soma Mesleki ve Teknik Anadolu Lisesi</div>
+      <div class="alan">Makine Teknolojisi Alanı${altBaslik ? " · " + altBaslik : ""}</div>
+    </div>
+    <div class="tarih">Yazdırma Tarihi<br>${tarih}</div>
+  </div>`;
+}
+
 /* ---- Yıllık Plan / Günlük Plan (Eski Sistem / Maarif Model) ---- */
 function setPlanSistem(id) { activePlanSistem = id; renderMain(); }
 function removeEskiSistem() {
@@ -379,14 +403,18 @@ function viewPlanModule(kind) {
     ? `<button class="btn danger" style="margin-left:8px;" onclick="removeEskiSistem()">Eski Sistemi Kalıcı Olarak Kaldır</button>`
     : "";
   return `
-  <div class="card">
+  <div class="card no-print">
     <h2>${title}</h2>
     <p class="small">${aciklama}</p>
     <p class="small">MEB müfredat reformu kademeli işliyor: 2025-2026'da sadece 9. sınıf Maarif Model'e geçti, 10-12. sınıflar hâlâ eski çerçeve programa tabi. Bütün sınıflar Maarif Model'e geçtiğinde "Eski Sistem" sekmesini kalıcı olarak kaldırabilirsiniz.</p>
     <div class="row" style="margin-top:10px;">${tabs}${eskiSistemButon}</div>
+    ${belgeAracCubugu(title + " - " + data.label)}
   </div>
-  ${gradeCards}
-  <div class="card small" style="text-align:center;padding:30px 20px;">
+  <div class="print-area">
+    ${belgeYazdirmaBasligi(title + " · " + data.label)}
+    ${gradeCards}
+  </div>
+  <div class="card small no-print" style="text-align:center;padding:30px 20px;">
     Ders bilgi formlarını gönderdikçe her öğrenme birimini haftalara/günlere dağıtacak ve ölçme-değerlendirme kısmını ekleyeceğiz.
   </div>`;
 }
