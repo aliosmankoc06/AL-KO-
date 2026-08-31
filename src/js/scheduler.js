@@ -419,8 +419,10 @@ function distributeAllBestAsync(attempts, onDone, onProgress) {
   let bestScoreValue = null;
   let candidates = [];
   function attempt() {
+    // Önce normal ders saatleri yerleştirilir, koordinatörlük ancak ondan
+    // sonra kalan boş günlere sığdırılır (öncelik: ders programının tam
+    // olması). Sığmayan koordinatörlük, aşağıda "failedList" ile bildirilir.
     S.schedule = JSON.parse(JSON.stringify(frozenSnapshot));
-    const koordFailed = placeCoordinatorTasks();
     let tasks = [];
     S.classes.forEach(cls => {
       if (cls.excludeFromDistribution) return;
@@ -430,7 +432,7 @@ function distributeAllBestAsync(attempts, onDone, onProgress) {
       });
     });
     tasks = shuffleTasksByTier(tasks);
-    let placed = 0, failed = koordFailed.length, failedList = koordFailed.map(name => ({ isletmeName: name }));
+    let placed = 0, failed = 0, failedList = [];
     tasks.forEach(({ cls, assignment: a }) => {
       const course = courseById(a.courseId);
       if (!course) return;
@@ -446,6 +448,9 @@ function distributeAllBestAsync(attempts, onDone, onProgress) {
       tryPlaceAssignmentWithTeam(cls, a, blocks, team, true);
       placed += blocks.length;
     });
+    const koordFailed = placeCoordinatorTasks();
+    failed += koordFailed.length;
+    failedList = failedList.concat(koordFailed.map(name => ({ isletmeName: name })));
     const q = scheduleQualityScore();
     const snapshot = JSON.parse(JSON.stringify(S.schedule));
     if (bestScoreValue === null || q.score < bestScoreValue) {

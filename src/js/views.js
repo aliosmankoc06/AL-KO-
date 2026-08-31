@@ -4,7 +4,12 @@
 
 const MODULES = [
   { id: "ana", label: "Ana Sayfa", icon: "home" },
-  { id: "ders-programi", label: "Ders Programı", icon: "calendar" }
+  { id: "ders-programi", label: "Ders Programı", icon: "calendar" },
+  { id: "yillik-plan", label: "Yıllık Plan", icon: "note" },
+  { id: "gunluk-plan", label: "Günlük Plan", icon: "book" },
+  { id: "okul-zumresi", label: "Okul Zümresi", icon: "users" },
+  { id: "il-zumresi", label: "İl Zümresi", icon: "building" },
+  { id: "staj-yerlestirme", label: "Staj Yerleştirme", icon: "briefcase" }
 ];
 const DERS_PROGRAMI_TABS = [
   { id: "havuz", label: "Ders Havuzu", icon: "book" },
@@ -52,6 +57,11 @@ function renderMain() {
   const el = document.getElementById("main");
   if (activeModule === "ana") { el.innerHTML = viewAna(); return; }
   if (activeModule === "ders-programi-secim") { el.innerHTML = viewDersProgramiChooser(); return; }
+  if (activeModule === "yillik-plan") { el.innerHTML = viewPlaceholderModule("Yıllık Plan", "Alan/dal yıllık ders planlarınızı buraya birlikte kuracağız."); return; }
+  if (activeModule === "gunluk-plan") { el.innerHTML = viewPlaceholderModule("Günlük Plan", "Günlük ders planı şablonunuzu buraya birlikte kuracağız."); return; }
+  if (activeModule === "okul-zumresi") { el.innerHTML = viewPlaceholderModule("Okul Zümresi", "Okul zümre toplantı tutanaklarınızı buraya birlikte kuracağız."); return; }
+  if (activeModule === "il-zumresi") { el.innerHTML = viewPlaceholderModule("İl Zümresi", "İl zümre toplantı tutanaklarınızı buraya birlikte kuracağız."); return; }
+  if (activeModule === "staj-yerlestirme") { el.innerHTML = viewPlaceholderModule("Staj Yerleştirme", "Öğrencilerin işletmelere staj yerleştirme sürecini buraya birlikte kuracağız."); return; }
   if (activeTab === "havuz") el.innerHTML = viewHavuz();
   else if (activeTab === "ogretmen") el.innerHTML = viewOgretmen();
   else if (activeTab === "sinif") el.innerHTML = viewSinif();
@@ -226,6 +236,15 @@ function renderSavedProgramsCard() {
     <p class="small">"Kaydet" dediğinizde çalışma alanınız <b>silinmez</b> — sadece o anki hâlin isimli bir kopyası burada saklanır, siz aynı yerden çalışmaya devam edersiniz. Farklı bir kayıtlı kopyayı buradan <b>açabilir</b> (o anki çalışmanızın üzerine yazar) ya da silebilirsiniz.</p>
     <table><tr><th>Ad</th><th>Kaydedilme Tarihi</th><th></th></tr>${rows}</table>
     <p class="small" style="margin-top:10px;">Tamamen sıfırdan, boş bir programla başlamak isterseniz: <button class="btn danger" onclick="startNewProgram()">Boş Bir Programla Başla</button></p>
+  </div>`;
+}
+
+function viewPlaceholderModule(title, hint) {
+  return `
+  <div class="card" style="text-align:center;padding:50px 20px;">
+    <h2>${title}</h2>
+    <p class="small">Bu bölüm şimdilik boş — ${hint}</p>
+    <p class="small">Kullandığınız gerçek belge/şablonu (Word, PDF, Excel — boş şablon olsa yeter) gönderin, birebir buna göre dolduralım.</p>
   </div>`;
 }
 
