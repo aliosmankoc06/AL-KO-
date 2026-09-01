@@ -136,6 +136,7 @@ function defaultState() {
     beceriSinavi: { kayitlar: [] },
     ogrenciListesi: [],
     seflikRaporlari: [],
+    notlandirma: [],
     donemArsivi: [],
     kurumBilgileri: {
       okulAdi: "Soma Mesleki ve Teknik Anadolu Lisesi",
@@ -180,6 +181,7 @@ function emptyState() {
     beceriSinavi: { kayitlar: [] },
     ogrenciListesi: [],
     seflikRaporlari: [],
+    notlandirma: [],
     donemArsivi: [],
     kurumBilgileri: {
       okulAdi: "Soma Mesleki ve Teknik Anadolu Lisesi",
@@ -350,6 +352,32 @@ function normalizeState(s) {
       if (typeof k.gun !== "string") k.gun = "";
       if (typeof k.saat !== "string" && typeof k.saat !== "number") k.saat = "";
       if (typeof k.isler !== "string") k.isler = "";
+    });
+  });
+  if (!Array.isArray(s.notlandirma)) s.notlandirma = [];
+  s.notlandirma.forEach(n => {
+    if (!n.id) n.id = uid("nl");
+    if (typeof n.sinif !== "string") n.sinif = "";
+    if (typeof n.ders !== "string") n.ders = "";
+    if (n.donem !== "1" && n.donem !== "2") n.donem = "1";
+    if (typeof n.perf1Sayisi !== "number") n.perf1Sayisi = 3;
+    if (typeof n.perf2Sayisi !== "number") n.perf2Sayisi = 3;
+    if (typeof n.uygulamaSinaviVarMi !== "boolean") n.uygulamaSinaviVarMi = true;
+    if (!Array.isArray(n.kayitlar)) n.kayitlar = [];
+    n.kayitlar.forEach(k => {
+      if (!k.id) k.id = uid("nlk");
+      if (typeof k.okulNo !== "string") k.okulNo = String(k.okulNo || "");
+      if (typeof k.ad !== "string") k.ad = "";
+      if (typeof k.grup !== "string" || !k.grup) k.grup = "1";
+      if (typeof k.sinav1 !== "string") k.sinav1 = String(k.sinav1 !== undefined ? k.sinav1 : "");
+      if (typeof k.sinav2 !== "string") k.sinav2 = String(k.sinav2 !== undefined ? k.sinav2 : "");
+      if (typeof k.uygulama !== "string") k.uygulama = String(k.uygulama !== undefined ? k.uygulama : "");
+      if (!Array.isArray(k.perf1)) k.perf1 = [];
+      if (!Array.isArray(k.perf2)) k.perf2 = [];
+      while (k.perf1.length < n.perf1Sayisi) k.perf1.push("");
+      while (k.perf2.length < n.perf2Sayisi) k.perf2.push("");
+      k.perf1 = k.perf1.slice(0, n.perf1Sayisi).map(v => String(v !== undefined && v !== null ? v : ""));
+      k.perf2 = k.perf2.slice(0, n.perf2Sayisi).map(v => String(v !== undefined && v !== null ? v : ""));
     });
   });
   if (!Array.isArray(s.donemArsivi)) s.donemArsivi = [];
