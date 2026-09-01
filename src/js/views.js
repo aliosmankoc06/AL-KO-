@@ -3265,12 +3265,35 @@ function snSonucRengi(sonuc) {
 function snDeposu(kind) { return kind === "ku" ? S.kalfalikUstalik : S.beceriSinavi; }
 function snYeniKayitNesnesi(kind, ekAlanlar) {
   return Object.assign({
-    id: uid(kind), ogrenciNo: "", ad: "", soyad: "", kod: "",
+    id: uid(kind), ogrenciNo: "", ad: "", soyad: "", kod: "", tckn: "",
     d1: { t1: "", t2: "", ih1: "", ih2: "", proje: "", deney: "" },
     d2: { t1: "", t2: "", ih1: "", ih2: "", proje: "", deney: "" },
     isDosyasi: { k1: "", k2: "", k3: "", k4: "" }, isDosyasiTeslimEtmedi: false,
-    sinavPuani: "", aciklama: ""
+    sinavPuani: "", aciklama: "", kagitAdedi: "",
+    degerlendirici1: "", degerlendirici2: "", degerlendirici3: ""
   }, ekAlanlar);
+}
+function sayiYaziIleTr(n) {
+  const birler = ["", "BİR", "İKİ", "ÜÇ", "DÖRT", "BEŞ", "ALTI", "YEDİ", "SEKİZ", "DOKUZ"];
+  const onlar = ["", "ON", "YİRMİ", "OTUZ", "KIRK", "ELLİ", "ALTMIŞ", "YETMİŞ", "SEKSEN", "DOKSAN"];
+  if (n === 100) return "YÜZ";
+  if (n < 0 || n > 100 || isNaN(n)) return "";
+  const on = Math.floor(n / 10), bir = n % 10;
+  return (onlar[on] + (bir ? " " + birler[bir] : "")).trim();
+}
+function snDegerlendiriciOrtalama(k) {
+  const vals = [k.degerlendirici1, k.degerlendirici2, k.degerlendirici3]
+    .map(v => parseFloat(String(v).replace(",", "."))).filter(v => !isNaN(v));
+  if (!vals.length) return null;
+  return Math.round((vals.reduce((a, b) => a + b, 0) / vals.length) * 10) / 10;
+}
+function snGuncelleDegerlendirici(kind, id, alan, value) {
+  const k = snDeposu(kind).kayitlar.find(x => x.id === id);
+  if (!k) return;
+  k[alan] = value;
+  const ort = snDegerlendiriciOrtalama(k);
+  if (ort !== null) k.sinavPuani = String(ort);
+  save(); renderMain();
 }
 function snEkleKayit(kind, ekAlanlar) {
   snDeposu(kind).kayitlar.push(snYeniKayitNesnesi(kind, ekAlanlar));
@@ -3461,12 +3484,13 @@ function viewKalfalikUstalik() {
       <button class="btn primary" onclick="snEkleKayit('ku',{tur:activeKuTur,dal:activeKuDal})">Öğrenci Ekle</button>
       <button class="btn" onclick="snListedenTopluEkleModal('ku')">Öğrenci Listesinden Toplu Ekle</button>
     </div>
+    ${snBelgeSeciciBar()}
     ${belgeAracCubugu(dosyaAdi)}
   </div>
-  ${snIsDosyasiKriterAciklamasi()}
+  ${activeSnBelge === "cizelge" ? snIsDosyasiKriterAciklamasi() : ""}
   <div class="print-area">
     ${belgeYazdirmaBasligi(baslik)}
-    ${snRosterTablo("ku", kayitlar)}
+    ${activeSnBelge === "cizelge" ? snRosterTablo("ku", kayitlar) : snEkBelgeGovde("ku", kayitlar, { tur: activeKuTur, dal: activeKuDal }, baslik)}
   </div>`;
 }
 
@@ -3491,13 +3515,13 @@ function viewBeceriSinavi() {
       <button class="btn primary" onclick="snEkleKayit('bs',{sinif:activeBeceriSinif,dal:aktifDalIcinEkle()})">Öğrenci Ekle</button>
       <button class="btn" onclick="snListedenTopluEkleModal('bs')">Öğrenci Listesinden Toplu Ekle</button>
     </div>
+    ${snBelgeSeciciBar()}
     ${belgeAracCubugu(dosyaAdi)}
   </div>
-  ${snIsDosyasiKriterAciklamasi()}
-  ${beceriKomisyonKararKarti(activeBeceriSinif, aktifSinifTanimi.dal)}
+  ${activeSnBelge === "cizelge" ? snIsDosyasiKriterAciklamasi() + beceriKomisyonKararKarti(activeBeceriSinif, aktifSinifTanimi.dal) : ""}
   <div class="print-area">
     ${belgeYazdirmaBasligi(baslik)}
-    ${snRosterTablo("bs", kayitlar)}
+    ${activeSnBelge === "cizelge" ? snRosterTablo("bs", kayitlar) : snEkBelgeGovde("bs", kayitlar, { sinif: activeBeceriSinif }, baslik)}
   </div>`;
 }
 function aktifDalIcinEkle() {
@@ -3515,6 +3539,167 @@ function beceriKomisyonKararKarti(sinif, dal) {
     <p class="small">Dayanak: MEB Ortaöğretim Kurumları Yönetmeliği Madde 46/1 — "Bu sınav, dersin özelliğine göre komisyonca alınacak karar doğrultusunda uygulamalı ve/veya yazılı olarak yapılır."</p>
     <p class="small">İmza için Ayarlar &gt; İmza Sirküsü'nden komisyon üyelerini ekleyip belgeyi yazdırırken elle tamamlayabilirsiniz.</p>
   </div>`;
+}
+
+/* ---- Kalfalık/Ustalık ve Beceri Sınavı için ek resmi belgeler ----
+   Gönderilen gerçek sınav evraklarından (Sınav Tutanağı, Sınav Sonuç
+   Tutanağı, Sarf/Not Çizelgesi) yola çıkılarak eklendi. Sınav Tutanağı
+   oturum bazlı (tur+dal ya da sınıf) ayrı bir kayıt tutar; katılan/
+   başarılı/başarısız sayıları çizelgedeki kayıtlardan otomatik
+   hesaplanır, saat bilgileri elle girilir. Sınav Sonuç Tutanağı'ndaki
+   3 değerlendirici puanı girildiğinde ortalaması otomatik olarak
+   çizelgedeki Sınav Puanı'na işlenir — aynı bilgiyi iki yerde ayrı ayrı
+   girmeye gerek kalmaz. */
+let activeSnBelge = "cizelge";
+function setSnBelge(id) { activeSnBelge = id; renderMain(); }
+function snBelgeSeciciBar() {
+  const secenekler = [
+    { id: "cizelge", label: "Değerlendirme Çizelgesi" },
+    { id: "tutanak", label: "Sınav Tutanağı" },
+    { id: "sonuc-tutanak", label: "Sınav Sonuç Tutanağı" },
+    { id: "sarf-not", label: "Sarf / Not Çizelgesi" }
+  ];
+  return `<div class="row no-print" style="flex-wrap:wrap;">${secenekler.map(s => `<button class="btn ${s.id === activeSnBelge ? 'primary' : ''}" onclick="setSnBelge('${s.id}')">${s.label}</button>`).join("")}</div>`;
+}
+function sinavTutanagiAnahtari(kind, ekAlanlar) {
+  return kind === "ku" ? "ku|" + ekAlanlar.tur + "|" + ekAlanlar.dal : "bs|" + ekAlanlar.sinif;
+}
+function sinavTutanagiOlusturVeyaGetir(kind, ekAlanlar) {
+  const anahtar = sinavTutanagiAnahtari(kind, ekAlanlar);
+  let t = S.sinavTutanaklari.find(x => sinavTutanagiAnahtari(x.kind, x) === anahtar);
+  if (!t) {
+    t = Object.assign({ id: uid("st"), kind,
+      ogretimYili: S.akademikTakvim ? S.akademikTakvim.ogretimYili : "", sinavDonemi: "", sinavTarihi: "", dersinAdi: "",
+      komisyonToplanmaSaati: "", hazirlikSaati: "", sinavBaslamaSaati: "", katilmayanSayisi: "",
+      kullanilanKagitSayisi: "", sinavBitisSaati: "", degerlendirmeTarihSaati: "" }, ekAlanlar);
+    S.sinavTutanaklari.push(t);
+  }
+  return t;
+}
+function updateSinavTutanagiAlan(id, alan, value) {
+  const t = S.sinavTutanaklari.find(x => x.id === id);
+  if (!t) return;
+  t[alan] = value;
+  save();
+}
+function snImzaBlogu(baslikSayisi) {
+  const k = S.kurumBilgileri;
+  const hucreler = new Array(baslikSayisi).fill(0).map((_, i) => i === 0 ? `<td>${escHtml(k.mudurAdi)}</td>` : `<td>…………………..</td>`).join("");
+  const etiketler = ["Sınav Kom. Bşk.", "Üye", "Üye", "Üye", "Üye"].slice(0, baslikSayisi);
+  return `<table style="margin-top:10px;"><tr>${etiketler.map(e => `<th>${e}</th>`).join("")}</tr><tr>${hucreler}</tr><tr><td colspan="${baslikSayisi}" class="small">Okul/Kurum Müdürü</td></tr></table>`;
+}
+function renderSinavTutanagi(kind, kayitlar, t, baslik) {
+  const katilan = kayitlar.length;
+  const basarili = kayitlar.filter(k => snKayitHesapla(k).sonuc === "BAŞARILI").length;
+  const basarisiz = kayitlar.filter(k => snKayitHesapla(k).sonuc === "BAŞARISIZ").length;
+  const devamsiz = kayitlar.filter(k => k.kod === "D").length;
+  const alan = (etiket, field, w) => `<tr><td>${etiket}</td><td class="no-print"><input type="text" value="${escHtml(t[field])}" style="width:${w || 140}px" onchange="updateSinavTutanagiAlan('${t.id}','${field}',this.value)"></td><td class="print-only-cell">${escHtml(t[field] || '…')}</td></tr>`;
+  return `
+  <div style="text-align:center;margin-bottom:10px;">
+    <div style="font-weight:700;">${escHtml((S.kurumBilgileri.okulAdi || "").toLocaleUpperCase("tr-TR"))}</div>
+    <div style="font-weight:700;">SINAV TUTANAĞI</div>
+  </div>
+  <table style="margin-bottom:10px;">
+    ${alan("Öğretim Yılı", "ogretimYili")}
+    <tr><td>Sınav Seviyesi</td><td colspan="2">${escHtml(baslik)}</td></tr>
+    ${alan("Sınav Dönemi", "sinavDonemi")}
+    ${alan("Sınav Tarihi", "sinavTarihi")}
+    ${alan("Dersin Adı", "dersinAdi", 220)}
+  </table>
+  <h3>Sınav Hazırlığı</h3>
+  <table style="margin-bottom:10px;">
+    ${alan("Sınav Komisyonunun Toplandığı Saat", "komisyonToplanmaSaati", 90)}
+    ${alan("Soruların ve Cevap Anahtarının Hazırlandığı Saat", "hazirlikSaati", 90)}
+  </table>
+  <p class="small">1- Sınav Komisyonu, Okul/Kurum Müdürünün başkanlığında toplanarak sınav sorularını ve cevap anahtarını hazırlamıştır.<br>2- Sınav soruları ve cevap anahtarı imzalanıp onaylandıktan sonra bir nüshaları sınav komisyon başkanlığına teslim edilmiştir.</p>
+  ${snImzaBlogu(5)}
+  <h3 style="margin-top:16px;">Sınav Başlama, Katılma ve Sınav Bilgileri</h3>
+  <table style="margin-bottom:10px;">
+    ${alan("Sınavın Başladığı Saat", "sinavBaslamaSaati", 90)}
+    <tr><td>Sınava Katılan Öğrenci Sayısı</td><td colspan="2">${katilan}</td></tr>
+    ${alan("Sınava Katılmayan Öğrenci Sayısı", "katilmayanSayisi", 60)}
+    <tr><td>Toplam Öğrenci Sayısı</td><td colspan="2">${katilan}</td></tr>
+    ${alan("Sınavda Kullanılan Kağıt Sayısı", "kullanilanKagitSayisi", 60)}
+    ${alan("Sınavın Sona Erdiği Saat", "sinavBitisSaati", 90)}
+  </table>
+  ${snImzaBlogu(5)}
+  <h3 style="margin-top:16px;">Değerlendirme</h3>
+  <table style="margin-bottom:10px;">
+    ${alan("Değerlendirmenin Yapıldığı Tarih ve Saat", "degerlendirmeTarihSaati", 140)}
+    <tr><td>Başarılı Öğrenci Sayısı</td><td colspan="2">${basarili}</td></tr>
+    <tr><td>Başarısız Öğrenci Sayısı</td><td colspan="2">${basarisiz}${devamsiz ? " (" + devamsiz + " devamsız dahil)" : ""}</td></tr>
+    <tr><td>Toplam Öğrenci Sayısı</td><td colspan="2">${katilan}</td></tr>
+  </table>
+  <p class="small">1- Sınav Kağıtlarının Değerlendirilmesi Tamamlanmıştır.<br>2- Sınav Evrakları Komisyon Huzurunda Okul/Kurum Müdürlüğüne Teslim Edilmiştir.</p>
+  ${snImzaBlogu(5)}`;
+}
+function renderSinavSonucTutanagi(kind, kayitlar, baslik) {
+  let siraNo = 0;
+  const satirlar = kayitlar.map(k => {
+    siraNo++;
+    const ort = snDegerlendiriciOrtalama(k);
+    const yazi = ort !== null ? sayiYaziIleTr(Math.round(ort)) : "";
+    const basariliMi = ort !== null && ort >= 50;
+    return `<tr>
+      <td>${siraNo}</td>
+      <td>${escHtml(k.ad)} ${escHtml(k.soyad)}</td>
+      <td><input class="no-print" type="text" value="${escHtml(k.degerlendirici1)}" style="width:44px;text-align:center;" onchange="snGuncelleDegerlendirici('${kind}','${k.id}','degerlendirici1',this.value)"><span class="print-only-inline">${escHtml(k.degerlendirici1 || '-')}</span></td>
+      <td><input class="no-print" type="text" value="${escHtml(k.degerlendirici2)}" style="width:44px;text-align:center;" onchange="snGuncelleDegerlendirici('${kind}','${k.id}','degerlendirici2',this.value)"><span class="print-only-inline">${escHtml(k.degerlendirici2 || '-')}</span></td>
+      <td><input class="no-print" type="text" value="${escHtml(k.degerlendirici3)}" style="width:44px;text-align:center;" onchange="snGuncelleDegerlendirici('${kind}','${k.id}','degerlendirici3',this.value)"><span class="print-only-inline">${escHtml(k.degerlendirici3 || '-')}</span></td>
+      <td>${ort !== null ? ort : "-"}</td>
+      <td>${escHtml(yazi)}</td>
+      <td>${ort !== null ? (basariliMi ? "BAŞARILI" : "BAŞARISIZ") : "-"}</td>
+    </tr>`;
+  }).join("");
+  return `
+  <div style="text-align:center;margin-bottom:10px;">
+    <div style="font-weight:700;">${escHtml((S.kurumBilgileri.okulAdi || "").toLocaleUpperCase("tr-TR"))}</div>
+    <div style="font-weight:700;">SINAV SONUÇ TUTANAĞI — ${escHtml(baslik)}</div>
+  </div>
+  <table>
+    <thead><tr><th>Sıra No</th><th>Adayın Adı Soyadı</th><th>1. Değ.</th><th>2. Değ.</th><th>3. Değ.</th><th colspan="2">Sınav Puanı</th><th>Sonuç</th></tr></thead>
+    <tbody>${satirlar || `<tr><td colspan="8" class="small">Henüz aday yok.</td></tr>`}</tbody>
+  </table>
+  <p class="small" style="margin-top:10px;">En az 2 değerlendirici olması gerekir. Değerlendiricilerin verdiği puanların aritmetik ortalaması adayın sınav sonuç notudur. Kritik becerilerden başarılı olmak kaydıyla toplam 50 puan ve üzeri alanlar BAŞARILI sayılır.</p>
+  <table style="margin-top:14px;"><tr><th>Değerlendirici</th><th>Adı Soyadı</th><th>İmzası</th></tr><tr><td>1</td><td></td><td></td></tr><tr><td>2</td><td></td><td></td></tr><tr><td>3</td><td></td><td></td></tr></table>`;
+}
+function renderSarfNotCizelgesi(kind, kayitlar, t, baslik) {
+  let siraNo = 0;
+  const satirlar = kayitlar.map(k => {
+    siraNo++;
+    return `<tr>
+      <td>${siraNo}</td>
+      <td class="no-print"><input type="text" value="${escHtml(k.tckn)}" style="width:100px;" onchange="snGuncelleAlan('${kind}','${k.id}','tckn',this.value)"><span class="print-only-inline">${escHtml(k.tckn || '-')}</span></td>
+      <td>${escHtml(k.ad)} ${escHtml(k.soyad)}</td>
+      <td class="no-print"><input type="text" value="${escHtml(k.kagitAdedi)}" style="width:44px;text-align:center;" onchange="snGuncelleAlan('${kind}','${k.id}','kagitAdedi',this.value)"><span class="print-only-inline">${escHtml(k.kagitAdedi || '-')}</span></td>
+      <td>${escHtml(String(k.sinavPuani || '-'))}</td>
+    </tr>`;
+  }).join("");
+  return `
+  <div style="text-align:center;margin-bottom:10px;">
+    <div style="font-weight:700;">${escHtml((S.kurumBilgileri.okulAdi || "").toLocaleUpperCase("tr-TR"))}</div>
+    <div style="font-weight:700;">SINAV SARF / NOT ÇİZELGESİ</div>
+  </div>
+  <table style="margin-bottom:10px;">
+    <tr><td>Dersin Adı</td><td colspan="2">${escHtml(baslik)}</td></tr>
+    <tr><td>Sınav Tarihi/Saati</td><td class="no-print" colspan="2"><input type="text" value="${escHtml(t.sinavTarihi)}" style="width:140px;" onchange="updateSinavTutanagiAlan('${t.id}','sinavTarihi',this.value)"></td><td class="print-only-cell">${escHtml(t.sinavTarihi || '…')}</td></tr>
+  </table>
+  <table>
+    <thead><tr><th>Sıra No</th><th>T.C. Kimlik No</th><th>Adayın Adı Soyadı</th><th>Kağıt Adedi</th><th>Sınav Notu</th></tr></thead>
+    <tbody>${satirlar || `<tr><td colspan="5" class="small">Henüz aday yok.</td></tr>`}</tbody>
+  </table>`;
+}
+function snEkBelgeGovde(kind, kayitlar, ekAlanlar, baslik) {
+  if (activeSnBelge === "tutanak") {
+    const t = sinavTutanagiOlusturVeyaGetir(kind, ekAlanlar);
+    return renderSinavTutanagi(kind, kayitlar, t, baslik);
+  }
+  if (activeSnBelge === "sonuc-tutanak") return renderSinavSonucTutanagi(kind, kayitlar, baslik);
+  if (activeSnBelge === "sarf-not") {
+    const t = sinavTutanagiOlusturVeyaGetir(kind, ekAlanlar);
+    return renderSarfNotCizelgesi(kind, kayitlar, t, baslik);
+  }
+  return null;
 }
 
 /* ---- Ders Kesim Raporu / Yazılı Kağıtları Teslim Raporu ---- */

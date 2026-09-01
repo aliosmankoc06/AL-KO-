@@ -139,6 +139,7 @@ function defaultState() {
     sinavNotlari: [],
     performansNotlari: [],
     donemArsivi: [],
+    sinavTutanaklari: [],
     kurumBilgileri: {
       okulAdi: "Soma Mesleki ve Teknik Anadolu Lisesi",
       sehir: "SOMA",
@@ -185,6 +186,7 @@ function emptyState() {
     sinavNotlari: [],
     performansNotlari: [],
     donemArsivi: [],
+    sinavTutanaklari: [],
     kurumBilgileri: {
       okulAdi: "Soma Mesleki ve Teknik Anadolu Lisesi",
       sehir: "SOMA",
@@ -328,6 +330,11 @@ function normalizeState(s) {
       if (typeof k.isDosyasiTeslimEtmedi !== "boolean") k.isDosyasiTeslimEtmedi = false;
       if (typeof k.sinavPuani !== "string" && typeof k.sinavPuani !== "number") k.sinavPuani = "";
       if (typeof k.aciklama !== "string") k.aciklama = "";
+      if (typeof k.tckn !== "string") k.tckn = "";
+      if (typeof k.kagitAdedi !== "string") k.kagitAdedi = "";
+      ["degerlendirici1", "degerlendirici2", "degerlendirici3"].forEach(f => {
+        if (typeof k[f] !== "string" && typeof k[f] !== "number") k[f] = "";
+      });
     });
     return liste;
   }
@@ -410,6 +417,15 @@ function normalizeState(s) {
     if (typeof a.etiket !== "string") a.etiket = "";
     if (typeof a.tarih !== "string") a.tarih = "";
     if (!a.veri || typeof a.veri !== "object") a.veri = {};
+  });
+  if (!Array.isArray(s.sinavTutanaklari)) s.sinavTutanaklari = [];
+  s.sinavTutanaklari.forEach(t => {
+    if (!t.id) t.id = uid("st");
+    ["kind", "tur", "dal", "sinif", "ogretimYili", "sinavDonemi", "sinavTarihi", "dersinAdi",
+      "komisyonToplanmaSaati", "hazirlikSaati", "sinavBaslamaSaati", "katilmayanSayisi",
+      "kullanilanKagitSayisi", "sinavBitisSaati", "degerlendirmeTarihSaati"].forEach(f => {
+      if (typeof t[f] !== "string") t[f] = "";
+    });
   });
   if (!s.kurumBilgileri || typeof s.kurumBilgileri !== "object") s.kurumBilgileri = {};
   {
