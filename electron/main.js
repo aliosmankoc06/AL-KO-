@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Menu, dialog, ipcMain, shell } = require("electron");
+const { app, BrowserWindow, Menu, dialog, ipcMain, shell, session } = require("electron");
 const path = require("path");
 const fs = require("fs");
 const XLSX = require("xlsx");
@@ -15,6 +15,13 @@ function backupFileFilters() {
 }
 
 function createWindow() {
+  /* AI Yazım Yardımcısı'ndaki "Sesle Anlat" mikrofon düğmesi için — kendi
+     sayfamızın mikrofon izni istemesine izin veriyoruz (üçüncü taraf
+     bir siteye değil, sadece bu uygulamanın kendi arayüzüne). */
+  session.defaultSession.setPermissionRequestHandler((webContents, permission, callback) => {
+    callback(permission === "media");
+  });
+
   mainWindow = new BrowserWindow({
     width: 1440,
     height: 900,

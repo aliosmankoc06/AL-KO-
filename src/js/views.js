@@ -3701,15 +3701,48 @@ function aiYardimciTarayicidaAc(url) {
   if (window.desktop && window.desktop.isElectron && window.desktop.openExternal) window.desktop.openExternal(url);
   else window.open(url, "_blank");
 }
+/* ---- Sesle Anlat (mikrofon ile metne dökme) ----
+   Tarayıcının yerleşik Web Speech API'sini kullanır (internet bağlantısı
+   gerektirir, ekstra kurulum/hesap gerektirmez). Desteklenmeyen bir
+   ortamda buton görünmez, sorun olursa yazarak devam etmeye yönlendirir. */
+let aiYardimciTanima = null;
+function aiYardimciSesGirisiVarMi() {
+  return !!(window.SpeechRecognition || window.webkitSpeechRecognition);
+}
+function aiYardimciSesGirisiBaslat() {
+  const btn = document.getElementById("ai-mikrofon-btn");
+  if (aiYardimciTanima) { aiYardimciTanima.stop(); return; }
+  const Rec = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!Rec) { alert("Bu bilgisayarda sesle giriş desteklenmiyor. Lütfen yazarak devam edin."); return; }
+  const textarea = document.getElementById("ai-istek");
+  const rec = new Rec();
+  rec.lang = "tr-TR";
+  rec.interimResults = false;
+  rec.maxAlternatives = 1;
+  rec.onstart = () => { if (btn) { btn.textContent = "⏹ Durdur (Dinliyor…)"; btn.classList.add("primary"); } };
+  rec.onresult = (e) => {
+    let metin = "";
+    for (let i = 0; i < e.results.length; i++) metin += e.results[i][0].transcript;
+    metin = metin.trim();
+    if (metin) textarea.value = (textarea.value.trim() ? textarea.value.trim() + " " : "") + metin;
+  };
+  rec.onerror = (e) => {
+    if (e.error !== "aborted" && e.error !== "no-speech") alert("Sesle giriş sırasında bir sorun oluştu (" + e.error + "). Lütfen yazarak devam edin.");
+  };
+  rec.onend = () => { if (btn) { btn.textContent = "🎤 Sesle Anlat"; btn.classList.remove("primary"); } aiYardimciTanima = null; };
+  aiYardimciTanima = rec;
+  try { rec.start(); } catch (err) { alert("Mikrofon başlatılamadı: " + err.message); aiYardimciTanima = null; }
+}
 function viewAiYardimci() {
   return `
   <div class="card no-print">
     <h2>AI Yazım Yardımcısı</h2>
-    <p class="small">Bu program şu an internet üzerinden bir yapay zeka servisine <b>doğrudan bağlı değil</b> — böyle bir bağlantı, ayrı bir hesap/üyelik ve genelde kullandıkça ödenen bir ücret gerektirir; bunu size sormadan, "bedava herkese açık" bir şekilde kuramam. Ama işinizi kolaylaştıracak bir kısayol hazırladım: aşağıya ne istediğinizi kendi cümlelerinizle yazın, okul ve alan bilgilerinizle birlikte düzgün bir istek metni hazırlansın. Sonra "Kopyala"ya basıp tarayıcınızda (ücretsiz) bir yapay zeka sohbetine yapıştırırsınız — o size resmi dille yazılmış cevabı verir, siz de onu kopyalayıp buraya ya da istediğiniz belgeye geri yapıştırırsınız.</p>
-    <label class="small">Ne yapmak istiyorsunuz? (kendi cümlelerinizle anlatın)</label>
+    <p class="small">Bu program şu an internet üzerinden bir yapay zeka servisine <b>doğrudan bağlı değil</b> — böyle bir bağlantı, ayrı bir hesap/üyelik ve genelde kullandıkça ödenen bir ücret gerektirir; bunu size sormadan, "bedava herkese açık" bir şekilde kuramam. Ama işinizi kolaylaştıracak bir kısayol hazırladım: aşağıya ne istediğinizi kendi cümlelerinizle yazın (isterseniz mikrofonla konuşarak da anlatabilirsiniz), okul ve alan bilgilerinizle birlikte düzgün bir istek metni hazırlansın. Sonra "Kopyala"ya basıp tarayıcınızda (ücretsiz) bir yapay zeka sohbetine yapıştırırsınız — o size resmi dille yazılmış cevabı verir, siz de onu kopyalayıp buraya ya da istediğiniz belgeye geri yapıştırırsınız.</p>
+    <label class="small">Ne yapmak istiyorsunuz? (kendi cümlelerinizle anlatın ya da mikrofonla söyleyin)</label>
     <textarea id="ai-istek" rows="4" style="width:100%;max-width:700px;" placeholder="örn. Mayıs ayı için 12. sınıf öğrencilerine staj bitirme yazısı yaz, resmi dil kullan"></textarea>
-    <div class="row" style="margin-top:8px;">
+    <div class="row" style="margin-top:8px;flex-wrap:wrap;">
       <button class="btn primary" onclick="aiYardimciPromptOlustur()">Metni Hazırla</button>
+      ${aiYardimciSesGirisiVarMi() ? `<button class="btn" id="ai-mikrofon-btn" onclick="aiYardimciSesGirisiBaslat()" title="Yazmak yerine konuşarak anlatın">🎤 Sesle Anlat</button>` : ""}
     </div>
     <div id="ai-cikti-alani" style="display:none;margin-top:14px;">
       <label class="small">Hazır İstek Metni (kopyalayıp yapay zeka sohbetine yapıştırın)</label>
