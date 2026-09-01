@@ -3977,6 +3977,13 @@ function sonKayitZamaniniGuncelle() {
   const saat = new Date().toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" });
   el.textContent = "✓ Son kayıt: " + saat;
 }
+function sonKayitBaslangicDurumunuGoster() {
+  const el = document.getElementById("son-kayit-metni");
+  if (!el) return;
+  let varOlanKayit = false;
+  try { varOlanKayit = !!localStorage.getItem(LS_KEY); } catch (e) {}
+  el.textContent = varOlanKayit ? "✓ Kayıtlı verilerle açıldı" : "Henüz kayıt yok";
+}
 function kaydetManuel() {
   save();
   const btn = document.getElementById("kaydet-btn");

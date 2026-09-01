@@ -23,3 +23,4 @@ renderTabbar();
 renderMain();
 renderSidebarBrand();
 applyTheme(currentTheme());
+sonKayitBaslangicDurumunuGoster();
