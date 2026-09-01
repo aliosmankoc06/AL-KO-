@@ -3,27 +3,26 @@
    ============================================================ */
 
 const MODULES = [
-  { id: "ana", label: "Ana Sayfa", icon: "home" },
-  { id: "ders-programi", label: "Ders Programı", icon: "calendar" },
-  { id: "yillik-plan", label: "Yıllık Plan", icon: "note" },
-  { id: "gunluk-plan", label: "Günlük Plan", icon: "book" },
-  { id: "ders-bilgi-formu", label: "Ders Bilgi Formları", icon: "stack" },
-  { id: "ogrenci-listesi", label: "Öğrenci Listesi", icon: "school" },
-  { id: "norm-kadro", label: "Norm Kadro", icon: "chart" },
-  { id: "okul-zumresi", label: "Toplantı Tutanakları", icon: "users" },
-  { id: "il-zumresi", label: "İl Zümresi", icon: "building" },
-  { id: "staj-yerlestirme", label: "Staj Yerleştirme", icon: "briefcase" },
-  { id: "atolye-envanter", label: "Atölye / Envanter", icon: "tool" },
-  { id: "performans", label: "Performans Kriterleri", icon: "star" },
-  { id: "sinav-notlari", label: "Sınav Notları", icon: "penSquare" },
-  { id: "performans-notlari", label: "Performans Notları", icon: "percent" },
-  { id: "sonuc-karnesi", label: "Sonuç Karnesi", icon: "badge" },
-  { id: "kalfalik-ustalik", label: "Kalfalık / Ustalık Sınavı", icon: "medal" },
-  { id: "beceri-sinavi", label: "Beceri Sınavı", icon: "clipboardCheck" },
-  { id: "donem-raporlari", label: "Ders Kesim / Yazılı Teslim", icon: "report" },
-  { id: "seflik-raporu", label: "Şeflik Aylık Raporu", icon: "calendarCheck" },
-  { id: "sinav-havuzu", label: "Sınav Havuzu", icon: "question" },
-  { id: "ayarlar", label: "Ayarlar", icon: "settings" }
+  { id: "ana", label: "Ana Sayfa", icon: "home", group: "Genel" },
+  { id: "ders-programi", label: "Ders Programı", icon: "calendar", group: "Ders Planlama" },
+  { id: "yillik-plan", label: "Yıllık Plan", icon: "note", group: "Ders Planlama" },
+  { id: "gunluk-plan", label: "Günlük Plan", icon: "book", group: "Ders Planlama" },
+  { id: "ders-bilgi-formu", label: "Ders Bilgi Formları", icon: "stack", group: "Ders Planlama" },
+  { id: "ogrenci-listesi", label: "Öğrenci Listesi", icon: "school", group: "Öğrenci & Kadro" },
+  { id: "norm-kadro", label: "Norm Kadro", icon: "chart", group: "Öğrenci & Kadro" },
+  { id: "toplantilar", label: "Toplantılar", icon: "users", group: "Toplantılar" },
+  { id: "staj-yerlestirme", label: "Staj Yerleştirme", icon: "briefcase", group: "Staj" },
+  { id: "atolye-envanter", label: "Atölye / Envanter", icon: "tool", group: "Atölye" },
+  { id: "performans", label: "Performans Kriterleri", icon: "star", group: "Sınav & Değerlendirme" },
+  { id: "sinav-havuzu", label: "Sınav Havuzu", icon: "question", group: "Sınav & Değerlendirme" },
+  { id: "sinav-notlari", label: "Sınav Notları", icon: "penSquare", group: "Sınav & Değerlendirme" },
+  { id: "performans-notlari", label: "Performans Notları", icon: "percent", group: "Sınav & Değerlendirme" },
+  { id: "sonuc-karnesi", label: "Sonuç Karnesi", icon: "badge", group: "Sınav & Değerlendirme" },
+  { id: "kalfalik-ustalik", label: "Kalfalık / Ustalık Sınavı", icon: "medal", group: "Sınav & Değerlendirme" },
+  { id: "beceri-sinavi", label: "Beceri Sınavı", icon: "clipboardCheck", group: "Sınav & Değerlendirme" },
+  { id: "donem-raporlari", label: "Ders Kesim / Yazılı Teslim", icon: "report", group: "Dönem Raporları" },
+  { id: "seflik-raporu", label: "Şeflik Aylık Raporu", icon: "calendarCheck", group: "Dönem Raporları" },
+  { id: "ayarlar", label: "Ayarlar", icon: "settings", group: "Sistem" }
 ];
 const DERS_PROGRAMI_TABS = [
   { id: "havuz", label: "Ders Havuzu", icon: "book" },
@@ -40,9 +39,14 @@ const STAJ_TABS = [
   { id: "kontenjanlar", label: "İşletme Kontenjanları", icon: "building" },
   { id: "sonuc", label: "Sonuç / Yerleştirme", icon: "badge" }
 ];
+const TOPLANTI_TABS = [
+  { id: "okul", label: "Okul Zümresi", icon: "users" },
+  { id: "il", label: "İl Zümresi", icon: "building" }
+];
 let activeModule = "ana";
 let activeTab = "havuz";
 let activeStajTab = "ogrenciler";
+let activeToplantiTab = "okul";
 let activeClassId = S.classes[0] ? S.classes[0].id : null;
 let activeTeacherId = S.teachers[0] ? S.teachers[0].id : null;
 let multiSelectMode = false;
@@ -52,9 +56,12 @@ let activePlanSistem = "maarif";
 let activePlanEntryId = { yillik: null, gunluk: null };
 
 function renderTabbar() {
-  document.getElementById("tabbar").innerHTML = MODULES.map(m =>
-    `<button class="nav-btn ${(m.id === activeModule || (m.id === 'ders-programi' && activeModule === 'ders-programi-secim')) ? 'active' : ''}" onclick="setModule('${m.id}')">${icon(m.icon)}<span>${m.label}</span></button>`
-  ).join("");
+  let lastGroup = null;
+  document.getElementById("tabbar").innerHTML = MODULES.map(m => {
+    const groupHeader = m.group !== lastGroup ? `<div class="nav-section-label">${m.group}</div>` : "";
+    lastGroup = m.group;
+    return groupHeader + `<button class="nav-btn ${(m.id === activeModule || (m.id === 'ders-programi' && activeModule === 'ders-programi-secim')) ? 'active' : ''}" onclick="setModule('${m.id}')">${icon(m.icon)}<span>${m.label}</span></button>`;
+  }).join("");
   renderSubTabbar();
 }
 function renderSubTabbar() {
@@ -67,6 +74,10 @@ function renderSubTabbar() {
     el.innerHTML = `<div class="nav-section-label">Staj Yerleştirme</div>` + STAJ_TABS.map(t =>
       `<button class="nav-btn sub ${t.id === activeStajTab ? 'active' : ''}" onclick="setStajTab('${t.id}')">${icon(t.icon)}<span>${t.label}</span></button>`
     ).join("");
+  } else if (activeModule === "toplantilar") {
+    el.innerHTML = `<div class="nav-section-label">Toplantılar</div>` + TOPLANTI_TABS.map(t =>
+      `<button class="nav-btn sub ${t.id === activeToplantiTab ? 'active' : ''}" onclick="setToplantiTab('${t.id}')">${icon(t.icon)}<span>${t.label}</span></button>`
+    ).join("");
   } else {
     el.innerHTML = "";
   }
@@ -75,6 +86,7 @@ function setModule(id) {
   activeModule = id;
   if (id === "ders-programi" && !DERS_PROGRAMI_TABS.some(t => t.id === activeTab)) activeTab = "havuz";
   if (id === "staj-yerlestirme" && !STAJ_TABS.some(t => t.id === activeStajTab)) activeStajTab = "ogrenciler";
+  if (id === "toplantilar" && !TOPLANTI_TABS.some(t => t.id === activeToplantiTab)) activeToplantiTab = "okul";
   selectedTeacherCells.clear();
   multiSelectMode = false;
   renderTabbar();
@@ -82,6 +94,7 @@ function setModule(id) {
 }
 function setTab(id) { activeTab = id; selectedTeacherCells.clear(); multiSelectMode = false; renderSubTabbar(); renderMain(); }
 function setStajTab(id) { activeStajTab = id; renderSubTabbar(); renderMain(); }
+function setToplantiTab(id) { activeToplantiTab = id; renderSubTabbar(); renderMain(); }
 
 function renderMain() {
   const el = document.getElementById("main");
@@ -92,8 +105,10 @@ function renderMain() {
   if (activeModule === "ders-bilgi-formu") { el.innerHTML = viewDersBilgiFormu(); return; }
   if (activeModule === "ogrenci-listesi") { el.innerHTML = viewOgrenciListesi(); return; }
   if (activeModule === "norm-kadro") { el.innerHTML = viewNormKadro(); return; }
-  if (activeModule === "okul-zumresi") { el.innerHTML = viewOkulZumresi(); return; }
-  if (activeModule === "il-zumresi") { el.innerHTML = viewPlaceholderModule("İl Zümresi", "İl zümre toplantı tutanaklarınızı buraya birlikte kuracağız."); return; }
+  if (activeModule === "toplantilar") {
+    el.innerHTML = activeToplantiTab === "il" ? viewPlaceholderModule("İl Zümresi", "İl zümre toplantı tutanaklarınızı buraya birlikte kuracağız.") : viewOkulZumresi();
+    return;
+  }
   if (activeModule === "staj-yerlestirme") {
     el.innerHTML = activeStajTab === "not-ortalamalari" ? viewStajNotOrtalamalari()
       : activeStajTab === "tercihler" ? viewStajTercihler()
