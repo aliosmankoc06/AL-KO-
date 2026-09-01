@@ -136,6 +136,7 @@ function defaultState() {
     beceriSinavi: { kayitlar: [] },
     ogrenciListesi: [],
     seflikRaporlari: [],
+    donemArsivi: [],
     kurumBilgileri: {
       okulAdi: "Soma Mesleki ve Teknik Anadolu Lisesi",
       sehir: "SOMA",
@@ -179,6 +180,7 @@ function emptyState() {
     beceriSinavi: { kayitlar: [] },
     ogrenciListesi: [],
     seflikRaporlari: [],
+    donemArsivi: [],
     kurumBilgileri: {
       okulAdi: "Soma Mesleki ve Teknik Anadolu Lisesi",
       sehir: "SOMA",
@@ -349,6 +351,13 @@ function normalizeState(s) {
       if (typeof k.saat !== "string" && typeof k.saat !== "number") k.saat = "";
       if (typeof k.isler !== "string") k.isler = "";
     });
+  });
+  if (!Array.isArray(s.donemArsivi)) s.donemArsivi = [];
+  s.donemArsivi.forEach(a => {
+    if (!a.id) a.id = uid("da");
+    if (typeof a.etiket !== "string") a.etiket = "";
+    if (typeof a.tarih !== "string") a.tarih = "";
+    if (!a.veri || typeof a.veri !== "object") a.veri = {};
   });
   if (!s.kurumBilgileri || typeof s.kurumBilgileri !== "object") s.kurumBilgileri = {};
   {

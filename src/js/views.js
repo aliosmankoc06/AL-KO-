@@ -20,7 +20,6 @@ const MODULES = [
   { id: "donem-raporlari", label: "Ders Kesim / Yazılı Teslim", icon: "report" },
   { id: "seflik-raporu", label: "Şeflik Aylık Raporu", icon: "calendarCheck" },
   { id: "sinav-havuzu", label: "Sınav Havuzu", icon: "question" },
-  { id: "ai-yardimci", label: "AI Yazım Yardımcısı", icon: "sparkle" },
   { id: "ayarlar", label: "Ayarlar", icon: "settings" }
 ];
 const DERS_PROGRAMI_TABS = [
@@ -86,14 +85,15 @@ function renderMain() {
   if (activeModule === "donem-raporlari") { el.innerHTML = viewDonemRaporlari(); return; }
   if (activeModule === "seflik-raporu") { el.innerHTML = viewSeflikRaporlari(); return; }
   if (activeModule === "sinav-havuzu") { el.innerHTML = viewSinavHavuzu(); return; }
-  if (activeModule === "ai-yardimci") { el.innerHTML = viewAiYardimci(); return; }
   if (activeModule === "ayarlar") { el.innerHTML = viewAyarlar(); return; }
-  if (activeTab === "havuz") el.innerHTML = viewHavuz();
-  else if (activeTab === "ogretmen") el.innerHTML = viewOgretmen();
-  else if (activeTab === "sinif") el.innerHTML = viewSinif();
-  else if (activeTab === "dagitim") el.innerHTML = viewDagitim();
-  else if (activeTab === "koordinatorluk") el.innerHTML = viewKoordinatorluk();
-  else if (activeTab === "programlar") el.innerHTML = viewProgramlar();
+  const govde = activeTab === "havuz" ? viewHavuz()
+    : activeTab === "ogretmen" ? viewOgretmen()
+    : activeTab === "sinif" ? viewSinif()
+    : activeTab === "dagitim" ? viewDagitim()
+    : activeTab === "koordinatorluk" ? viewKoordinatorluk()
+    : activeTab === "programlar" ? viewProgramlar()
+    : "";
+  el.innerHTML = dersProgramiArsivBar() + govde;
 }
 
 function hasUnsavedWork() {
@@ -131,6 +131,90 @@ function continueCurrentProgram() {
   renderTabbar();
   renderMain();
 }
+
+/* ---- Ders Programı Dönem Arşivi ----
+   Ders Programı (havuz, öğretmenler, sınıflar, koordinatörlük, dağıtım)
+   her öğretim yılı başında sıfırdan hazırlanır. Bu arşiv, o alanları bir
+   isimle (ör. "2025-2026 Eğitim-Öğretim Yılı") anlık görüntü olarak
+   saklamayı, yeni bir döneme sıfırdan başlamayı ve eski bir dönemi geri
+   yükleyip üzerinde çalışarak farklı bir isimle tekrar kaydetmeyi sağlar.
+   Yıllık Plan/Günlük Plan/Toplantı Tutanakları gibi diğer modüller
+   etkilenmez — onlar zaten kendi geçmiş kayıtlarını liste olarak tutar. */
+const DERS_PROGRAMI_ARSIV_ALANLARI = ["rooms", "courses", "teachers", "classes", "schedule", "blockedSlots", "teacherBlockedSlots", "coordAssignments", "isletmeler", "isletmeTeacherAssign"];
+function dersProgramiSnapshotAl() {
+  const veri = {};
+  DERS_PROGRAMI_ARSIV_ALANLARI.forEach(k => { veri[k] = JSON.parse(JSON.stringify(S[k])); });
+  return veri;
+}
+function dersProgramiBosSnapshot() {
+  return { rooms: [], courses: [], teachers: [], classes: [], schedule: {}, blockedSlots: {}, teacherBlockedSlots: {}, coordAssignments: [], isletmeler: [], isletmeTeacherAssign: {} };
+}
+function dersProgramiSnapshotUygula(veri) {
+  DERS_PROGRAMI_ARSIV_ALANLARI.forEach(k => { S[k] = JSON.parse(JSON.stringify(veri[k] !== undefined ? veri[k] : dersProgramiBosSnapshot()[k])); });
+}
+function dersProgramiFarkliKaydet() {
+  const varsayilan = S.akademikTakvim && S.akademikTakvim.ogretimYili ? S.akademikTakvim.ogretimYili + " Eğitim-Öğretim Yılı" : "Ders Programı - " + new Date().toLocaleDateString("tr-TR");
+  const etiket = prompt("Şu anki ders programını (havuz, öğretmenler, sınıflar, koordinatörlük, dağıtım) hangi isimle arşivlemek istiyorsunuz?", varsayilan);
+  if (!etiket || !etiket.trim()) return;
+  if (!S.donemArsivi) S.donemArsivi = [];
+  S.donemArsivi.push({ id: uid("da"), etiket: etiket.trim(), tarih: new Date().toLocaleDateString("tr-TR"), veri: dersProgramiSnapshotAl() });
+  save();
+  renderMain();
+  alert('"' + etiket.trim() + '" adıyla arşivlendi. Arşivden Yükle listesinden istediğiniz zaman geri çağırabilirsiniz.');
+}
+function dersProgramiArsivdenYukle(id) {
+  const kayit = (S.donemArsivi || []).find(a => a.id === id);
+  if (!kayit) return;
+  if (!confirm('"' + kayit.etiket + '" arşivi şu anki ders programının (havuz, öğretmenler, sınıflar, koordinatörlük, dağıtım) yerine yüklenecek. Şu anki çalışmanızı önce "Farklı Kaydet (Arşivle)" ile kaydetmediyseniz kaybolacak. Devam edilsin mi?')) return;
+  dersProgramiSnapshotUygula(kayit.veri);
+  activeClassId = S.classes[0] ? S.classes[0].id : null;
+  activeTeacherId = S.teachers[0] ? S.teachers[0].id : null;
+  save();
+  renderTabbar();
+  renderMain();
+}
+function dersProgramiArsivSil(id) {
+  if (!confirm("Bu arşiv kalıcı olarak silinsin mi? Bu işlem geri alınamaz.")) return;
+  S.donemArsivi = (S.donemArsivi || []).filter(a => a.id !== id);
+  save();
+  renderMain();
+}
+function dersProgramiSifirla() {
+  if (!confirm("Ders Programı (havuz, öğretmenler, sınıflar, koordinatörlük, dağıtım) sıfırlanacak. Diğer modülleriniz (Yıllık Plan, Zümre, Envanter vb.) etkilenmeyecek. Önce \"Farklı Kaydet (Arşivle)\" ile kaydetmediyseniz şu anki ders programı kaybolacak. Devam edilsin mi?")) return;
+  dersProgramiSnapshotUygula(dersProgramiBosSnapshot());
+  activeClassId = null;
+  activeTeacherId = null;
+  save();
+  renderTabbar();
+  renderMain();
+}
+function dersProgramiArsivDropdown() {
+  const arsiv = S.donemArsivi || [];
+  const items = arsiv.map(a => `
+    <div class="tab-dropdown-item" style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+      <span onclick="dersProgramiArsivdenYukle('${jsq(a.id)}'); toggleTabDropdown('ders-arsiv');" style="flex:1;cursor:pointer;">${escHtml(a.etiket)}<br><span class="small">${escHtml(a.tarih)}</span></span>
+      <span onclick="event.stopPropagation(); dersProgramiArsivSil('${jsq(a.id)}');" style="cursor:pointer;" title="Arşivden sil">✕</span>
+    </div>`).join("");
+  return `<div class="tab-dropdown no-print">
+    <button class="btn" onclick="toggleTabDropdown('ders-arsiv')">Arşivden Yükle ▾</button>
+    <div id="tabdd-ders-arsiv" class="tab-dropdown-menu">${items || '<div class="tab-dropdown-item small">Henüz arşiv yok</div>'}</div>
+  </div>`;
+}
+function dersProgramiArsivBar() {
+  return `
+  <div class="card no-print">
+    <div class="row" style="flex-wrap:wrap;align-items:center;justify-content:space-between;">
+      <div class="small" style="font-weight:600;">Dönem Arşivi</div>
+      <div class="row" style="flex-wrap:wrap;margin:0;">
+        ${dersProgramiArsivDropdown()}
+        <button class="btn" onclick="dersProgramiFarkliKaydet()">Farklı Kaydet (Arşivle)</button>
+        <button class="btn danger" onclick="dersProgramiSifirla()">Yeni Döneme Başla (Sıfırla)</button>
+      </div>
+    </div>
+    <p class="small" style="margin-top:6px;">Şu anki ders programını bir isimle (ör. "2025-2026 Eğitim-Öğretim Yılı") arşivleyin; sonra yeni döneme sıfırdan başlayın ya da eski bir arşivi geri yükleyip üzerinde çalışıp yeni bir isimle tekrar kaydedin. Diğer modülleriniz (Yıllık Plan, Zümre, Envanter vb.) bundan etkilenmez.</p>
+  </div>`;
+}
+
 function viewDersProgramiChooser() {
   return `
   <div class="card">
@@ -1439,6 +1523,26 @@ function deleteToplanti(id) {
   if (activeToplantiId === id) activeToplantiId = null;
   save(); renderMain();
 }
+function toplantiYeniDonemeKopyala(id) {
+  const top = toplantiById(id);
+  if (!top) return;
+  const varsayilan = (S.akademikTakvim && S.akademikTakvim.ogretimYili ? S.akademikTakvim.ogretimYili : "") + " " + (top.baslik || "");
+  const yeniBaslik = prompt('Bu tutanak, içeriği (katılımcılar, gündem maddeleri, kararlar) korunarak yeni bir tutanak olarak kopyalanacak — orijinali silinmeyecek. Yeni tutanağa hangi başlığı vermek istersiniz?', varsayilan.trim());
+  if (!yeniBaslik || !yeniBaslik.trim()) return;
+  const kopya = JSON.parse(JSON.stringify(top));
+  kopya.id = uid("top");
+  kopya.baslik = yeniBaslik.trim();
+  kopya.ogretimYili = S.akademikTakvim && S.akademikTakvim.ogretimYili ? S.akademikTakvim.ogretimYili : top.ogretimYili;
+  kopya.tarih = ""; kopya.yer = ""; kopya.saat = ""; kopya.zumreNo = "";
+  kopya.katilimcilar = kopya.katilimcilar.map(k => Object.assign({}, k, { id: uid("kt") }));
+  kopya.gorevDagilimi = kopya.gorevDagilimi.map(g => Object.assign({}, g, { id: uid("gd") }));
+  kopya.gundemMaddeleri = kopya.gundemMaddeleri.map(g => Object.assign({}, g, { id: uid("gm") }));
+  S.toplantilar.push(kopya);
+  activeToplantiId = kopya.id;
+  save();
+  renderMain();
+  alert('"' + kopya.baslik + '" adıyla yeni bir tutanak olarak kaydedildi. Gündem/katılımcı içeriği kopyalandı, tarih/yer/saat alanlarını güncelleyin. Orijinal tutanak olduğu gibi duruyor.');
+}
 function addKatilimci(topId) {
   const top = toplantiById(topId);
   if (!top) return;
@@ -1607,7 +1711,7 @@ function viewOkulZumresi() {
     <h2>Toplantı Tutanakları</h2>
     <p class="small">Şube Öğretmenler Kurulu, Zümre Toplantısı ve Veli Toplantısı tutanaklarınızı burada tutun — katılımcılar, gündem maddeleri, görüşmeler ve kararlar. Yeni bir toplantı eklediğinizde standart gündem maddeleri otomatik geliyor, dilediğiniz gibi düzenleyip Yazdır/PDF/Word/Excel alabilirsiniz.</p>
     <div class="row"><button class="btn primary" onclick="addToplanti()">Yeni Toplantı Ekle</button>
-      ${active ? `<button class="btn danger" onclick="deleteToplanti('${active.id}')">Bu Toplantıyı Sil</button>` : ""}
+      ${active ? `<button class="btn" onclick="toplantiYeniDonemeKopyala('${active.id}')" title="İçeriği koruyarak yeni bir dönem için kopyala, orijinali silinmez">Kopyala (Yeni Döneme)</button><button class="btn danger" onclick="deleteToplanti('${active.id}')">Bu Toplantıyı Sil</button>` : ""}
     </div>
     ${belgeAracCubugu(dosyaAdi)}
   </div>
@@ -3783,135 +3887,6 @@ function viewSinavHavuzu() {
   const govde = activeSinavTab === "kagitlar" ? viewKagitlarBolum(activeSinavSinifId, activeSinavCourseId) : viewSoruHavuzuBolum(activeSinavSinifId, activeSinavCourseId);
 
   return ustBar + sinifBar + dersBar + tabBar + govde;
-}
-
-/* ---- AI Yazım Yardımcısı ----
-   Bu program herhangi bir yapay zeka servisine bağlı DEĞİL (gerçek bir
-   bağlantı kullanıcının kendi API anahtarını gerektirir). Bunun yerine
-   sohbet görünümlü bir arayüzle: mesajınız yazılır → panoya otomatik
-   kopyalanır → tarayıcıda (ücretsiz) Claude/ChatGPT'ye yapıştırılır →
-   oradan gelen cevap buraya yapıştırılır ve konuşma geçmişine bir
-   balon olarak eklenir. Konuşma sadece bellekte tutulur (S'e/diske
-   kaydedilmez), program kapanınca kendiliğinden sıfırlanır. */
-let aiYardimciKonusma = [];
-function aiYardimciPanoyaKopyala(metin) {
-  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(metin).catch(() => {});
-}
-function aiYardimciBaglamliMetin(istek) {
-  const k = S.kurumBilgileri;
-  const satirlar = [
-    `Sen bir Türk mesleki ve teknik Anadolu lisesinde çalışan bir "${k.alanSefiUnvani || 'Alan Şefi'}"ne resmi yazışma ve belge hazırlama konusunda yardımcı oluyorsun.`,
-    k.okulAdi ? `Okul: ${k.okulAdi}` : "",
-    k.alanAdi ? `Alan: ${k.alanAdi}` : "",
-    k.alanSefiAdi ? `Yazan: ${k.alanSefiAdi}${k.alanSefiUnvani ? " (" + k.alanSefiUnvani + ")" : ""}` : "",
-    "",
-    "İstek: " + istek,
-    "",
-    "Lütfen resmi, düzgün ve profesyonel bir Türkçe ile, doğrudan kullanılabilecek şekilde yaz."
-  ].filter(s => s !== "");
-  return satirlar.join("\n");
-}
-function aiYardimciYeniKonusma() {
-  if (aiYardimciKonusma.length && !confirm("Bu konuşma temizlensin mi?")) return;
-  aiYardimciKonusma = [];
-  renderMain();
-}
-function aiYardimciMesajGonder() {
-  const istekEl = document.getElementById("ai-istek");
-  const istek = (istekEl.value || "").trim();
-  if (!istek) { alert("Ne yapmak istediğinizi yazın."); return; }
-  const prompt = aiYardimciBaglamliMetin(istek);
-  aiYardimciKonusma.push({ rol: "siz", metin: istek, prompt });
-  istekEl.value = "";
-  aiYardimciPanoyaKopyala(prompt);
-  renderMain();
-}
-function aiYardimciTekrarKopyala(i) {
-  const m = aiYardimciKonusma[i];
-  if (!m) return;
-  aiYardimciPanoyaKopyala(m.prompt || m.metin);
-  alert("Panoya kopyalandı.");
-}
-function aiYardimciCevapEkle() {
-  const el = document.getElementById("ai-cevap-yapistir");
-  const cevap = (el.value || "").trim();
-  if (!cevap) { alert("Yapay zekadan aldığınız cevabı önce buraya yapıştırın."); return; }
-  aiYardimciKonusma.push({ rol: "ai", metin: cevap });
-  renderMain();
-}
-function aiYardimciTarayicidaAc(url) {
-  if (window.desktop && window.desktop.isElectron && window.desktop.openExternal) window.desktop.openExternal(url);
-  else window.open(url, "_blank");
-}
-/* ---- Sesle Anlat (mikrofon ile metne dökme) ----
-   Tarayıcının yerleşik Web Speech API'sini kullanır (internet bağlantısı
-   gerektirir, ekstra kurulum/hesap gerektirmez). Desteklenmeyen bir
-   ortamda buton görünmez, sorun olursa yazarak devam etmeye yönlendirir. */
-let aiYardimciTanima = null;
-function aiYardimciSesGirisiVarMi() {
-  return !!(window.SpeechRecognition || window.webkitSpeechRecognition);
-}
-function aiYardimciSesGirisiBaslat() {
-  const btn = document.getElementById("ai-mikrofon-btn");
-  if (aiYardimciTanima) { aiYardimciTanima.stop(); return; }
-  const Rec = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!Rec) { alert("Bu bilgisayarda sesle giriş desteklenmiyor. Lütfen yazarak devam edin."); return; }
-  const textarea = document.getElementById("ai-istek");
-  const rec = new Rec();
-  rec.lang = "tr-TR";
-  rec.interimResults = false;
-  rec.maxAlternatives = 1;
-  rec.onstart = () => { if (btn) { btn.textContent = "⏹ Durdur (Dinliyor…)"; btn.classList.add("primary"); } };
-  rec.onresult = (e) => {
-    let metin = "";
-    for (let i = 0; i < e.results.length; i++) metin += e.results[i][0].transcript;
-    metin = metin.trim();
-    if (metin) textarea.value = (textarea.value.trim() ? textarea.value.trim() + " " : "") + metin;
-  };
-  rec.onerror = (e) => {
-    if (e.error !== "aborted" && e.error !== "no-speech") alert("Sesle giriş sırasında bir sorun oluştu (" + e.error + "). Lütfen yazarak devam edin.");
-  };
-  rec.onend = () => { if (btn) { btn.textContent = "🎤 Sesle Anlat"; btn.classList.remove("primary"); } aiYardimciTanima = null; };
-  aiYardimciTanima = rec;
-  try { rec.start(); } catch (err) { alert("Mikrofon başlatılamadı: " + err.message); aiYardimciTanima = null; }
-}
-function viewAiYardimci() {
-  return `
-  <div class="card no-print" style="display:flex;flex-direction:column;">
-    <div class="row" style="justify-content:space-between;align-items:center;flex-wrap:wrap;">
-      <h2 style="margin:0;">AI Yazım Yardımcısı</h2>
-      <div class="row" style="margin:0;">
-        <button class="btn" style="padding:5px 10px;font-size:11px;" onclick="aiYardimciTarayicidaAc('https://claude.ai/new')">Claude'u Aç</button>
-        <button class="btn" style="padding:5px 10px;font-size:11px;" onclick="aiYardimciTarayicidaAc('https://chatgpt.com')">ChatGPT'yi Aç</button>
-        <button class="btn" style="padding:5px 10px;font-size:11px;" onclick="aiYardimciYeniKonusma()">Yeni Konuşma</button>
-      </div>
-    </div>
-    <p class="small" style="margin:6px 0 10px;">Gönderdiğiniz mesaj panoya otomatik kopyalanır — Claude/ChatGPT'ye yapıştırıp cevabı alın, aşağıya yapıştırıp ekleyin. Gerçek hesap/ücret gerektirmez; program hiçbir yapay zekaya doğrudan bağlı değil.</p>
-    <div style="min-height:120px;max-height:50vh;overflow-y:auto;display:flex;flex-direction:column;padding:10px;background:var(--panel-2);border-radius:8px;">
-      ${aiYardimciKonusma.length ? aiYardimciKonusma.map((m, i) => m.rol === "siz" ? `
-        <div style="align-self:flex-end;max-width:85%;background:var(--accent-bg);color:var(--accent-ink);padding:9px 13px;border-radius:12px 12px 2px 12px;margin-bottom:8px;">
-          <div>${nlToBr(m.metin)}</div>
-          <div class="small" style="margin-top:5px;opacity:.75;">📋 Panoya kopyalandı</div>
-          <button class="btn" style="padding:2px 7px;font-size:10px;margin-top:4px;" onclick="aiYardimciTekrarKopyala(${i})">Tekrar Kopyala</button>
-        </div>` : `
-        <div style="align-self:flex-start;max-width:85%;background:var(--panel);border:1px solid var(--line);padding:9px 13px;border-radius:12px 12px 12px 2px;margin-bottom:8px;">
-          <div class="small" style="font-weight:600;margin-bottom:3px;">Yapay Zeka Cevabı</div>
-          <div>${nlToBr(m.metin)}</div>
-        </div>`).join("") : `<p class="small" style="text-align:center;margin:30px 0;">Henüz mesaj yok. Aşağıya yazın (ya da 🎤 ile söyleyin) ve gönderin.</p>`}
-      ${aiYardimciKonusma.length && aiYardimciKonusma[aiYardimciKonusma.length - 1].rol === "siz" ? `
-      <div style="align-self:flex-start;max-width:85%;width:85%;">
-        <textarea id="ai-cevap-yapistir" rows="3" placeholder="Yapay zekadan aldığınız cevabı buraya yapıştırın…" style="width:100%;"></textarea>
-        <button class="btn primary" style="margin-top:4px;padding:5px 10px;font-size:11px;" onclick="aiYardimciCevapEkle()">Cevabı Ekle</button>
-      </div>` : ""}
-    </div>
-    <div class="row" style="margin-top:10px;align-items:flex-end;">
-      <textarea id="ai-istek" rows="2" style="flex:1;min-width:200px;" placeholder="Ne yapmak istiyorsunuz? örn. Mayıs ayı için 12. sınıf öğrencilerine staj bitirme yazısı yaz, resmi dil kullan"></textarea>
-    </div>
-    <div class="row" style="margin-top:6px;">
-      <button class="btn primary" onclick="aiYardimciMesajGonder()">Gönder</button>
-      ${aiYardimciSesGirisiVarMi() ? `<button class="btn" id="ai-mikrofon-btn" onclick="aiYardimciSesGirisiBaslat()" title="Yazmak yerine konuşarak anlatın">🎤 Sesle Anlat</button>` : ""}
-    </div>
-  </div>`;
 }
 
 /* ---- Ayarlar (Kurum Bilgileri) ---- */

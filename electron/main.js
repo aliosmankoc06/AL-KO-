@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Menu, dialog, ipcMain, shell, session } = require("electron");
+const { app, BrowserWindow, Menu, dialog, ipcMain } = require("electron");
 const path = require("path");
 const fs = require("fs");
 const XLSX = require("xlsx");
@@ -15,13 +15,6 @@ function backupFileFilters() {
 }
 
 function createWindow() {
-  /* AI Yazım Yardımcısı'ndaki "Sesle Anlat" mikrofon düğmesi için — kendi
-     sayfamızın mikrofon izni istemesine izin veriyoruz (üçüncü taraf
-     bir siteye değil, sadece bu uygulamanın kendi arayüzüne). */
-  session.defaultSession.setPermissionRequestHandler((webContents, permission, callback) => {
-    callback(permission === "media");
-  });
-
   mainWindow = new BrowserWindow({
     width: 1440,
     height: 900,
@@ -119,12 +112,6 @@ ipcMain.handle("import:envanter-xlsx", async (evt, filePath) => {
 
 ipcMain.handle("import:performans-xlsx", async (evt, filePath) => {
   return parsePerformansWorkbook(filePath, XLSX);
-});
-
-ipcMain.handle("open:external", (evt, url) => {
-  if (typeof url !== "string" || !/^https:\/\//.test(url)) return false;
-  shell.openExternal(url);
-  return true;
 });
 
 ipcMain.handle("dialog:open-pdf", async () => {

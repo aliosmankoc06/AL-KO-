@@ -18,6 +18,5 @@ contextBridge.exposeInMainWorld("desktop", {
   importEnvanterXlsx: (filePath) => ipcRenderer.invoke("import:envanter-xlsx", filePath),
   importPerformansXlsx: (filePath) => ipcRenderer.invoke("import:performans-xlsx", filePath),
   openPdfDialog: () => ipcRenderer.invoke("dialog:open-pdf"),
-  importOgrenciPdf: (filePath) => ipcRenderer.invoke("import:ogrenci-pdf", filePath),
-  openExternal: (url) => ipcRenderer.invoke("open:external", url)
+  importOgrenciPdf: (filePath) => ipcRenderer.invoke("import:ogrenci-pdf", filePath)
 });
