@@ -410,8 +410,12 @@ function viewStajOgrenciler() {
   <div class="card no-print">
     <h2>Staj Yerleştirme — Öğrenciler</h2>
     <p class="small">Staj yerleştirmesi yapılacak öğrenci listesi. Not ortalamalarını "Not Ortalamaları", işletme tercihlerini "Tercihler" sekmesinden girin; sonuç ve yerleştirme "Sonuç / Yerleştirme" sekmesinde.</p>
+    ${belgeAracCubugu("Staj Yerleştirme - Öğrenciler")}
   </div>
-  <div class="card">${listHtml}</div>
+  <div class="print-area">
+    ${belgeYazdirmaBasligi("Staj Yerleştirme — Öğrenciler")}
+    <div class="card">${listHtml}</div>
+  </div>
   <div class="card no-print">
     <h2>Öğrenci Listesinden Ekle</h2>
     <p class="small">Öğrenci Listesi modülüne aktardığınız e-Okul listesinden bu sınıfın tüm öğrencilerini tek seferde ekleyin.</p>
@@ -501,8 +505,14 @@ function viewStajKontenjanlar() {
   <div class="card no-print">
     <h2>İşletme Kontenjanları</h2>
     <p class="small">Her işletmenin dal başına kaç öğrenci alabileceğini ve varsa özellikle istediği (isimle talep ettiği) öğrencileri buradan girin. İşletme listesi <b>Koordinatörlük</b> sekmesine eklediğiniz işletmelerden gelir.</p>
-    <table><thead><tr><th>İşletme</th>${dallar.map(d => `<th>${escHtml(d)} Kontenjanı</th>`).join("")}<th>Talep Ettiği Öğrenciler</th></tr></thead>
-    <tbody>${kontenjanRows}</tbody></table>
+    ${belgeAracCubugu("Staj Yerleştirme - İşletme Kontenjanları")}
+  </div>
+  <div class="print-area">
+    ${belgeYazdirmaBasligi("Staj Yerleştirme — İşletme Kontenjanları")}
+    <div class="card">
+      <table><thead><tr><th>İşletme</th>${dallar.map(d => `<th>${escHtml(d)} Kontenjanı</th>`).join("")}<th>Talep Ettiği Öğrenciler</th></tr></thead>
+      <tbody>${kontenjanRows}</tbody></table>
+    </div>
   </div>`;
 }
 /* -- Sekme 5: Sonuç / Yerleştirme (çıktı) -- */
