@@ -3388,6 +3388,7 @@ function snRosterTablo(kind, kayitlar) {
     </tr>`;
   }).join("");
   return `
+  <p class="small no-print" style="margin:6px 0;">↔ Tablo geniş — sağa/sola kaydırarak diğer sütunları görebilirsiniz.</p>
   <div class="card" style="overflow-x:auto;">
     <table style="width:100%;font-size:11px;">
       <thead>
