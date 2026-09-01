@@ -509,6 +509,34 @@ function belgeAracCubugu(dosyaAdi) {
     </div>
   </div>`;
 }
+/* ---- Sekme Dropdown (genel amaçlı) ----
+   Çok sayıda seçenek olduğunda (sınıf, ay, ders listesi vb.) yan yana
+   dizilmiş onlarca buton yerine, İndir menüsüyle aynı mantıkta tek bir
+   açılır/kapanır liste gösterir: butona tıklayınca seçenekler alt alta
+   açılır, bir seçenek tıklanınca ya da dışarı tıklanınca kapanır. */
+document.addEventListener("click", (e) => {
+  if (!e.target.closest(".tab-dropdown")) {
+    document.querySelectorAll(".tab-dropdown-menu.show").forEach(m => m.classList.remove("show"));
+  }
+});
+function toggleTabDropdown(groupId) {
+  const menu = document.getElementById("tabdd-" + groupId);
+  if (!menu) return;
+  const willOpen = !menu.classList.contains("show");
+  document.querySelectorAll(".tab-dropdown-menu.show").forEach(m => m.classList.remove("show"));
+  if (willOpen) menu.classList.add("show");
+}
+function sekmeDropdown(groupId, secenekler, aktifDeger, onSelectExprSablonu) {
+  const aktif = secenekler.find(s => String(s.value) === String(aktifDeger));
+  const items = secenekler.map(s => {
+    const expr = onSelectExprSablonu.split("{v}").join(jsq(s.value));
+    return `<div class="tab-dropdown-item ${String(s.value) === String(aktifDeger) ? 'active' : ''}" onclick="${expr}; toggleTabDropdown('${jsq(groupId)}');">${escHtml(s.label)}</div>`;
+  }).join("");
+  return `<div class="tab-dropdown no-print">
+    <button class="btn primary" onclick="toggleTabDropdown('${jsq(groupId)}')">${escHtml(aktif ? aktif.label : "Seçiniz")} ▾</button>
+    <div id="tabdd-${groupId}" class="tab-dropdown-menu">${items || '<div class="tab-dropdown-item small">Seçenek yok</div>'}</div>
+  </div>`;
+}
 function belgeYazdirmaBasligi(altBaslik) {
   const tarih = new Date().toLocaleDateString("tr-TR");
   const k = S.kurumBilgileri;
@@ -832,7 +860,7 @@ function viewPlanModule(kind) {
   const listHtml = entries.length === 0 ? "" : `
     <div class="card no-print">
       <div class="row" style="flex-wrap:wrap;">
-        ${entries.map(e => `<button class="btn ${e.id === activePlanEntryId[kind] ? 'primary' : ''}" onclick="selectPlanEntry('${kind}','${e.id}')">${escHtml(e.sinif)} — ${escHtml(e.ders)}</button>`).join("")}
+        ${sekmeDropdown("plan-ders-" + kind, entries.map(e => ({ value: e.id, label: e.sinif + " — " + e.ders })), activePlanEntryId[kind], `selectPlanEntry('${jsq(kind)}','{v}')`)}
       </div>
     </div>`;
 
@@ -949,10 +977,7 @@ function setOgrenciListesiSinif(sinif) { activeOgrenciListesiSinif = sinif; rend
 function viewOgrenciListesi() {
   const siniflar = ogrenciListesiSiniflari();
   if (!activeOgrenciListesiSinif || !siniflar.includes(activeOgrenciListesiSinif)) activeOgrenciListesiSinif = siniflar[0] || null;
-  const sinifBar = `<div class="row no-print" style="flex-wrap:wrap;">${siniflar.map(s => {
-    const sayi = ogrencilerForSinif(s).length;
-    return `<button class="btn ${s === activeOgrenciListesiSinif ? 'primary' : ''}" onclick="setOgrenciListesiSinif('${jsq(s)}')">${escHtml(s)} (${sayi})</button>`;
-  }).join("")}</div>`;
+  const sinifBar = `<div class="row no-print" style="flex-wrap:wrap;">${sekmeDropdown("ogrenci-sinif", siniflar.map(s => ({ value: s, label: s + " (" + ogrencilerForSinif(s).length + ")" })), activeOgrenciListesiSinif, "setOgrenciListesiSinif('{v}')")}</div>`;
   const ogrenciler = activeOgrenciListesiSinif ? ogrencilerForSinif(activeOgrenciListesiSinif) : [];
   const rows = ogrenciler.map((o, i) => `
     <tr>
@@ -1440,7 +1465,7 @@ function viewOkulZumresi() {
   const listHtml = entries.length === 0 ? "" : `
     <div class="card no-print">
       <div class="row" style="flex-wrap:wrap;">
-        ${entries.map(e => `<button class="btn ${e.id === activeToplantiId ? 'primary' : ''}" onclick="selectToplanti('${e.id}')">${e.tur === 'sube' ? '📋 ' : e.tur === 'veli' ? '👪 ' : '🏭 '}${escHtml(e.baslik)}</button>`).join("")}
+        ${sekmeDropdown("toplanti", entries.map(e => ({ value: e.id, label: (e.tur === 'sube' ? '📋 ' : e.tur === 'veli' ? '👪 ' : '🏭 ') + e.baslik })), activeToplantiId, "selectToplanti('{v}')")}
       </div>
     </div>`;
 
@@ -1728,11 +1753,11 @@ function viewMakinelerBolumu() {
   if (!list.length) activeMakineId = "__ALL__";
   const active = activeMakineId === "__ALL__" ? null : makineById(activeMakineId);
 
+  const makineSecenekleri = [{ value: "__ALL__", label: "📋 Tüm Liste" }].concat(list.map(m => ({ value: m.id, label: m.ad })));
   const listHtml = list.length === 0 ? "" : `
     <div class="card no-print">
       <div class="row" style="flex-wrap:wrap;">
-        <button class="btn ${activeMakineId === '__ALL__' ? 'primary' : ''}" onclick="selectMakine('__ALL__')">📋 Tüm Liste</button>
-        ${list.map(m => `<button class="btn ${m.id === activeMakineId ? 'primary' : ''}" onclick="selectMakine('${m.id}')">${escHtml(m.ad)}</button>`).join("")}
+        ${sekmeDropdown("makine", makineSecenekleri, activeMakineId, "selectMakine('{v}')")}
       </div>
     </div>`;
 
@@ -1941,7 +1966,7 @@ function viewDurumTespitBolumu() {
   const listHtml = entries.length === 0 ? "" : `
     <div class="card no-print">
       <div class="row" style="flex-wrap:wrap;">
-        ${entries.map(e => `<button class="btn ${e.id === activeDurumTespitId ? 'primary' : ''}" onclick="selectDurumTespit('${e.id}')">${escHtml(e.atolye)}${e.tarih ? ' · ' + escHtml(e.tarih) : ''}</button>`).join("")}
+        ${sekmeDropdown("durum-tespit", entries.map(e => ({ value: e.id, label: e.atolye + (e.tarih ? " · " + e.tarih : "") })), activeDurumTespitId, "selectDurumTespit('{v}')")}
       </div>
     </div>`;
 
@@ -2279,7 +2304,7 @@ function viewPerformansBolum(tur) {
   <div class="card no-print">
     <div class="small" style="margin-bottom:6px;font-weight:600;">1) Sınıf</div>
     <div class="row" style="flex-wrap:wrap;">
-      ${siniflar.length ? siniflar.map(s => `<button class="btn ${s === activePerformansSinif ? 'primary' : ''}" onclick="selectPerformansSinif('${jsq(s)}')">${escHtml(s)}</button>`).join("")
+      ${siniflar.length ? sekmeDropdown("perf-sinif", siniflar.map(s => ({ value: s, label: s })), activePerformansSinif, "selectPerformansSinif('{v}')")
         : '<span class="small">Henüz tanımlı sınıf yok — Ders Programı &gt; Sınıflar bölümünden sınıf ekleyebilirsiniz.</span>'}
     </div>
   </div>`;
@@ -2306,8 +2331,8 @@ function viewPerformansBolum(tur) {
   const dersBar = `
   <div class="card no-print">
     <div class="small" style="margin-bottom:6px;font-weight:600;">3) Ders — ${escHtml(activePerformansSinif)} · ${escHtml(activePerformansDonem)}</div>
-    <div class="row" style="flex-wrap:wrap;">
-      ${dersEntries.map(e => `<button class="btn ${e.id === activePerformansId[tur] ? 'primary' : ''}" onclick="selectPerformansKayit('${tur}','${e.id}')">${escHtml(e.ders)}</button>`).join("")}
+    <div class="row" style="flex-wrap:wrap;align-items:center;">
+      ${dersEntries.length ? sekmeDropdown("perf-ders", dersEntries.map(e => ({ value: e.id, label: e.ders })), activePerformansId[tur], `selectPerformansKayit('${jsq(tur)}','{v}')`) : ""}
       <button class="btn" onclick="addPerformansKayit('${tur}')">+ Ders Ekle</button>
       ${active ? `<button class="btn danger" onclick="deletePerformansKayit('${active.id}')">Bu Dersi Sil</button>` : ""}
     </div>
@@ -2585,7 +2610,7 @@ function viewBeceriSinavi() {
   const siniflar = siniflarKaynagi.length ? siniflarKaynagi.map(c => ({ id: c.name, dal: c.dal })) : [{ id: "12-A", dal: "MBO" }, { id: "12-B", dal: "BMI" }];
   if (!siniflar.some(s => s.id === activeBeceriSinif)) activeBeceriSinif = siniflar[0].id;
   const aktifSinifTanimi = siniflar.find(s => s.id === activeBeceriSinif) || siniflar[0];
-  const sinifBar = `<div class="row no-print" style="flex-wrap:wrap;">${siniflar.map(s => `<button class="btn ${s.id === activeBeceriSinif ? 'primary' : ''}" onclick="setBeceriSinif('${jsq(s.id)}')">${escHtml(s.id)} — ${DAL_LABELS[s.dal] || s.dal}</button>`).join("")}</div>`;
+  const sinifBar = `<div class="row no-print" style="flex-wrap:wrap;">${sekmeDropdown("beceri-sinif", siniflar.map(s => ({ value: s.id, label: s.id + " — " + (DAL_LABELS[s.dal] || s.dal) })), activeBeceriSinif, "setBeceriSinif('{v}')")}</div>`;
   const kayitlar = S.beceriSinavi.kayitlar.filter(k => k.sinif === activeBeceriSinif);
   const baslik = "İşletmelerde Beceri Eğitimi Yıl Sonu Beceri Sınavı Değerlendirme Çizelgesi — " + activeBeceriSinif + " — " + (DAL_LABELS[aktifSinifTanimi.dal] || aktifSinifTanimi.dal);
   const dosyaAdi = baslik;
@@ -2841,7 +2866,7 @@ function viewDonemRaporBolum(tur) {
   const listHtml = entries.length === 0 ? "" : `
     <div class="card no-print">
       <div class="row" style="flex-wrap:wrap;">
-        ${entries.map(e => `<button class="btn ${e.id === activeDonemRaporId[tur] ? 'primary' : ''}" onclick="selectDonemRapor('${tur}','${e.id}')">${escHtml(e.ogretmenAdi)} · ${escHtml(e.donem || '')} ${escHtml(e.ogretimYili || '')}</button>`).join("")}
+        ${sekmeDropdown("donem-rapor-" + tur, entries.map(e => ({ value: e.id, label: e.ogretmenAdi + " · " + (e.donem || "") + " " + (e.ogretimYili || "") })), activeDonemRaporId[tur], `selectDonemRapor('${jsq(tur)}','{v}')`)}
       </div>
     </div>`;
 
@@ -2880,6 +2905,231 @@ let activeSeflikRaporId = null;
 function seflikRaporById(id) { return S.seflikRaporlari.find(r => r.id === id); }
 function seflikToplamSaat(r) {
   return r.kayitlar.reduce((sum, k) => sum + (Number(k.saat) || 0), 0);
+}
+/* ---- Alan Şefi Aylık Görev Havuzu (öneri metinleri) ----
+   MEB Ortaöğretim Kurumları Yönetmeliği Madde 85'te (Alan/bölüm, atölye
+   ve laboratuvar şeflerinin görev ve sorumlulukları) tanımlanan görev
+   kategorilerine (bakım-onarım, İSG, kayıt tutma, staj/işletme koordi-
+   nasyonu, mezun izleme) ve gerçek örnek raporunuzdaki (Nisan 2026)
+   çalışma diline dayanarak hazırlanmış, aya göre değişen ÖNERİ metin
+   havuzu. Bunlar resmi yönetmelik metni DEĞİL, siz düzenleyip kendi
+   gerçek çalışmanıza göre değiştireceğiniz taslak cümlelerdir — atölye
+   envanterinizde o tarih aralığına denk gelen gerçek bir bakım kaydı
+   varsa, öneri onun yerine gerçek kaydı kullanır. */
+const ALAN_SEFI_AYLIK_GOREV_HAVUZU = {
+  "Eylül": [
+    "Yeni eğitim-öğretim yılına ait staj/işletmede mesleki eğitim programının planlanması çalışmalarına başlandı; staj yapılacak işletmelerin tespiti ve staj takviminin hazırlanmasına yönelik ön çalışmalar yürütüldü.",
+    "Atölye ve laboratuvarların yeni döneme hazırlığı kapsamında genel temizlik, düzen ve güvenlik kontrolü yapıldı; eksik/arızalı makine-teçhizat tespit edilerek bakım-onarım planlaması yapıldı.",
+    "Alan/bölüm, atölye ve laboratuvar kayıtlarının (demirbaş, makine kartları, kullanma talimatları) güncellenmesi çalışmaları yürütüldü."
+  ],
+  "Ekim": [
+    "Öğrenci-işletme eşleştirme çalışmaları sürdürüldü; staj sözleşmeleri ve ilgili evrakların hazırlanmasına devam edildi.",
+    "Atölye tezgahlarının periyodik bakımı yapıldı; tespit edilen eksiklikler giderildi, atölye şeflerine teknik destek verildi.",
+    "İş sağlığı ve güvenliği denetimi kapsamında koruyucu muhafazalar, acil stop butonları ve kişisel koruyucu donanım (KKD) durumu kontrol edildi."
+  ],
+  "Kasım": [
+    "1. dönem sınavlarına yönelik atölye ve laboratuvar hazırlıkları tamamlandı.",
+    "Atölye makinelerinin periyodik bakımı ve küçük onarımları yapıldı; makine kartları güncellendi.",
+    "Staj/işletmede mesleki eğitim gören öğrencilerin işletme ziyaretleri koordine edildi, devam-devamsızlık durumları takip edildi."
+  ],
+  "Aralık": [
+    "1. dönem sonuna doğru atölye/laboratuvar genel bakım ve düzenleme çalışmaları yapıldı.",
+    "Öğrencilerin dönem sonu beceri/performans değerlendirmeleri için gerekli atölye düzenlemeleri yapıldı.",
+    "Yılbaşı tatiline hazırlık kapsamında makine-teçhizatın güvenli şekilde kapatılması ve envanter kontrolü yapıldı."
+  ],
+  "Ocak": [
+    "1. dönem değerlendirmesi yapıldı; atölye/laboratuvar kullanım ve bakım kayıtları gözden geçirildi.",
+    "2. döneme hazırlık kapsamında atölye tezgahlarının genel bakımı ve güvenlik kontrolü yapıldı.",
+    "Yarıyıl tatili döneminde ihtiyaç duyulan büyük bakım-onarım çalışmaları planlandı ve yürütüldü."
+  ],
+  "Şubat": [
+    "2. dönem başlangıcında atölye ve laboratuvarların eğitime hazır hâle getirilmesi sağlandı.",
+    "Staj/işletmede mesleki eğitim programının 2. dönem takvimi ve öğrenci-işletme durumları gözden geçirildi.",
+    "Atölye makinelerinin periyodik bakımı yapıldı; eksik yedek parça ihtiyaçları tespit edildi."
+  ],
+  "Mart": [
+    "Atölye ve laboratuvarların periyodik bakım ve iş sağlığı-güvenliği denetimleri sürdürüldü.",
+    "Staj yapan öğrencilerin işletme ziyaretleri ve değerlendirmeleri koordine edildi.",
+    "2. dönem sınavlarına yönelik atölye/laboratuvar hazırlıkları yapıldı."
+  ],
+  "Nisan": [
+    "Bir sonraki eğitim-öğretim yılına ait staj/işletmede mesleki eğitim programının planlanması çalışmalarına başlandı.",
+    "Atölye tezgahlarının periyodik bakımı ve iş sağlığı-güvenliği denetimi yapıldı; tespit edilen eksiklikler giderildi.",
+    "Alan şefleri toplantısına katılım sağlandı; staj programı ve İSG eksiklikleri gibi gündem maddeleri değerlendirildi."
+  ],
+  "Mayıs": [
+    "12. sınıf öğrencilerinin işletmelerde beceri eğitimi / kalfalık-ustalık beceri sınavlarına yönelik hazırlık ve koordinasyon çalışmaları yürütüldü.",
+    "Yeni öğretim yılı staj/işletmede mesleki eğitim programı kapsamında öğrenci-işletme eşleştirme çalışmaları sürdürüldü.",
+    "Atölye ve laboratuvarların yıl sonu genel bakımı ve envanter sayımı planlanmaya başlandı."
+  ],
+  "Haziran": [
+    "Yıl sonu değerlendirmesi yapıldı; atölye/laboratuvar demirbaş ve makine envanteri sayımı tamamlandı.",
+    "Mezun olacak öğrencilerin işe yerleştirme ve mezunları izleme çalışmaları ilgili alan öğretmenleriyle birlikte yürütüldü.",
+    "Yaz döneminde yapılacak büyük bakım-onarım çalışmaları planlandı; gelecek öğretim yılı hazırlıkları başlatıldı."
+  ]
+};
+function seflikTarihinAyi(tarihStr) {
+  const ilkTarih = (tarihStr || "").split("\n")[0];
+  const d = parseTrTarih(ilkTarih);
+  if (d) return TR_AYLAR[d.getMonth()];
+  const m = /(Ocak|Şubat|Mart|Nisan|Mayıs|Haziran|Temmuz|Ağustos|Eylül|Ekim|Kasım|Aralık)/.exec(tarihStr || "");
+  return m ? m[1] : null;
+}
+function seflikGercekBakimMetni(pzt, gunSonIndex) {
+  if (!pzt) return "";
+  const sonTarih = new Date(pzt);
+  sonTarih.setDate(sonTarih.getDate() + gunSonIndex);
+  const cumleler = [];
+  S.envanter.makineler.forEach(m => {
+    (m.bakimKayitlari || []).forEach(b => {
+      const bd = parseTrTarih(b.tarih);
+      if (bd && bd >= pzt && bd <= sonTarih) {
+        cumleler.push(`${m.ad} makinesine${b.tip ? " " + b.tip : ""} bakım yapıldı${b.islemler ? " (" + b.islemler + ")" : ""}.`);
+      }
+    });
+  });
+  return cumleler.join(" ");
+}
+function seflikOneriMetni(ay, pzt, gunSonIndex) {
+  const gercek = seflikGercekBakimMetni(pzt, gunSonIndex);
+  if (gercek) return gercek;
+  const havuz = ALAN_SEFI_AYLIK_GOREV_HAVUZU[ay];
+  if (!havuz || !havuz.length) return "";
+  return havuz[Math.floor(Math.random() * havuz.length)];
+}
+function seflikIslerOneriDegistir(raporId, kayitId) {
+  const r = seflikRaporById(raporId);
+  if (!r) return;
+  const k = r.kayitlar.find(x => x.id === kayitId);
+  if (!k) return;
+  const ay = seflikTarihinAyi(k.tarih);
+  const havuz = ay ? ALAN_SEFI_AYLIK_GOREV_HAVUZU[ay] : null;
+  if (!havuz || !havuz.length) { alert("Bu satır için otomatik öneri havuzu bulunamadı — elle yazabilirsiniz."); return; }
+  const mevcutIdx = havuz.indexOf(k.isler);
+  k.isler = havuz[(mevcutIdx + 1) % havuz.length];
+  save(); renderMain();
+}
+/* ---- Ders Programından Otomatik Oluşturma ----
+   "Planlama Bakım Onarım (Alan Şefi)" dersinin haftalık hangi gün(ler)e
+   kaç saat yerleştiğini Ders Dağıtım'ın ürettiği S.schedule'dan okuyup,
+   seçilen ay için Akademik Takvim'deki haftalara göre tarih/gün/saat
+   satırlarını otomatik üretir. Tatil haftaları otomatik işaretlenir;
+   tek günlük resmi bayramlar (takvimde ayrı hafta olarak tutulmadığı
+   için) otomatik yakalanmaz — o satırı elle düzeltmeniz gerekir. */
+function alanSefiPlanlamaKursu() {
+  return S.courses.find(c => /alan\s*şefi/i.test(c.name || "") && /planlama/i.test(c.name || "")) || null;
+}
+function alanSefiGunlukSaatler() {
+  const kurs = alanSefiPlanlamaKursu();
+  const gunSaat = [0, 0, 0, 0, 0];
+  if (!kurs) return gunSaat;
+  Object.keys(S.schedule).forEach(key => {
+    const cell = S.schedule[key];
+    if (cell.courseId === kurs.id && cell.day >= 0 && cell.day <= 4) gunSaat[cell.day]++;
+  });
+  return gunSaat;
+}
+function seflikGunGruplariOlustur(gunSaat) {
+  const gruplar = [];
+  let i = 0;
+  while (i < 5) {
+    if (!gunSaat[i]) { i++; continue; }
+    let j = i;
+    while (j + 1 < 5 && gunSaat[j + 1] === gunSaat[i]) j++;
+    gruplar.push({ gunIndexleri: Array.from({ length: j - i + 1 }, (_, k) => i + k), saatGunluk: gunSaat[i] });
+    i = j + 1;
+  }
+  return gruplar;
+}
+function seflikAySecenekleri() {
+  const t = S.akademikTakvim;
+  if (!t || !Array.isArray(t.haftalar)) return [];
+  const map = new Map();
+  t.haftalar.forEach(h => {
+    if (!h.pazartesi) return;
+    const d = parseTrTarih(h.pazartesi);
+    if (!d) return;
+    const ay = TR_AYLAR[d.getMonth()], yil = d.getFullYear();
+    map.set(ay + " " + yil, { ay, yil });
+  });
+  return Array.from(map.values()).sort((a, b) => a.yil - b.yil || TR_AYLAR.indexOf(a.ay) - TR_AYLAR.indexOf(b.ay));
+}
+function seflikOtomatikOlusturModal() {
+  const secenekler = seflikAySecenekleri();
+  const root = document.getElementById("modal-root");
+  if (!secenekler.length) {
+    root.innerHTML = `
+      <div class="modal-bg" onclick="if(event.target===this) closeModal()">
+        <div class="modal" style="width:360px;">
+          <h3>Ders Programından Otomatik Oluştur</h3>
+          <p class="small">Bunun çalışması için Ayarlar &gt; Akademik Takvim'de Pazartesi tarihli haftalık takvim bulunmalı. "Haftaları Otomatik Oluştur" ile hemen kurabilirsiniz.</p>
+          <div class="row"><button class="btn" onclick="closeModal()">Tamam</button></div>
+        </div>
+      </div>`;
+    return;
+  }
+  root.innerHTML = `
+    <div class="modal-bg" onclick="if(event.target===this) closeModal()">
+      <div class="modal" style="width:380px;">
+        <h3>Ders Programından Otomatik Oluştur</h3>
+        <p class="small">Seçtiğiniz ay için, Ders Programı'ndaki "Planlama Bakım Onarım (Alan Şefi)" gününüze göre tarih/gün/egzersiz saati satırları otomatik oluşturulur; tatil haftaları da işaretlenir. "Yapılan İşler" sütunu, o tarihe denk gelen gerçek bir makine bakım kaydınız varsa onunla, yoksa alan şefliği görevlerine dayalı genel bir öneriyle otomatik doldurulur — beğenmezseniz her satırdaki "Öneri Değiştir" ile başka bir öneriye geçebilir, ya da doğrudan elle değiştirebilirsiniz. (Tek günlük resmi bayramlar takvimde ayrı hafta olmadığı için otomatik yakalanmaz, o satırı elle düzeltebilirsiniz.)</p>
+        <label class="small">Ay</label>
+        <select id="sr-oto-ay" style="width:100%">
+          ${secenekler.map(s => `<option value="${s.ay} ${s.yil}">${s.ay} ${s.yil}</option>`).join("")}
+        </select>
+        <div class="row">
+          <button class="btn primary" onclick="seflikOtomatikOlustur(document.getElementById('sr-oto-ay').value)">Oluştur</button>
+          <button class="btn" onclick="closeModal()">İptal</button>
+        </div>
+      </div>
+    </div>`;
+}
+function seflikOtomatikOlustur(aySecim) {
+  const parcalar = aySecim.split(" ");
+  const yil = Number(parcalar.pop());
+  const ay = parcalar.join(" ");
+  const t = S.akademikTakvim;
+  const gunSaat = alanSefiGunlukSaatler();
+  const gunAdlari = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma"];
+  const gunGruplari = seflikGunGruplariOlustur(gunSaat);
+  if (!gunGruplari.length) {
+    closeModal();
+    alert('Ders Programı\'nda "Planlama Bakım Onarım (Alan Şefi)" dersi için henüz bir gün ataması bulunamadı. Önce Ders Programı > Ders Dağıtım\'dan programı oluşturun.');
+    return;
+  }
+  let r = S.seflikRaporlari.find(x => x.ay === aySecim);
+  if (!r) { r = { id: uid("sr"), ay: aySecim, kayitlar: [] }; S.seflikRaporlari.push(r); }
+
+  const ilgiliHaftalar = t.haftalar.filter(h => {
+    if (!h.pazartesi) return false;
+    const d = parseTrTarih(h.pazartesi);
+    return d && TR_AYLAR[d.getMonth()] === ay && d.getFullYear() === yil;
+  });
+
+  let eklenen = 0;
+  ilgiliHaftalar.forEach(h => {
+    const pzt = parseTrTarih(h.pazartesi);
+    if (h.tatilMi) {
+      const varMi = r.kayitlar.some(k => k.tarih === h.tarihAraligi);
+      if (!varMi) {
+        r.kayitlar.push({ id: uid("srk"), tarih: h.tarihAraligi, gun: "", saat: "-", isler: h.tatilAdi || "TATİL" });
+        eklenen++;
+      }
+      return;
+    }
+    gunGruplari.forEach(g => {
+      const tarihStr = g.gunIndexleri.map(gi => { const d = new Date(pzt); d.setDate(d.getDate() + gi); return formatTrTarih(d); }).join("\n");
+      if (r.kayitlar.some(k => k.tarih === tarihStr)) return;
+      const gunStr = g.gunIndexleri.map(gi => gunAdlari[gi]).join("\n");
+      const isler = seflikOneriMetni(ay, pzt, g.gunIndexleri[g.gunIndexleri.length - 1]);
+      r.kayitlar.push({ id: uid("srk"), tarih: tarihStr, gun: gunStr, saat: String(g.saatGunluk * g.gunIndexleri.length), isler });
+      eklenen++;
+    });
+  });
+
+  activeSeflikRaporId = r.id;
+  save(); closeModal(); renderMain();
+  alert(eklenen ? `${eklenen} satır eklendi. "Yapılan İşler" sütunu otomatik önerilerle dolduruldu — gözden geçirip beğenmediklerinizi "Öneri Değiştir" ile başka bir öneriyle değiştirebilir ya da elle düzenleyebilirsiniz.` : "Eklenecek yeni satır bulunamadı (bu ay için satırlar zaten mevcut).");
 }
 function addSeflikRaporu() {
   const root = document.getElementById("modal-root");
@@ -2939,7 +3189,8 @@ function renderSeflikRaporDetay(r) {
       <td><textarea class="no-print" rows="2" style="width:110px;border:none;resize:vertical;font-family:inherit;font-size:11.5px;" oninput="updateSeflikKayit('${r.id}','${k2.id}','tarih',this.value)" onblur="save()">${escHtml(k2.tarih)}</textarea><div class="print-only">${nlToBr(k2.tarih)}</div></td>
       <td><textarea class="no-print" rows="2" style="width:100px;border:none;resize:vertical;font-family:inherit;font-size:11.5px;" oninput="updateSeflikKayit('${r.id}','${k2.id}','gun',this.value)" onblur="save()">${escHtml(k2.gun)}</textarea><div class="print-only">${nlToBr(k2.gun)}</div></td>
       <td><input class="no-print" type="text" value="${escHtml(String(k2.saat))}" style="width:44px" onchange="updateSeflikKayit('${r.id}','${k2.id}','saat',this.value); renderMain();"><span class="print-only-inline">${escHtml(String(k2.saat))}</span></td>
-      <td><textarea class="no-print" rows="2" style="width:100%;border:none;resize:vertical;font-family:inherit;font-size:11.5px;" oninput="updateSeflikKayit('${r.id}','${k2.id}','isler',this.value)" onblur="save()">${escHtml(k2.isler)}</textarea><div class="print-only">${nlToBr(k2.isler)}</div></td>
+      <td><textarea class="no-print" rows="2" style="width:100%;border:none;resize:vertical;font-family:inherit;font-size:11.5px;" oninput="updateSeflikKayit('${r.id}','${k2.id}','isler',this.value)" onblur="save()">${escHtml(k2.isler)}</textarea><div class="print-only">${nlToBr(k2.isler)}</div>
+        <button class="btn no-print" style="padding:3px 8px;font-size:10.5px;margin-top:3px;" onclick="seflikIslerOneriDegistir('${r.id}','${k2.id}')" title="Bu ay için başka bir öneri metni getirir">Öneri Değiştir</button></td>
       <td class="no-print"><button class="btn danger" onclick="removeSeflikKayit('${r.id}','${k2.id}')">Sil</button></td>
     </tr>`).join("");
   const toplam = seflikToplamSaat(r);
@@ -2979,7 +3230,7 @@ function viewSeflikRaporlari() {
   const listHtml = entries.length === 0 ? "" : `
     <div class="card no-print">
       <div class="row" style="flex-wrap:wrap;">
-        ${entries.map(e => `<button class="btn ${e.id === activeSeflikRaporId ? 'primary' : ''}" onclick="selectSeflikRaporu('${e.id}')">${escHtml(e.ay)}</button>`).join("")}
+        ${sekmeDropdown("seflik-ay", entries.map(e => ({ value: e.id, label: e.ay })), activeSeflikRaporId, "selectSeflikRaporu('{v}')")}
       </div>
     </div>`;
   const dosyaAdi = active ? "Şeflik Aylık Raporu - " + active.ay : "Şeflik Aylık Raporu";
@@ -2989,7 +3240,8 @@ function viewSeflikRaporlari() {
     <h2>Şeflik Aylık Raporu</h2>
     <p class="small">Alan Şefliği görevi kapsamında her ay okul müdürlüğüne sunulan Planlama ve Bakım Onarım raporu. Her satır bir tarih/tarih aralığı için yapılan işleri ve egzersiz saatini gösterir; aylık toplam otomatik hesaplanır.</p>
     <div class="row" style="margin-top:8px;">
-      <button class="btn primary" onclick="addSeflikRaporu()">Yeni Ay Ekle</button>
+      <button class="btn primary" onclick="seflikOtomatikOlusturModal()">Ders Programından Otomatik Oluştur</button>
+      <button class="btn" onclick="addSeflikRaporu()">Boş Ay Ekle</button>
       ${active ? `<button class="btn danger" onclick="deleteSeflikRaporu('${active.id}')">Bu Ayı Sil</button>` : ""}
     </div>
     ${active ? belgeAracCubugu(dosyaAdi) : ""}
@@ -3338,7 +3590,7 @@ function viewKagitlarBolum(classId, courseId) {
   const listHtml = entries.length === 0 ? "" : `
     <div class="card no-print">
       <div class="row" style="flex-wrap:wrap;">
-        ${entries.map(e => `<button class="btn ${e.id === activeSinavKagitId ? 'primary' : ''}" onclick="selectKagit('${e.id}')">${escHtml(e.baslik)}</button>`).join("")}
+        ${sekmeDropdown("sinav-kagit", entries.map(e => ({ value: e.id, label: e.baslik })), activeSinavKagitId, "selectKagit('{v}')")}
       </div>
     </div>`;
 
@@ -3370,7 +3622,7 @@ function viewSinavHavuzu() {
   <div class="card no-print">
     <div class="small" style="margin-bottom:6px;font-weight:600;">1) Sınıf</div>
     <div class="row" style="flex-wrap:wrap;">
-      ${siniflar.length ? siniflar.map(c => `<button class="btn ${c.id === activeSinavSinifId ? 'primary' : ''}" onclick="selectSinavSinif('${c.id}')">${escHtml(c.name)}</button>`).join("")
+      ${siniflar.length ? sekmeDropdown("sinav-sinif", siniflar.map(c => ({ value: c.id, label: c.name })), activeSinavSinifId, "selectSinavSinif('{v}')")
         : '<span class="small">Henüz tanımlı sınıf yok — Ders Programı &gt; Sınıflar bölümünden sınıf ekleyebilirsiniz.</span>'}
     </div>
   </div>`;
@@ -3385,7 +3637,7 @@ function viewSinavHavuzu() {
   <div class="card no-print">
     <div class="small" style="margin-bottom:6px;font-weight:600;">2) Ders — ${escHtml(cls ? cls.name : '')}</div>
     <div class="row" style="flex-wrap:wrap;">
-      ${dersler.length ? dersler.map(c => `<button class="btn ${c.id === activeSinavCourseId ? 'primary' : ''}" onclick="selectSinavCourse('${c.id}')">${escHtml(c.name)}</button>`).join("")
+      ${dersler.length ? sekmeDropdown("sinav-ders", dersler.map(c => ({ value: c.id, label: c.name })), activeSinavCourseId, "selectSinavCourse('{v}')")
         : '<span class="small">Bu sınıf için tanımlı ders yok — Ders Programı &gt; Ders Havuzu bölümünden ders ekleyebilirsiniz.</span>'}
     </div>
   </div>`;
