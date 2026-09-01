@@ -15,7 +15,9 @@ const MODULES = [
   { id: "staj-yerlestirme", label: "Staj Yerleştirme", icon: "briefcase" },
   { id: "atolye-envanter", label: "Atölye / Envanter", icon: "tool" },
   { id: "performans", label: "Performans Kriterleri", icon: "star" },
-  { id: "notlandirma", label: "Notlandırma", icon: "penSquare" },
+  { id: "sinav-notlari", label: "Sınav Notları", icon: "penSquare" },
+  { id: "performans-notlari", label: "Performans Notları", icon: "percent" },
+  { id: "sonuc-karnesi", label: "Sonuç Karnesi", icon: "badge" },
   { id: "kalfalik-ustalik", label: "Kalfalık / Ustalık Sınavı", icon: "medal" },
   { id: "beceri-sinavi", label: "Beceri Sınavı", icon: "clipboardCheck" },
   { id: "donem-raporlari", label: "Ders Kesim / Yazılı Teslim", icon: "report" },
@@ -81,7 +83,9 @@ function renderMain() {
   if (activeModule === "staj-yerlestirme") { el.innerHTML = viewStajYerlestirme(); return; }
   if (activeModule === "atolye-envanter") { el.innerHTML = viewAtolyeEnvanter(); return; }
   if (activeModule === "performans") { el.innerHTML = viewPerformans(); return; }
-  if (activeModule === "notlandirma") { el.innerHTML = viewNotlandirma(); return; }
+  if (activeModule === "sinav-notlari") { el.innerHTML = viewSinavNotlari(); return; }
+  if (activeModule === "performans-notlari") { el.innerHTML = viewPerformansNotlari(); return; }
+  if (activeModule === "sonuc-karnesi") { el.innerHTML = viewSonucKarnesi(); return; }
   if (activeModule === "kalfalik-ustalik") { el.innerHTML = viewKalfalikUstalik(); return; }
   if (activeModule === "beceri-sinavi") { el.innerHTML = viewBeceriSinavi(); return; }
   if (activeModule === "donem-raporlari") { el.innerHTML = viewDonemRaporlari(); return; }
@@ -371,12 +375,19 @@ function viewStajYerlestirme() {
         <td>${st.okulNo || ''}</td>
         <td>${escHtml(st.ad)}</td>
         <td>${st.dal || ''}</td>
-        <td class="no-print"><select onchange="setStudentIsletme('${st.id}', this.value)">${studentIsletmeOptions(st.isletme)}</select></td>
+        <td class="no-print"><select onchange="setStudentIsletme('${st.id}', this.value)">${studentIsletmeOptions(st.isletme)}</select>${st.yerlestirmeSirasi ? `<div class="small">${yerlestirmeSirasiPill(st.yerlestirmeSirasi)}</div>` : ""}</td>
         <td class="print-only-cell">${escHtml(st.isletme || '—')}</td>
         <td class="no-print"><div class="row" style="margin:0;"><button class="btn" onclick="editStudent('${st.id}')">Düzenle</button><button class="btn danger" onclick="deleteStudent('${st.id}')">Sil</button></div></td>
       </tr>`).join("");
     return `<h2 style="margin-top:16px;">${escHtml(sinif)}</h2><table><tr><th>Okul No</th><th>Ad Soyad</th><th>Dal</th><th>İşletme</th><th class="no-print"></th></tr>${rows}</table>`;
   }).join("") || `<p class="small">Henüz öğrenci eklenmedi.</p>`;
+  const dallar = [...new Set(S.students.map(s => s.dal).filter(Boolean))];
+  const kontenjanRows = S.isletmeler.map(isl => `
+    <tr>
+      <td>${escHtml(isl.name)}</td>
+      ${dallar.map(d => `<td><input type="number" min="0" value="${escHtml(isl.kontenjanlar[d] || '')}" style="width:60px;" onchange="setIsletmeKontenjan('${isl.id}','${jsq(d)}',this.value)"></td>`).join("")}
+      <td><input type="text" value="${escHtml(isl.talep)}" placeholder="örn. Ali Rıza Yetim, Mehmet Mamak" style="width:220px;" onchange="setIsletmeTalep('${isl.id}',this.value)"></td>
+    </tr>`).join("") || `<tr><td colspan="${dallar.length + 2}" class="small">Önce Ders Programı &gt; Koordinatörlük'ten işletme ekleyin.</td></tr>`;
 
   return `
   <div class="card no-print">
@@ -392,6 +403,13 @@ function viewStajYerlestirme() {
     <h2>Öğrenci Listesinden Ekle</h2>
     <p class="small">Öğrenci Listesi modülüne aktardığınız e-Okul listesinden bu sınıfın tüm öğrencilerini tek seferde ekleyin, sonra işletmelerini burada atayın.</p>
     <div class="row" style="max-width:260px"><button class="btn primary" onclick="stajListedenTopluEkleModal()">Öğrenci Listesinden Toplu Ekle</button></div>
+  </div>
+  <div class="card no-print">
+    <h2>Otomatik Yerleştirme</h2>
+    <p class="small">Öğrencilerin "Düzenle" penceresinden girdiğiniz not, tercih ve istemediği işletme bilgilerine göre, aşağıdaki kontenjanları dikkate alarak otomatik işletme ataması yapar. Sırasıyla: önce işletmenin özellikle istediği öğrenciler, sonra nota göre sıralı tercih eşleştirmesi, sonra kalan kontenjana göre döngüsel dağıtım (istemediği işletmeler elenir), son çare olarak zorunlu atama. <b>Zaten işletmesi atanmış öğrenciler değiştirilmez</b> — sadece işletmesi boş olanlara uygulanır.</p>
+    <table style="margin-bottom:10px;"><thead><tr><th>İşletme</th>${dallar.map(d => `<th>${escHtml(d)} Kontenjanı</th>`).join("")}<th>Talep Ettiği Öğrenciler</th></tr></thead>
+    <tbody>${kontenjanRows}</tbody></table>
+    <div class="row" style="max-width:260px"><button class="btn primary" onclick="stajOtomatikYerlestir()">Otomatik Yerleştir</button></div>
   </div>
   <div class="card no-print">
     <h2>Öğrenci Ekle</h2>
@@ -470,12 +488,15 @@ function editStudent(id) {
   const root = document.getElementById("modal-root");
   root.innerHTML = `
     <div class="modal-bg" onclick="if(event.target===this) closeModal()">
-      <div class="modal" style="width:380px;">
+      <div class="modal" style="width:420px;">
         <h3>Öğrenciyi Düzenle</h3>
         <label class="small">Sınıf</label><input type="text" id="es-sinif" value="${escHtml(st.sinif || '')}" style="width:100%">
         <label class="small">Okul No</label><input type="text" id="es-okulno" value="${escHtml(st.okulNo || '')}" style="width:100%">
         <label class="small">Ad Soyad</label><input type="text" id="es-ad" value="${escHtml(st.ad || '')}" style="width:100%">
         <label class="small">Dal</label><input type="text" id="es-dal" value="${escHtml(st.dal || '')}" style="width:100%">
+        <label class="small">Notu (Otomatik Yerleştirme'de öncelik sırası için — yüksek not önce yerleşir)</label><input type="text" id="es-not" value="${escHtml(st.not || '')}" style="width:100%">
+        <label class="small">Tercihleri (işletme adları, öncelik sırasıyla virgülle — 1. tercih önce)</label><input type="text" id="es-tercihler" value="${escHtml(st.tercihler || '')}" style="width:100%">
+        <label class="small">İstemediği İşletmeler (virgülle)</label><input type="text" id="es-istemiyor" value="${escHtml(st.istemiyor || '')}" style="width:100%">
         <div class="row">
           <button class="btn primary" onclick="saveStudentEdit('${id}')">Kaydet</button>
           <button class="btn" onclick="closeModal()">İptal</button>
@@ -492,12 +513,119 @@ function saveStudentEdit(id) {
   st.okulNo = document.getElementById("es-okulno").value.trim();
   st.ad = ad;
   st.dal = document.getElementById("es-dal").value.trim();
+  st.not = document.getElementById("es-not").value.trim();
+  st.tercihler = document.getElementById("es-tercihler").value.trim();
+  st.istemiyor = document.getElementById("es-istemiyor").value.trim();
   save(); closeModal(); renderMain();
 }
 function setStudentIsletme(id, isletme) {
   const st = S.students.find(s => s.id === id);
-  if (st) st.isletme = isletme;
+  if (st) { st.isletme = isletme; st.yerlestirmeSirasi = ""; }
   save(); renderMain();
+}
+function setIsletmeKontenjan(isletmeId, dal, value) {
+  const isl = isletmeById(isletmeId);
+  if (!isl) return;
+  if (!isl.kontenjanlar) isl.kontenjanlar = {};
+  isl.kontenjanlar[dal] = value.trim();
+  save();
+}
+function setIsletmeTalep(isletmeId, value) {
+  const isl = isletmeById(isletmeId);
+  if (!isl) return;
+  isl.talep = value.trim();
+  save();
+}
+function yerlestirmeSirasiPill(sira) {
+  const cls = sira === "Zorunlu Atama" ? "warn" : sira === "Otomatik" ? "info" : "ok";
+  return `<span class="pill ${cls}">${escHtml(sira)}</span>`;
+}
+/* ---- Staj Otomatik Yerleştirme ----
+   Kullanıcının bize verdiği gerçek VBA makrosundaki algoritmanın (5 adım:
+   işletme talebi → nota göre sıralı tercih eşleştirme → döngüsel otomatik
+   dağıtım → zorunlu atama) JavaScript'e taşınmış hâli — artık Excel/VBA
+   kurulumuna gerek kalmadan program içinde çalışıyor. Sadece işletmesi
+   BOŞ olan öğrencilere uygulanır; elle atanmış işletmeler korunur. */
+function trIcerir(hedef, aranan) {
+  const a = trLower(hedef), b = trLower(aranan);
+  return a.indexOf(b) >= 0 || b.indexOf(a) >= 0;
+}
+function stajOtomatikYerlestir() {
+  const bosOgrenciler = S.students.filter(s => !s.isletme);
+  if (!bosOgrenciler.length) { alert("İşletmesi boş öğrenci yok — hepsi zaten atanmış."); return; }
+  if (!confirm(bosOgrenciler.length + " öğrenci için otomatik yerleştirme yapılacak. Devam edilsin mi?")) return;
+
+  const dallar = [...new Set(bosOgrenciler.map(s => s.dal).filter(Boolean))];
+  let talepSayisi = 0, tercihSayisi = 0, otomatikSayisi = 0, zorunluSayisi = 0;
+  const yerlesemeyenler = [];
+
+  dallar.forEach(dal => {
+    const ogrenciler = bosOgrenciler.filter(s => s.dal === dal);
+    const kalanKontenjan = {};
+    S.isletmeler.forEach(isl => { kalanKontenjan[isl.id] = parseInt(isl.kontenjanlar[dal], 10) || 0; });
+    const yerlesti = new Set();
+
+    // Adım 1: İşletme Talebi
+    S.isletmeler.forEach(isl => {
+      if (!isl.talep) return;
+      isl.talep.split(",").map(s => s.trim()).filter(Boolean).forEach(aranan => {
+        if (kalanKontenjan[isl.id] <= 0) return;
+        const ogr = ogrenciler.find(o => !yerlesti.has(o.id) && trIcerir(o.ad, aranan));
+        if (ogr) {
+          ogr.isletme = isl.name; ogr.yerlestirmeSirasi = "İşletme Talebi";
+          yerlesti.add(ogr.id); kalanKontenjan[isl.id]--; talepSayisi++;
+        }
+      });
+    });
+
+    // Adım 2: Nota göre sıralı, tercihe göre yerleştirme
+    const siraliOgrenciler = ogrenciler.filter(o => !yerlesti.has(o.id))
+      .slice().sort((a, b) => (parseFloat(String(b.not).replace(",", ".")) || 0) - (parseFloat(String(a.not).replace(",", ".")) || 0));
+    siraliOgrenciler.forEach(ogr => {
+      if (yerlesti.has(ogr.id)) return;
+      const tercihler = (ogr.tercihler || "").split(",").map(s => s.trim()).filter(Boolean);
+      for (let t = 0; t < tercihler.length; t++) {
+        const isl = S.isletmeler.find(i => kalanKontenjan[i.id] > 0 && trIcerir(i.name, tercihler[t]));
+        if (isl) {
+          ogr.isletme = isl.name; ogr.yerlestirmeSirasi = (t + 1) + ". Tercih";
+          yerlesti.add(ogr.id); kalanKontenjan[isl.id]--; tercihSayisi++;
+          break;
+        }
+      }
+    });
+
+    // Adım 3: Döngüsel otomatik dağıtım (istemiyor'u dikkate al), sonra zorunlu atama
+    let pointer = 0;
+    const islListesi = S.isletmeler;
+    ogrenciler.filter(o => !yerlesti.has(o.id)).forEach(ogr => {
+      const istemiyor = (ogr.istemiyor || "").split(",").map(s => s.trim()).filter(Boolean);
+      let atandi = false;
+      for (let pass = 0; pass < 2 && !atandi; pass++) {
+        for (let d = 0; d < islListesi.length; d++) {
+          const idx = (pointer + d) % islListesi.length;
+          const isl = islListesi[idx];
+          if (kalanKontenjan[isl.id] <= 0) continue;
+          const istenmiyorMu = pass === 0 && istemiyor.some(x => trIcerir(isl.name, x));
+          if (istenmiyorMu) continue;
+          ogr.isletme = isl.name;
+          ogr.yerlestirmeSirasi = pass === 0 ? "Otomatik" : "Zorunlu Atama";
+          if (pass === 0) otomatikSayisi++; else zorunluSayisi++;
+          yerlesti.add(ogr.id);
+          kalanKontenjan[isl.id]--;
+          pointer = (idx + 1) % islListesi.length;
+          atandi = true;
+          break;
+        }
+      }
+      if (!atandi) yerlesemeyenler.push(ogr.ad);
+    });
+  });
+
+  save();
+  renderMain();
+  let mesaj = `Otomatik yerleştirme tamamlandı:\n${talepSayisi} öğrenci işletme talebiyle\n${tercihSayisi} öğrenci tercihiyle\n${otomatikSayisi} öğrenci otomatik dağıtımla\n${zorunluSayisi} öğrenci zorunlu atamayla yerleşti.`;
+  if (yerlesemeyenler.length) mesaj += `\n\nHiç yerleştirilemeyen (${yerlesemeyenler.length}): ${yerlesemeyenler.join(", ")} — bu öğrencilerin dalında hiçbir işletmede kontenjan kalmamış olabilir, yukarıdaki kontenjan tablosunu kontrol edin.`;
+  alert(mesaj);
 }
 function bulkImportStudents() {
   const raw = document.getElementById("bulk-student-paste").value;
@@ -2596,155 +2724,255 @@ function viewPerformans() {
   return tabBar + viewPerformansBolum(activePerformansTab);
 }
 
-/* ---- Notlandırma (Not Girişi Çizelgesi) ----
-   Bir dersin dönem sonu not girişi öncesi kullanılan resmi çizelge —
-   sınav notları + performans notları bir arada, gruplara ayrılmış
-   öğrenci listesiyle. Öğrenci Listesi modülündeki merkezi listeden
-   otomatik doldurulur (okul no + ad soyad), notlar burada girilir.
-   Performans ortalaması, o yarının boş olmayan not girişlerinin
-   ortalaması olarak otomatik hesaplanır ("g" = girmedi gibi harfli
-   notlar ortalamaya katılmaz). */
-let activeNotlandirmaSinifId = null;
-let activeNotlandirmaCourseId = null;
-let activeNotlandirmaDonem = "1";
-function notlandirmaById(id) { return S.notlandirma.find(x => x.id === id); }
-function notlandirmaBul(sinif, ders, donem) {
-  return S.notlandirma.find(n => n.sinif === sinif && n.ders === ders && n.donem === donem);
+/* ---- Sınav Notları / Performans Notları / Sonuç Karnesi ----
+   Notlandırma üç ayrı, bağımsız dosyalanabilir modüle bölündü (grup
+   ayrımı olmadan, düz liste): Sınav Notları ve Performans Notları
+   modüllerine notlar buradan girilir; Sonuç Karnesi ise bu ikisinden
+   okulNo eşleşmesiyle otomatik derlenen, salt-okunur bir özet — kendi
+   başına düzenlenmez, kaynağı iki modül. Üçü de aynı Sınıf/Ders/Dönem
+   seçimini paylaşır (birinde seçim yapınca diğerinde de hatırlanır).
+   Öğrenci Listesi modülündeki merkezi listeden otomatik doldurulur. */
+let activeNotSinifId = null;
+let activeNotCourseId = null;
+let activeNotDonem = "1";
+function selectNotSinif(id) { activeNotSinifId = id; activeNotCourseId = null; renderMain(); }
+function selectNotCourse(id) { activeNotCourseId = id; renderMain(); }
+function setNotDonem(d) { activeNotDonem = d; renderMain(); }
+function notSecimBarlari(baslik, aciklama) {
+  const siniflar = sinavSiniflari();
+  if (activeNotSinifId && !siniflar.some(c => c.id === activeNotSinifId)) { activeNotSinifId = null; activeNotCourseId = null; }
+  const ustBar = `<div class="card no-print"><h2>${escHtml(baslik)}</h2><p class="small">${aciklama}</p></div>`;
+  const sinifBar = `
+  <div class="card no-print">
+    <div class="small" style="margin-bottom:6px;font-weight:600;">1) Sınıf</div>
+    <div class="row" style="flex-wrap:wrap;">
+      ${siniflar.length ? sekmeDropdown("not-sinif", siniflar.map(c => ({ value: c.id, label: c.name })), activeNotSinifId, "selectNotSinif('{v}')")
+        : '<span class="small">Henüz tanımlı sınıf yok — Ders Programı &gt; Sınıflar bölümünden sınıf ekleyebilirsiniz.</span>'}
+    </div>
+  </div>`;
+  if (!activeNotSinifId) return { html: ustBar + sinifBar, cls: null, course: null, done: false };
+
+  const cls = classById(activeNotSinifId);
+  const dersler = cls ? coursesForClass(cls) : [];
+  if (activeNotCourseId && !dersler.some(c => c.id === activeNotCourseId)) activeNotCourseId = null;
+  const dersBar = `
+  <div class="card no-print">
+    <div class="small" style="margin-bottom:6px;font-weight:600;">2) Ders — ${escHtml(cls ? cls.name : '')}</div>
+    <div class="row" style="flex-wrap:wrap;">
+      ${dersler.length ? sekmeDropdown("not-ders", dersler.map(c => ({ value: c.id, label: c.name })), activeNotCourseId, "selectNotCourse('{v}')")
+        : '<span class="small">Bu sınıf için tanımlı ders yok — Ders Programı &gt; Ders Havuzu bölümünden ders ekleyebilirsiniz.</span>'}
+    </div>
+  </div>`;
+  if (!activeNotCourseId) return { html: ustBar + sinifBar + dersBar, cls, course: null, done: false };
+
+  const donemBar = `
+  <div class="row no-print" style="flex-wrap:wrap;">
+    <button class="btn ${activeNotDonem === '1' ? 'primary' : ''}" onclick="setNotDonem('1')">1. Dönem</button>
+    <button class="btn ${activeNotDonem === '2' ? 'primary' : ''}" onclick="setNotDonem('2')">2. Dönem</button>
+  </div>`;
+  return { html: ustBar + sinifBar + dersBar + donemBar, cls, course: courseById(activeNotCourseId), done: true };
 }
-function notlandirmaOlusturVeyaGetir(sinif, ders, donem) {
-  let n = notlandirmaBul(sinif, ders, donem);
-  if (!n) {
-    n = { id: uid("nl"), sinif, ders, donem, perf1Sayisi: 3, perf2Sayisi: 3, uygulamaSinaviVarMi: true, kayitlar: [] };
-    S.notlandirma.push(n);
-  }
+
+/* -- Sınav Notları -- */
+function sinavNotlariById(id) { return S.sinavNotlari.find(x => x.id === id); }
+function sinavNotlariBul(sinif, ders, donem) { return S.sinavNotlari.find(n => n.sinif === sinif && n.ders === ders && n.donem === donem); }
+function sinavNotlariOlusturVeyaGetir(sinif, ders, donem) {
+  let n = sinavNotlariBul(sinif, ders, donem);
+  if (!n) { n = { id: uid("sn"), sinif, ders, donem, uygulamaSinaviVarMi: true, kayitlar: [] }; S.sinavNotlari.push(n); }
   return n;
 }
-function notlandirmaPerfOrt(arr) {
-  const sayilar = arr.map(v => parseFloat(String(v).replace(",", "."))).filter(v => !isNaN(v));
-  if (!sayilar.length) return "";
-  const ort = sayilar.reduce((a, b) => a + b, 0) / sayilar.length;
-  return Math.round(ort * 10) / 10;
-}
-function notlandirmaSenkronizeEt(entryId) {
-  const n = notlandirmaById(entryId);
+function sinavNotlariSenkronizeEt(entryId) {
+  const n = sinavNotlariById(entryId);
   if (!n) return;
-  const ogrenciler = ogrencilerForSinif(n.sinif);
   let eklenen = 0;
-  ogrenciler.forEach(o => {
+  ogrencilerForSinif(n.sinif).forEach(o => {
     const varMi = n.kayitlar.some(k => k.okulNo === o.okulNo && k.ad === (o.ad + " " + o.soyad).trim());
     if (varMi) return;
-    n.kayitlar.push({
-      id: uid("nlk"), okulNo: o.okulNo, ad: (o.ad + " " + o.soyad).trim(), grup: "1",
-      sinav1: "", sinav2: "", uygulama: "",
-      perf1: new Array(n.perf1Sayisi).fill(""), perf2: new Array(n.perf2Sayisi).fill("")
-    });
+    n.kayitlar.push({ id: uid("snk"), okulNo: o.okulNo, ad: (o.ad + " " + o.soyad).trim(), sinav1: "", sinav2: "", uygulama: "" });
     eklenen++;
   });
-  save();
-  renderMain();
-  if (eklenen) alert(eklenen + " öğrenci Öğrenci Listesi'nden eklendi.");
-  else alert("Eklenecek yeni öğrenci yok — liste zaten güncel.");
+  save(); renderMain();
+  alert(eklenen ? eklenen + " öğrenci Öğrenci Listesi'nden eklendi." : "Eklenecek yeni öğrenci yok — liste zaten güncel.");
 }
-function updateNotlandirmaAlan(entryId, kayitId, field, value) {
-  const n = notlandirmaById(entryId);
+function updateSinavNotuAlan(entryId, kayitId, field, value) {
+  const n = sinavNotlariById(entryId);
   const k = n && n.kayitlar.find(x => x.id === kayitId);
   if (!k) return;
   k[field] = value;
   save();
 }
-function updateNotlandirmaPerf(entryId, kayitId, hangi, idx, value) {
-  const n = notlandirmaById(entryId);
-  const k = n && n.kayitlar.find(x => x.id === kayitId);
-  if (!k) return;
-  k[hangi][idx] = value;
-  save();
-  renderMain();
-}
-function addNotlandirmaKayitManuel(entryId) {
-  const n = notlandirmaById(entryId);
+function addSinavNotuKayitManuel(entryId) {
+  const n = sinavNotlariById(entryId);
   if (!n) return;
-  const sonGrup = n.kayitlar.length ? n.kayitlar[n.kayitlar.length - 1].grup : "1";
-  n.kayitlar.push({ id: uid("nlk"), okulNo: "", ad: "", grup: sonGrup, sinav1: "", sinav2: "", uygulama: "", perf1: new Array(n.perf1Sayisi).fill(""), perf2: new Array(n.perf2Sayisi).fill("") });
-  save();
-  renderMain();
+  n.kayitlar.push({ id: uid("snk"), okulNo: "", ad: "", sinav1: "", sinav2: "", uygulama: "" });
+  save(); renderMain();
 }
-function removeNotlandirmaKayit(entryId, kayitId) {
-  const n = notlandirmaById(entryId);
+function removeSinavNotuKayit(entryId, kayitId) {
+  const n = sinavNotlariById(entryId);
   if (!n) return;
   n.kayitlar = n.kayitlar.filter(k => k.id !== kayitId);
-  save();
-  renderMain();
+  save(); renderMain();
 }
-function deleteNotlandirma(entryId) {
-  if (!confirm("Bu notlandırma çizelgesi silinsin mi? Bu işlem geri alınamaz.")) return;
-  S.notlandirma = S.notlandirma.filter(n => n.id !== entryId);
-  save();
-  renderMain();
+function deleteSinavNotlari(entryId) {
+  if (!confirm("Bu sınav notları çizelgesi silinsin mi? Bu işlem geri alınamaz.")) return;
+  S.sinavNotlari = S.sinavNotlari.filter(n => n.id !== entryId);
+  save(); renderMain();
 }
-function setNotlandirmaAyar(entryId, field, value) {
-  const n = notlandirmaById(entryId);
+function setSinavNotlariUygulama(entryId, value) {
+  const n = sinavNotlariById(entryId);
   if (!n) return;
-  if (field === "uygulamaSinaviVarMi") {
-    n.uygulamaSinaviVarMi = value;
-  } else {
-    const sayi = Math.max(1, Math.min(6, parseInt(value, 10) || 1));
-    n[field] = sayi;
-    const hangi = field === "perf1Sayisi" ? "perf1" : "perf2";
-    n.kayitlar.forEach(k => {
-      while (k[hangi].length < sayi) k[hangi].push("");
-      k[hangi] = k[hangi].slice(0, sayi);
-    });
-  }
-  save();
-  renderMain();
+  n.uygulamaSinaviVarMi = value;
+  save(); renderMain();
 }
-function selectNotlandirmaSinif(id) { activeNotlandirmaSinifId = id; activeNotlandirmaCourseId = null; renderMain(); }
-function selectNotlandirmaCourse(id) { activeNotlandirmaCourseId = id; renderMain(); }
-function setNotlandirmaDonem(d) { activeNotlandirmaDonem = d; renderMain(); }
-function renderNotlandirmaDetay(n) {
-  const gruplar = [...new Set(n.kayitlar.map(k => k.grup))].sort((a, b) => a.localeCompare(b, "tr", { numeric: true }));
+function renderSinavNotlariDetay(n) {
   let siraNo = 0;
-  const perfBaslik = (etiket, sayi) => new Array(sayi).fill(0).map((_, i) => `<th style="width:34px;">${i + 1}</th>`).join("") + `<th style="width:44px;">Ort.</th>`;
-  const govde = gruplar.map(grup => {
-    const satirlar = n.kayitlar.filter(k => k.grup === grup).map(k => {
-      siraNo++;
-      const perf1Cells = k.perf1.map((v, i) => `<td><input class="no-print" type="text" value="${escHtml(v)}" style="width:32px;text-align:center;" onchange="updateNotlandirmaPerf('${n.id}','${k.id}','perf1',${i},this.value)"><span class="print-only-inline">${escHtml(v)}</span></td>`).join("");
-      const perf2Cells = k.perf2.map((v, i) => `<td><input class="no-print" type="text" value="${escHtml(v)}" style="width:32px;text-align:center;" onchange="updateNotlandirmaPerf('${n.id}','${k.id}','perf2',${i},this.value)"><span class="print-only-inline">${escHtml(v)}</span></td>`).join("");
-      return `<tr>
-        <td>${siraNo}</td>
-        <td><input class="no-print" type="text" value="${escHtml(k.okulNo)}" style="width:56px;" onchange="updateNotlandirmaAlan('${n.id}','${k.id}','okulNo',this.value)"><span class="print-only-inline">${escHtml(k.okulNo)}</span></td>
-        <td><input class="no-print" type="text" value="${escHtml(k.ad)}" style="width:150px;" onchange="updateNotlandirmaAlan('${n.id}','${k.id}','ad',this.value)"><span class="print-only-inline">${escHtml(k.ad)}</span></td>
-        <td><input class="no-print" type="text" value="${escHtml(k.sinav1)}" style="width:40px;text-align:center;" onchange="updateNotlandirmaAlan('${n.id}','${k.id}','sinav1',this.value)"><span class="print-only-inline">${escHtml(k.sinav1)}</span></td>
-        <td><input class="no-print" type="text" value="${escHtml(k.sinav2)}" style="width:40px;text-align:center;" onchange="updateNotlandirmaAlan('${n.id}','${k.id}','sinav2',this.value)"><span class="print-only-inline">${escHtml(k.sinav2)}</span></td>
-        ${n.uygulamaSinaviVarMi ? `<td><input class="no-print" type="text" value="${escHtml(k.uygulama)}" style="width:40px;text-align:center;" onchange="updateNotlandirmaAlan('${n.id}','${k.id}','uygulama',this.value)"><span class="print-only-inline">${escHtml(k.uygulama)}</span></td>` : ""}
-        ${perf1Cells}<td><b>${notlandirmaPerfOrt(k.perf1)}</b></td>
-        ${perf2Cells}<td><b>${notlandirmaPerfOrt(k.perf2)}</b></td>
-        <td class="no-print"><input type="text" value="${escHtml(k.grup)}" style="width:34px;text-align:center;" title="Grup" onchange="updateNotlandirmaAlan('${n.id}','${k.id}','grup',this.value); renderMain();"></td>
-        <td class="no-print"><button class="btn danger" onclick="removeNotlandirmaKayit('${n.id}','${k.id}')">Sil</button></td>
-      </tr>`;
-    }).join("");
-    const kolonSayisi = 5 + (n.uygulamaSinaviVarMi ? 1 : 0) + (n.perf1Sayisi + 1) + (n.perf2Sayisi + 1) + 2;
-    return `<tr><td colspan="${kolonSayisi}" style="font-weight:700;background:var(--panel-2);">${escHtml(grup)}. GRUP</td></tr>${satirlar}`;
+  const satirlar = n.kayitlar.map(k => {
+    siraNo++;
+    return `<tr>
+      <td>${siraNo}</td>
+      <td><input class="no-print" type="text" value="${escHtml(k.okulNo)}" style="width:56px;" onchange="updateSinavNotuAlan('${n.id}','${k.id}','okulNo',this.value)"><span class="print-only-inline">${escHtml(k.okulNo)}</span></td>
+      <td><input class="no-print" type="text" value="${escHtml(k.ad)}" style="width:180px;" onchange="updateSinavNotuAlan('${n.id}','${k.id}','ad',this.value)"><span class="print-only-inline">${escHtml(k.ad)}</span></td>
+      <td><input class="no-print" type="text" value="${escHtml(k.sinav1)}" style="width:50px;text-align:center;" onchange="updateSinavNotuAlan('${n.id}','${k.id}','sinav1',this.value)"><span class="print-only-inline">${escHtml(k.sinav1)}</span></td>
+      <td><input class="no-print" type="text" value="${escHtml(k.sinav2)}" style="width:50px;text-align:center;" onchange="updateSinavNotuAlan('${n.id}','${k.id}','sinav2',this.value)"><span class="print-only-inline">${escHtml(k.sinav2)}</span></td>
+      ${n.uygulamaSinaviVarMi ? `<td><input class="no-print" type="text" value="${escHtml(k.uygulama)}" style="width:50px;text-align:center;" onchange="updateSinavNotuAlan('${n.id}','${k.id}','uygulama',this.value)"><span class="print-only-inline">${escHtml(k.uygulama)}</span></td>` : ""}
+      <td class="no-print"><button class="btn danger" onclick="removeSinavNotuKayit('${n.id}','${k.id}')">Sil</button></td>
+    </tr>`;
   }).join("");
   return `
   <div class="card no-print">
     <div class="row small" style="flex-wrap:wrap;gap:14px;align-items:center;">
-      <span><b>Sınıf:</b> ${escHtml(n.sinif)}</span>
-      <span><b>Ders:</b> ${escHtml(n.ders)}</span>
-      <span><b>Dönem:</b> ${n.donem}. Dönem</span>
-      <label class="small">Performans Notu Girişi Sayısı (1. yarı): <input type="number" min="1" max="6" value="${n.perf1Sayisi}" style="width:44px;" onchange="setNotlandirmaAyar('${n.id}','perf1Sayisi',this.value)"></label>
-      <label class="small">(2. yarı): <input type="number" min="1" max="6" value="${n.perf2Sayisi}" style="width:44px;" onchange="setNotlandirmaAyar('${n.id}','perf2Sayisi',this.value)"></label>
-      <label class="small"><input type="checkbox" ${n.uygulamaSinaviVarMi ? "checked" : ""} onchange="setNotlandirmaAyar('${n.id}','uygulamaSinaviVarMi',this.checked)"> Uygulama Sınavı sütunu olsun</label>
+      <span><b>Sınıf:</b> ${escHtml(n.sinif)}</span><span><b>Ders:</b> ${escHtml(n.ders)}</span><span><b>Dönem:</b> ${n.donem}. Dönem</span>
+      <label class="small"><input type="checkbox" ${n.uygulamaSinaviVarMi ? "checked" : ""} onchange="setSinavNotlariUygulama('${n.id}',this.checked)"> Uygulama Sınavı sütunu olsun</label>
     </div>
     <div class="row" style="margin-top:8px;">
-      <button class="btn" onclick="notlandirmaSenkronizeEt('${n.id}')" title="Öğrenci Listesi'ndeki güncel sınıf listesiyle eşitle">Öğrenci Listesinden Senkronize Et</button>
-      <button class="btn" onclick="addNotlandirmaKayitManuel('${n.id}')">Satır Ekle</button>
-      <button class="btn danger" onclick="deleteNotlandirma('${n.id}')">Bu Çizelgeyi Sil</button>
+      <button class="btn" onclick="sinavNotlariSenkronizeEt('${n.id}')" title="Öğrenci Listesi'ndeki güncel sınıf listesiyle eşitle">Öğrenci Listesinden Senkronize Et</button>
+      <button class="btn" onclick="addSinavNotuKayitManuel('${n.id}')">Satır Ekle</button>
+      <button class="btn danger" onclick="deleteSinavNotlari('${n.id}')">Bu Çizelgeyi Sil</button>
     </div>
   </div>
   <div style="text-align:center;margin-bottom:6px;">
     <div style="font-weight:700;">${escHtml((S.kurumBilgileri.okulAdi || "").toLocaleUpperCase("tr-TR"))}</div>
-    <div style="font-weight:700;">${escHtml((n.ders || "").toLocaleUpperCase("tr-TR"))} DERSİ — ${escHtml(n.sinif)} — ${n.donem}. DÖNEM</div>
+    <div style="font-weight:700;">${escHtml((n.ders || "").toLocaleUpperCase("tr-TR"))} DERSİ — ${escHtml(n.sinif)} — ${n.donem}. DÖNEM — SINAV NOTLARI</div>
+  </div>
+  <table style="font-size:11px;">
+    <thead><tr><th style="width:34px;">Sıra<br>No</th><th style="width:56px;">Okul<br>No</th><th>Adı ve Soyadı</th><th style="width:50px;">1.<br>Sınav</th><th style="width:50px;">2.<br>Sınav</th>${n.uygulamaSinaviVarMi ? '<th style="width:56px;">Uygulama<br>Sınavı</th>' : ""}<th class="no-print"></th></tr></thead>
+    <tbody>${satirlar || `<tr><td colspan="7" class="small">Henüz öğrenci yok — "Öğrenci Listesinden Senkronize Et" ile Öğrenci Listesi modülündeki sınıf listesini buraya getirin.</td></tr>`}</tbody>
+  </table>`;
+}
+function viewSinavNotlari() {
+  const bar = notSecimBarlari("Sınav Notları", "Dersin 1./2. Sınav ve Uygulama Sınavı notlarını buradan girin. Öğrenci listesi Öğrenci Listesi modülünden otomatik gelir. Sonuç Karnesi bu notları otomatik çeker.");
+  if (!bar.done) return bar.html;
+  const n = sinavNotlariOlusturVeyaGetir(bar.cls.name, bar.course.name, activeNotDonem);
+  const dosyaAdi = "Sınav Notları - " + bar.course.name + " - " + bar.cls.name + " - " + n.donem + ". Dönem";
+  return `${bar.html}
+  <div class="card no-print">${belgeAracCubugu(dosyaAdi)}</div>
+  <div class="print-area"><div class="card" style="overflow-x:auto;">${renderSinavNotlariDetay(n)}</div></div>`;
+}
+
+/* -- Performans Notları -- */
+function performansNotlariById(id) { return S.performansNotlari.find(x => x.id === id); }
+function performansNotlariBul(sinif, ders, donem) { return S.performansNotlari.find(n => n.sinif === sinif && n.ders === ders && n.donem === donem); }
+function performansNotlariOlusturVeyaGetir(sinif, ders, donem) {
+  let n = performansNotlariBul(sinif, ders, donem);
+  if (!n) { n = { id: uid("pn"), sinif, ders, donem, perf1Sayisi: 3, perf2Sayisi: 3, kayitlar: [] }; S.performansNotlari.push(n); }
+  return n;
+}
+function performansOrt(arr) {
+  const sayilar = arr.map(v => parseFloat(String(v).replace(",", "."))).filter(v => !isNaN(v));
+  if (!sayilar.length) return "";
+  return Math.round((sayilar.reduce((a, b) => a + b, 0) / sayilar.length) * 10) / 10;
+}
+function performansNotlariSenkronizeEt(entryId) {
+  const n = performansNotlariById(entryId);
+  if (!n) return;
+  let eklenen = 0;
+  ogrencilerForSinif(n.sinif).forEach(o => {
+    const varMi = n.kayitlar.some(k => k.okulNo === o.okulNo && k.ad === (o.ad + " " + o.soyad).trim());
+    if (varMi) return;
+    n.kayitlar.push({ id: uid("pnk"), okulNo: o.okulNo, ad: (o.ad + " " + o.soyad).trim(), perf1: new Array(n.perf1Sayisi).fill(""), perf2: new Array(n.perf2Sayisi).fill("") });
+    eklenen++;
+  });
+  save(); renderMain();
+  alert(eklenen ? eklenen + " öğrenci Öğrenci Listesi'nden eklendi." : "Eklenecek yeni öğrenci yok — liste zaten güncel.");
+}
+function updatePerformansAlan(entryId, kayitId, field, value) {
+  const n = performansNotlariById(entryId);
+  const k = n && n.kayitlar.find(x => x.id === kayitId);
+  if (!k) return;
+  k[field] = value;
+  save();
+}
+function updatePerformansPerf(entryId, kayitId, hangi, idx, value) {
+  const n = performansNotlariById(entryId);
+  const k = n && n.kayitlar.find(x => x.id === kayitId);
+  if (!k) return;
+  k[hangi][idx] = value;
+  save(); renderMain();
+}
+function addPerformansKayitManuel(entryId) {
+  const n = performansNotlariById(entryId);
+  if (!n) return;
+  n.kayitlar.push({ id: uid("pnk"), okulNo: "", ad: "", perf1: new Array(n.perf1Sayisi).fill(""), perf2: new Array(n.perf2Sayisi).fill("") });
+  save(); renderMain();
+}
+function removePerformansKayit(entryId, kayitId) {
+  const n = performansNotlariById(entryId);
+  if (!n) return;
+  n.kayitlar = n.kayitlar.filter(k => k.id !== kayitId);
+  save(); renderMain();
+}
+function deletePerformansNotlari(entryId) {
+  if (!confirm("Bu performans notları çizelgesi silinsin mi? Bu işlem geri alınamaz.")) return;
+  S.performansNotlari = S.performansNotlari.filter(n => n.id !== entryId);
+  save(); renderMain();
+}
+function setPerformansSayisi(entryId, field, value) {
+  const n = performansNotlariById(entryId);
+  if (!n) return;
+  const sayi = Math.max(1, Math.min(6, parseInt(value, 10) || 1));
+  n[field] = sayi;
+  const hangi = field === "perf1Sayisi" ? "perf1" : "perf2";
+  n.kayitlar.forEach(k => {
+    while (k[hangi].length < sayi) k[hangi].push("");
+    k[hangi] = k[hangi].slice(0, sayi);
+  });
+  save(); renderMain();
+}
+function renderPerformansNotlariDetay(n) {
+  const perfBaslik = sayi => new Array(sayi).fill(0).map((_, i) => `<th style="width:30px;">${i + 1}</th>`).join("") + `<th style="width:56px;">Ort. /<br>Girildi</th>`;
+  let siraNo = 0;
+  const satirlar = n.kayitlar.map(k => {
+    siraNo++;
+    const perf1Dolu = k.perf1.filter(v => v !== "").length;
+    const perf2Dolu = k.perf2.filter(v => v !== "").length;
+    const perf1Cells = k.perf1.map((v, i) => `<td><input class="no-print" type="text" value="${escHtml(v)}" style="width:28px;text-align:center;" onchange="updatePerformansPerf('${n.id}','${k.id}','perf1',${i},this.value)"><span class="print-only-inline">${escHtml(v)}</span></td>`).join("");
+    const perf2Cells = k.perf2.map((v, i) => `<td><input class="no-print" type="text" value="${escHtml(v)}" style="width:28px;text-align:center;" onchange="updatePerformansPerf('${n.id}','${k.id}','perf2',${i},this.value)"><span class="print-only-inline">${escHtml(v)}</span></td>`).join("");
+    return `<tr>
+      <td>${siraNo}</td>
+      <td><input class="no-print" type="text" value="${escHtml(k.okulNo)}" style="width:56px;" onchange="updatePerformansAlan('${n.id}','${k.id}','okulNo',this.value)"><span class="print-only-inline">${escHtml(k.okulNo)}</span></td>
+      <td><input class="no-print" type="text" value="${escHtml(k.ad)}" style="width:160px;" onchange="updatePerformansAlan('${n.id}','${k.id}','ad',this.value)"><span class="print-only-inline">${escHtml(k.ad)}</span></td>
+      ${perf1Cells}<td><b>${performansOrt(k.perf1)}</b><div class="small">${perf1Dolu}/${n.perf1Sayisi} girildi</div></td>
+      ${perf2Cells}<td><b>${performansOrt(k.perf2)}</b><div class="small">${perf2Dolu}/${n.perf2Sayisi} girildi</div></td>
+      <td class="no-print"><button class="btn danger" onclick="removePerformansKayit('${n.id}','${k.id}')">Sil</button></td>
+    </tr>`;
+  }).join("");
+  const kolonSayisi = 3 + (n.perf1Sayisi + 1) + (n.perf2Sayisi + 1) + 1;
+  return `
+  <div class="card no-print">
+    <div class="row small" style="flex-wrap:wrap;gap:14px;align-items:center;">
+      <span><b>Sınıf:</b> ${escHtml(n.sinif)}</span><span><b>Ders:</b> ${escHtml(n.ders)}</span><span><b>Dönem:</b> ${n.donem}. Dönem</span>
+      <label class="small">1. Performans girişi sayısı: <input type="number" min="1" max="6" value="${n.perf1Sayisi}" style="width:44px;" onchange="setPerformansSayisi('${n.id}','perf1Sayisi',this.value)"></label>
+      <label class="small">2. Performans girişi sayısı: <input type="number" min="1" max="6" value="${n.perf2Sayisi}" style="width:44px;" onchange="setPerformansSayisi('${n.id}','perf2Sayisi',this.value)"></label>
+    </div>
+    <div class="row" style="margin-top:8px;">
+      <button class="btn" onclick="performansNotlariSenkronizeEt('${n.id}')" title="Öğrenci Listesi'ndeki güncel sınıf listesiyle eşitle">Öğrenci Listesinden Senkronize Et</button>
+      <button class="btn" onclick="addPerformansKayitManuel('${n.id}')">Satır Ekle</button>
+      <button class="btn danger" onclick="deletePerformansNotlari('${n.id}')">Bu Çizelgeyi Sil</button>
+    </div>
+  </div>
+  <div style="text-align:center;margin-bottom:6px;">
+    <div style="font-weight:700;">${escHtml((S.kurumBilgileri.okulAdi || "").toLocaleUpperCase("tr-TR"))}</div>
+    <div style="font-weight:700;">${escHtml((n.ders || "").toLocaleUpperCase("tr-TR"))} DERSİ — ${escHtml(n.sinif)} — ${n.donem}. DÖNEM — PERFORMANS NOTLARI</div>
   </div>
   <table style="font-size:11px;">
     <thead>
@@ -2752,74 +2980,80 @@ function renderNotlandirmaDetay(n) {
         <th rowspan="2" style="width:34px;">Sıra<br>No</th>
         <th rowspan="2" style="width:56px;">Okul<br>No</th>
         <th rowspan="2">Adı ve Soyadı</th>
-        <th rowspan="2" style="width:40px;">1.<br>Sınav</th>
-        <th rowspan="2" style="width:40px;">2.<br>Sınav</th>
-        ${n.uygulamaSinaviVarMi ? `<th rowspan="2" style="width:40px;">Uygulama<br>Sınavı</th>` : ""}
         <th colspan="${n.perf1Sayisi + 1}">1. Performans Notu</th>
         <th colspan="${n.perf2Sayisi + 1}">2. Performans Notu</th>
-        <th class="no-print" rowspan="2" style="width:34px;">Grup</th>
         <th class="no-print" rowspan="2"></th>
       </tr>
-      <tr>${perfBaslik("1", n.perf1Sayisi)}${perfBaslik("2", n.perf2Sayisi)}</tr>
+      <tr>${perfBaslik(n.perf1Sayisi)}${perfBaslik(n.perf2Sayisi)}</tr>
     </thead>
-    <tbody>${govde || `<tr><td colspan="20" class="small">Henüz öğrenci yok — "Öğrenci Listesinden Senkronize Et" ile Öğrenci Listesi modülündeki sınıf listesini buraya getirin.</td></tr>`}</tbody>
+    <tbody>${satirlar || `<tr><td colspan="${kolonSayisi}" class="small">Henüz öğrenci yok — "Öğrenci Listesinden Senkronize Et" ile Öğrenci Listesi modülündeki sınıf listesini buraya getirin.</td></tr>`}</tbody>
   </table>`;
 }
-function viewNotlandirma() {
-  const siniflar = sinavSiniflari();
-  if (activeNotlandirmaSinifId && !siniflar.some(c => c.id === activeNotlandirmaSinifId)) { activeNotlandirmaSinifId = null; activeNotlandirmaCourseId = null; }
-
-  const ustBar = `
-  <div class="card no-print">
-    <h2>Notlandırma (Not Girişi Çizelgesi)</h2>
-    <p class="small">Dönem sonu not girişi öncesi kullanılan resmi çizelge — sınav notları ve performans notları bir arada. Önce sınıf, sonra ders, sonra dönem seçin; öğrenci listesi Öğrenci Listesi modülünden otomatik gelir.</p>
-  </div>`;
-
-  const sinifBar = `
-  <div class="card no-print">
-    <div class="small" style="margin-bottom:6px;font-weight:600;">1) Sınıf</div>
-    <div class="row" style="flex-wrap:wrap;">
-      ${siniflar.length ? sekmeDropdown("notlandirma-sinif", siniflar.map(c => ({ value: c.id, label: c.name })), activeNotlandirmaSinifId, "selectNotlandirmaSinif('{v}')")
-        : '<span class="small">Henüz tanımlı sınıf yok — Ders Programı &gt; Sınıflar bölümünden sınıf ekleyebilirsiniz.</span>'}
-    </div>
-  </div>`;
-
-  if (!activeNotlandirmaSinifId) return ustBar + sinifBar;
-
-  const cls = classById(activeNotlandirmaSinifId);
-  const dersler = cls ? coursesForClass(cls) : [];
-  if (activeNotlandirmaCourseId && !dersler.some(c => c.id === activeNotlandirmaCourseId)) activeNotlandirmaCourseId = null;
-
-  const dersBar = `
-  <div class="card no-print">
-    <div class="small" style="margin-bottom:6px;font-weight:600;">2) Ders — ${escHtml(cls ? cls.name : '')}</div>
-    <div class="row" style="flex-wrap:wrap;">
-      ${dersler.length ? sekmeDropdown("notlandirma-ders", dersler.map(c => ({ value: c.id, label: c.name })), activeNotlandirmaCourseId, "selectNotlandirmaCourse('{v}')")
-        : '<span class="small">Bu sınıf için tanımlı ders yok — Ders Programı &gt; Ders Havuzu bölümünden ders ekleyebilirsiniz.</span>'}
-    </div>
-  </div>`;
-
-  if (!activeNotlandirmaCourseId) return ustBar + sinifBar + dersBar;
-
-  const donemBar = `
-  <div class="row no-print" style="flex-wrap:wrap;">
-    <button class="btn ${activeNotlandirmaDonem === '1' ? 'primary' : ''}" onclick="setNotlandirmaDonem('1')">1. Dönem</button>
-    <button class="btn ${activeNotlandirmaDonem === '2' ? 'primary' : ''}" onclick="setNotlandirmaDonem('2')">2. Dönem</button>
-  </div>`;
-
-  const course = courseById(activeNotlandirmaCourseId);
-  const n = notlandirmaOlusturVeyaGetir(cls.name, course.name, activeNotlandirmaDonem);
-  const dosyaAdi = "Notlandırma - " + course.name + " - " + cls.name + " - " + n.donem + ". Dönem";
-
-  return `
-  ${ustBar}
-  ${sinifBar}
-  ${dersBar}
-  ${donemBar}
+function viewPerformansNotlari() {
+  const bar = notSecimBarlari("Performans Notları", "Dersin performans notlarını (1./2. Performans, girilecek not sayısı ayarlanabilir) buradan girin — ortalama otomatik hesaplanır, kaç notun girildiği her satırda görünür. Sonuç Karnesi bu notları otomatik çeker.");
+  if (!bar.done) return bar.html;
+  const n = performansNotlariOlusturVeyaGetir(bar.cls.name, bar.course.name, activeNotDonem);
+  const dosyaAdi = "Performans Notları - " + bar.course.name + " - " + bar.cls.name + " - " + n.donem + ". Dönem";
+  return `${bar.html}
   <div class="card no-print">${belgeAracCubugu(dosyaAdi)}</div>
-  <div class="print-area">
-    <div class="card" style="overflow-x:auto;">${renderNotlandirmaDetay(n)}</div>
-  </div>`;
+  <div class="print-area"><div class="card" style="overflow-x:auto;">${renderPerformansNotlariDetay(n)}</div></div>`;
+}
+
+/* -- Sonuç Karnesi (salt okunur, Sınav Notları + Performans Notları'ndan derlenir) -- */
+function karneGenelOrtalama(o) {
+  const degerler = [o.sinav1, o.sinav2, o.uygulamaVarMi ? o.uygulama : undefined, o.perf1Ort, o.perf2Ort]
+    .map(v => parseFloat(String(v).replace(",", ".")))
+    .filter(v => !isNaN(v));
+  if (!degerler.length) return "";
+  return Math.round((degerler.reduce((a, b) => a + b, 0) / degerler.length) * 10) / 10;
+}
+function renderSonucKarnesi(bar, sn, pn) {
+  if (!sn && !pn) return `<p class="small" style="text-align:center;padding:24px 10px;">Bu sınıf/ders/dönem için henüz Sınav Notları ya da Performans Notları girilmemiş. Önce o modüllerden not girin, karne burada otomatik oluşsun.</p>`;
+  const birlesik = {};
+  (sn ? sn.kayitlar : []).forEach(k => {
+    const key = k.okulNo || k.ad;
+    birlesik[key] = Object.assign({ okulNo: k.okulNo, ad: k.ad }, birlesik[key] || {}, { sinav1: k.sinav1, sinav2: k.sinav2, uygulama: k.uygulama, uygulamaVarMi: sn.uygulamaSinaviVarMi });
+  });
+  (pn ? pn.kayitlar : []).forEach(k => {
+    const key = k.okulNo || k.ad;
+    birlesik[key] = Object.assign({ okulNo: k.okulNo, ad: k.ad }, birlesik[key] || {}, { perf1Ort: performansOrt(k.perf1), perf2Ort: performansOrt(k.perf2) });
+  });
+  const liste = Object.values(birlesik).sort((a, b) => (Number(a.okulNo) || 0) - (Number(b.okulNo) || 0));
+  const uygulamaVarMi = sn ? sn.uygulamaSinaviVarMi : false;
+  let siraNo = 0;
+  const satirlar = liste.map(o => {
+    siraNo++;
+    return `<tr>
+      <td>${siraNo}</td><td>${escHtml(o.okulNo || "")}</td><td>${escHtml(o.ad || "")}</td>
+      <td>${o.sinav1 !== undefined ? escHtml(o.sinav1) : '<span class="small">—</span>'}</td>
+      <td>${o.sinav2 !== undefined ? escHtml(o.sinav2) : '<span class="small">—</span>'}</td>
+      ${uygulamaVarMi ? `<td>${o.uygulama !== undefined ? escHtml(o.uygulama) : '<span class="small">—</span>'}</td>` : ""}
+      <td>${o.perf1Ort !== undefined ? o.perf1Ort : '<span class="small">—</span>'}</td>
+      <td>${o.perf2Ort !== undefined ? o.perf2Ort : '<span class="small">—</span>'}</td>
+      <td><b>${karneGenelOrtalama(o)}</b></td>
+    </tr>`;
+  }).join("");
+  return `
+  ${(!sn || !pn) ? `<p class="small no-print" style="margin-bottom:10px;">Not: ${!sn ? "Sınav Notları" : "Performans Notları"} bu sınıf/ders/dönem için henüz girilmemiş — ilgili sütunlar boş görünüyor.</p>` : ""}
+  <div style="text-align:center;margin-bottom:6px;">
+    <div style="font-weight:700;">${escHtml((S.kurumBilgileri.okulAdi || "").toLocaleUpperCase("tr-TR"))}</div>
+    <div style="font-weight:700;">${escHtml((bar.course.name || "").toLocaleUpperCase("tr-TR"))} DERSİ — ${escHtml(bar.cls.name)} — ${activeNotDonem}. DÖNEM — SONUÇ KARNESİ</div>
+  </div>
+  <p class="small no-print" style="margin-bottom:8px;">Genel Ortalama, o öğrenci için girilmiş olan tüm notların (sınavlar + performans ortalamaları) basit ortalamasıdır — okulunuzun resmi ağırlıklandırma formülü farklıysa referans olarak kullanıp gerekirse e-Okul'a elle işleyin.</p>
+  <table style="font-size:11px;">
+    <thead><tr><th>Sıra No</th><th>Okul No</th><th>Adı ve Soyadı</th><th>1. Sınav</th><th>2. Sınav</th>${uygulamaVarMi ? "<th>Uygulama Sınavı</th>" : ""}<th>1. Perf. Ort.</th><th>2. Perf. Ort.</th><th>Genel Ortalama</th></tr></thead>
+    <tbody>${satirlar || `<tr><td colspan="9" class="small">Kayıt yok.</td></tr>`}</tbody>
+  </table>`;
+}
+function viewSonucKarnesi() {
+  const bar = notSecimBarlari("Sonuç Karnesi", "Sınav Notları ve Performans Notları modüllerinden okul numarasına göre otomatik derlenen, dosyalanabilir sonuç özeti. <b>Burada düzenleme yapılmaz</b> — notları ilgili modülden girin, karne kendini otomatik günceller.");
+  if (!bar.done) return bar.html;
+  const sn = sinavNotlariBul(bar.cls.name, bar.course.name, activeNotDonem);
+  const pn = performansNotlariBul(bar.cls.name, bar.course.name, activeNotDonem);
+  const dosyaAdi = "Sonuç Karnesi - " + bar.course.name + " - " + bar.cls.name + " - " + activeNotDonem + ". Dönem";
+  return `${bar.html}
+  <div class="card no-print">${belgeAracCubugu(dosyaAdi)}</div>
+  <div class="print-area"><div class="card" style="overflow-x:auto;">${renderSonucKarnesi(bar, sn, pn)}</div></div>`;
 }
 
 /* ---- Kalfalık/Ustalık Sınavı ve Beceri Sınavı (ortak hesaplama motoru) ----

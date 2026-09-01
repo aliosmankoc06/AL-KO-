@@ -24,7 +24,9 @@ const ICONS = {
   clipboardCheck: '<rect x="4.5" y="3.5" width="15" height="18" rx="2"/><path d="M9 2.5h6a1 1 0 0 1 1 1V6H8V3.5a1 1 0 0 1 1-1Z"/><path d="m8.5 13.5 2.2 2.2L15.5 11"/>',
   calendarCheck: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/><path d="m9 15 2 2 4-4.5"/>',
   stack: '<path d="m12 3 9 4.5-9 4.5-9-4.5L12 3Z"/><path d="m3 12 9 4.5 9-4.5"/><path d="m3 16.5 9 4.5 9-4.5"/>',
-  penSquare: '<rect x="3.5" y="3.5" width="17" height="17" rx="2"/><path d="M14.5 7.5 17 10l-6 6H8v-3Z"/>'
+  penSquare: '<rect x="3.5" y="3.5" width="17" height="17" rx="2"/><path d="M14.5 7.5 17 10l-6 6H8v-3Z"/>',
+  percent: '<path d="M5 19 19 5"/><circle cx="7" cy="7" r="2.5"/><circle cx="17" cy="17" r="2.5"/>',
+  badge: '<circle cx="12" cy="9" r="6"/><path d="m8 14-1.5 7L12 18l5.5 3L16 14"/>'
 };
 function icon(name) {
   const body = ICONS[name] || "";

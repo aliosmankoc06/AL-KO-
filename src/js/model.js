@@ -136,7 +136,8 @@ function defaultState() {
     beceriSinavi: { kayitlar: [] },
     ogrenciListesi: [],
     seflikRaporlari: [],
-    notlandirma: [],
+    sinavNotlari: [],
+    performansNotlari: [],
     donemArsivi: [],
     kurumBilgileri: {
       okulAdi: "Soma Mesleki ve Teknik Anadolu Lisesi",
@@ -181,7 +182,8 @@ function emptyState() {
     beceriSinavi: { kayitlar: [] },
     ogrenciListesi: [],
     seflikRaporlari: [],
-    notlandirma: [],
+    sinavNotlari: [],
+    performansNotlari: [],
     donemArsivi: [],
     kurumBilgileri: {
       okulAdi: "Soma Mesleki ve Teknik Anadolu Lisesi",
@@ -201,8 +203,18 @@ function normalizeState(s) {
   if (!s.teacherBlockedSlots) s.teacherBlockedSlots = {};
   if (!s.coordAssignments) s.coordAssignments = [];
   if (!s.isletmeler) s.isletmeler = [];
+  s.isletmeler.forEach(isl => {
+    if (!isl.kontenjanlar || typeof isl.kontenjanlar !== "object") isl.kontenjanlar = {};
+    if (typeof isl.talep !== "string") isl.talep = "";
+  });
   if (!s.isletmeTeacherAssign) s.isletmeTeacherAssign = {};
   if (!Array.isArray(s.students)) s.students = [];
+  s.students.forEach(st => {
+    if (typeof st.not !== "string") st.not = st.not !== undefined && st.not !== null ? String(st.not) : "";
+    if (typeof st.tercihler !== "string") st.tercihler = "";
+    if (typeof st.istemiyor !== "string") st.istemiyor = "";
+    if (typeof st.yerlestirmeSirasi !== "string") st.yerlestirmeSirasi = "";
+  });
   if (typeof s.eskiSistemKaldirildi !== "boolean") s.eskiSistemKaldirildi = false;
   if (s.akademikTakvim === undefined) s.akademikTakvim = null;
   if (s.akademikTakvim && (!s.akademikTakvim.sinavTarihleri || typeof s.akademikTakvim.sinavTarihleri !== "object")) {
@@ -354,24 +366,36 @@ function normalizeState(s) {
       if (typeof k.isler !== "string") k.isler = "";
     });
   });
-  if (!Array.isArray(s.notlandirma)) s.notlandirma = [];
-  s.notlandirma.forEach(n => {
-    if (!n.id) n.id = uid("nl");
+  if (!Array.isArray(s.sinavNotlari)) s.sinavNotlari = [];
+  s.sinavNotlari.forEach(n => {
+    if (!n.id) n.id = uid("sn");
+    if (typeof n.sinif !== "string") n.sinif = "";
+    if (typeof n.ders !== "string") n.ders = "";
+    if (n.donem !== "1" && n.donem !== "2") n.donem = "1";
+    if (typeof n.uygulamaSinaviVarMi !== "boolean") n.uygulamaSinaviVarMi = true;
+    if (!Array.isArray(n.kayitlar)) n.kayitlar = [];
+    n.kayitlar.forEach(k => {
+      if (!k.id) k.id = uid("snk");
+      if (typeof k.okulNo !== "string") k.okulNo = String(k.okulNo || "");
+      if (typeof k.ad !== "string") k.ad = "";
+      if (typeof k.sinav1 !== "string") k.sinav1 = String(k.sinav1 !== undefined ? k.sinav1 : "");
+      if (typeof k.sinav2 !== "string") k.sinav2 = String(k.sinav2 !== undefined ? k.sinav2 : "");
+      if (typeof k.uygulama !== "string") k.uygulama = String(k.uygulama !== undefined ? k.uygulama : "");
+    });
+  });
+  if (!Array.isArray(s.performansNotlari)) s.performansNotlari = [];
+  s.performansNotlari.forEach(n => {
+    if (!n.id) n.id = uid("pn");
     if (typeof n.sinif !== "string") n.sinif = "";
     if (typeof n.ders !== "string") n.ders = "";
     if (n.donem !== "1" && n.donem !== "2") n.donem = "1";
     if (typeof n.perf1Sayisi !== "number") n.perf1Sayisi = 3;
     if (typeof n.perf2Sayisi !== "number") n.perf2Sayisi = 3;
-    if (typeof n.uygulamaSinaviVarMi !== "boolean") n.uygulamaSinaviVarMi = true;
     if (!Array.isArray(n.kayitlar)) n.kayitlar = [];
     n.kayitlar.forEach(k => {
-      if (!k.id) k.id = uid("nlk");
+      if (!k.id) k.id = uid("pnk");
       if (typeof k.okulNo !== "string") k.okulNo = String(k.okulNo || "");
       if (typeof k.ad !== "string") k.ad = "";
-      if (typeof k.grup !== "string" || !k.grup) k.grup = "1";
-      if (typeof k.sinav1 !== "string") k.sinav1 = String(k.sinav1 !== undefined ? k.sinav1 : "");
-      if (typeof k.sinav2 !== "string") k.sinav2 = String(k.sinav2 !== undefined ? k.sinav2 : "");
-      if (typeof k.uygulama !== "string") k.uygulama = String(k.uygulama !== undefined ? k.uygulama : "");
       if (!Array.isArray(k.perf1)) k.perf1 = [];
       if (!Array.isArray(k.perf2)) k.perf2 = [];
       while (k.perf1.length < n.perf1Sayisi) k.perf1.push("");
