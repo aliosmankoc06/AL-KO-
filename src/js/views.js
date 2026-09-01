@@ -1672,7 +1672,7 @@ function viewNormKadro() {
       </tr>`;
     }).join("");
     return `
-    <div style="margin-bottom:14px;">
+    <div class="card">
       <div class="row no-print" style="align-items:center;margin-top:0;">
         <h3 style="margin:0;">${escHtml(cls.name)} Sınıfı</h3>
         <label class="small" style="margin-left:10px;">Öğrenci Sayısı:</label>
@@ -1684,7 +1684,7 @@ function viewNormKadro() {
       <table><thead><tr><th>No</th><th>Sınıf</th><th>Ders Adı</th><th>Haftalık Saat</th><th>Grup Sayısı</th><th>Toplam Ders Saati</th></tr></thead>
       <tbody>${rows}</tbody></table>
     </div>`;
-  }).join("") || `<p class="small">Ders Programı → Sınıflar ve Ders Atama'dan sınıflara ders atadıkça burada otomatik listelenecek.</p>`;
+  }).join("") || `<div class="card"><p class="small">Ders Programı → Sınıflar ve Ders Atama'dan sınıflara ders atadıkça burada otomatik listelenecek.</p></div>`;
 
   let koordToplam = 0;
   const koordRows = S.normKadro.koordinatorlukSatirlari.map(r => {
@@ -1729,10 +1729,10 @@ function viewNormKadro() {
   </div>
   <div class="print-area">
     ${belgeYazdirmaBasligi("Norm Kadro Hesabı" + (S.akademikTakvim ? " · " + S.akademikTakvim.ogretimYili : ""))}
-    <div class="card">
-      <h2 class="print-only">AMP Mesleki Alan Dersleri</h2>
-      ${sinifBlocks}
-      <p class="small" style="text-align:right;"><b>AMP Mesleki Alan Dersleri Toplamı: ${ampToplam} saat</b></p>
+    <h2 style="margin-top:0;">AMP Mesleki Alan Dersleri</h2>
+    ${sinifBlocks}
+    <div class="card" style="text-align:right;">
+      <b>AMP Mesleki Alan Dersleri Toplamı: ${ampToplam} saat</b>
     </div>
     <div class="card">
       <h2>Koordinatörlük Dersleri</h2>
