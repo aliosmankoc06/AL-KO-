@@ -17,6 +17,7 @@ const MODULES = [
   { id: "kalfalik-ustalik", label: "Kalfalık / Ustalık Sınavı", icon: "medal" },
   { id: "beceri-sinavi", label: "Beceri Sınavı", icon: "clipboardCheck" },
   { id: "donem-raporlari", label: "Ders Kesim / Yazılı Teslim", icon: "report" },
+  { id: "seflik-raporu", label: "Şeflik Aylık Raporu", icon: "calendarCheck" },
   { id: "sinav-havuzu", label: "Sınav Havuzu", icon: "question" },
   { id: "ayarlar", label: "Ayarlar", icon: "settings" }
 ];
@@ -80,6 +81,7 @@ function renderMain() {
   if (activeModule === "kalfalik-ustalik") { el.innerHTML = viewKalfalikUstalik(); return; }
   if (activeModule === "beceri-sinavi") { el.innerHTML = viewBeceriSinavi(); return; }
   if (activeModule === "donem-raporlari") { el.innerHTML = viewDonemRaporlari(); return; }
+  if (activeModule === "seflik-raporu") { el.innerHTML = viewSeflikRaporlari(); return; }
   if (activeModule === "sinav-havuzu") { el.innerHTML = viewSinavHavuzu(); return; }
   if (activeModule === "ayarlar") { el.innerHTML = viewAyarlar(); return; }
   if (activeTab === "havuz") el.innerHTML = viewHavuz();
@@ -2869,6 +2871,133 @@ function viewDonemRaporlari() {
   ];
   const tabBar = `<div class="row no-print" style="flex-wrap:wrap;">${tabs.map(t => `<button class="btn ${t.id === activeDonemRaporTab ? 'primary' : ''}" onclick="setDonemRaporTab('${t.id}')">${escHtml(t.label)}</button>`).join("")}</div>`;
   return tabBar + viewDonemRaporBolum(activeDonemRaporTab);
+}
+
+/* ---- Şeflik Aylık Raporu ----
+   Alan Şefliği görevi kapsamında okul müdürlüğüne sunulan aylık
+   Planlama ve Bakım Onarım raporu (gerçek örnek: Seflik_NISAN_2026.docx). */
+let activeSeflikRaporId = null;
+function seflikRaporById(id) { return S.seflikRaporlari.find(r => r.id === id); }
+function seflikToplamSaat(r) {
+  return r.kayitlar.reduce((sum, k) => sum + (Number(k.saat) || 0), 0);
+}
+function addSeflikRaporu() {
+  const root = document.getElementById("modal-root");
+  root.innerHTML = `
+    <div class="modal-bg" onclick="if(event.target===this) closeModal()">
+      <div class="modal" style="width:360px;">
+        <h3>Yeni Aylık Rapor</h3>
+        <label class="small">Ay (örn. Mayıs 2026)</label>
+        <input type="text" id="sr-ay" style="width:100%">
+        <div class="row">
+          <button class="btn primary" onclick="saveNewSeflikRaporu()">Ekle</button>
+          <button class="btn" onclick="closeModal()">İptal</button>
+        </div>
+      </div>
+    </div>`;
+}
+function saveNewSeflikRaporu() {
+  const ay = document.getElementById("sr-ay").value.trim();
+  if (!ay) { alert("Ay girin."); return; }
+  const r = { id: uid("sr"), ay, kayitlar: [] };
+  S.seflikRaporlari.push(r);
+  activeSeflikRaporId = r.id;
+  save(); closeModal(); renderMain();
+}
+function deleteSeflikRaporu(id) {
+  if (!confirm("Bu aylık rapor silinsin mi?")) return;
+  S.seflikRaporlari = S.seflikRaporlari.filter(r => r.id !== id);
+  if (activeSeflikRaporId === id) activeSeflikRaporId = null;
+  save(); renderMain();
+}
+function selectSeflikRaporu(id) { activeSeflikRaporId = id; renderMain(); }
+function addSeflikKayit(raporId) {
+  const r = seflikRaporById(raporId);
+  if (!r) return;
+  r.kayitlar.push({ id: uid("srk"), tarih: "", gun: "", saat: "", isler: "" });
+  save(); renderMain();
+}
+function updateSeflikKayit(raporId, kayitId, field, value) {
+  const r = seflikRaporById(raporId);
+  if (!r) return;
+  const k = r.kayitlar.find(x => x.id === kayitId);
+  if (!k) return;
+  k[field] = value;
+  save();
+}
+function removeSeflikKayit(raporId, kayitId) {
+  if (!confirm("Bu satır silinsin mi?")) return;
+  const r = seflikRaporById(raporId);
+  if (!r) return;
+  r.kayitlar = r.kayitlar.filter(x => x.id !== kayitId);
+  save(); renderMain();
+}
+function renderSeflikRaporDetay(r) {
+  const k = S.kurumBilgileri;
+  const rows = r.kayitlar.map(k2 => `
+    <tr>
+      <td><textarea class="no-print" rows="2" style="width:110px;border:none;resize:vertical;font-family:inherit;font-size:11.5px;" oninput="updateSeflikKayit('${r.id}','${k2.id}','tarih',this.value)" onblur="save()">${escHtml(k2.tarih)}</textarea><div class="print-only">${nlToBr(k2.tarih)}</div></td>
+      <td><textarea class="no-print" rows="2" style="width:100px;border:none;resize:vertical;font-family:inherit;font-size:11.5px;" oninput="updateSeflikKayit('${r.id}','${k2.id}','gun',this.value)" onblur="save()">${escHtml(k2.gun)}</textarea><div class="print-only">${nlToBr(k2.gun)}</div></td>
+      <td><input class="no-print" type="text" value="${escHtml(String(k2.saat))}" style="width:44px" onchange="updateSeflikKayit('${r.id}','${k2.id}','saat',this.value); renderMain();"><span class="print-only-inline">${escHtml(String(k2.saat))}</span></td>
+      <td><textarea class="no-print" rows="2" style="width:100%;border:none;resize:vertical;font-family:inherit;font-size:11.5px;" oninput="updateSeflikKayit('${r.id}','${k2.id}','isler',this.value)" onblur="save()">${escHtml(k2.isler)}</textarea><div class="print-only">${nlToBr(k2.isler)}</div></td>
+      <td class="no-print"><button class="btn danger" onclick="removeSeflikKayit('${r.id}','${k2.id}')">Sil</button></td>
+    </tr>`).join("");
+  const toplam = seflikToplamSaat(r);
+  return `
+  <div class="card no-print">
+    <div class="row small" style="flex-wrap:wrap;gap:14px;align-items:center;">
+      <span><b>Ay:</b> ${escHtml(r.ay)}</span>
+      <span><b>Toplam Egzersiz Saati:</b> ${toplam}</span>
+      <button class="btn" onclick="addSeflikKayit('${r.id}')">Satır Ekle</button>
+    </div>
+  </div>
+  <div style="margin-bottom:14px;">
+    <div>${escHtml((k.okulAdi || "").toLocaleUpperCase("tr-TR"))} MÜDÜRLÜĞÜNE</div>
+  </div>
+  <p class="small" style="margin-bottom:14px;">Okulunuzda ${escHtml(k.alanAdi)} Alan Şefliği görevini yürütmekteyim. Görevimle ilgili olarak ${escHtml((r.ay || "").toLocaleUpperCase("tr-TR"))} ayına ait Planlama ve Bakım Onarım raporu aşağıdaki gibidir.</p>
+  <p class="small" style="margin-bottom:14px;">Bilgilerinize arz ederim.</p>
+  <div style="text-align:right;margin-bottom:20px;">
+    <div style="font-weight:600;">${escHtml(k.alanSefiAdi)}</div>
+    <div>${escHtml(k.alanSefiUnvani)}</div>
+  </div>
+  <table><thead><tr><th style="width:110px;">Tarih</th><th style="width:100px;">Gün</th><th style="width:60px;">Egzersiz Saati</th><th>Yapılan İşler</th><th class="no-print"></th></tr></thead>
+  <tbody>${rows || `<tr><td colspan="5" class="small">Henüz satır yok.</td></tr>`}</tbody></table>
+  <p class="small" style="margin-top:6px;">Not: Rapor, izin veya tatil saatleri Egzersiz Saatinden düşülecektir.</p>
+  <p class="small" style="font-weight:700;">AYLIK TOPLAM EGZERSİZ SAATİ: ${toplam} SAAT</p>
+  <div style="margin-top:30px;">
+    <div>UYGUNDUR</div>
+    <div>.../…/....</div>
+    <div style="margin-top:24px;font-weight:600;">${escHtml(k.mudurAdi)}</div>
+    <div>Okul Müdürü</div>
+  </div>`;
+}
+function viewSeflikRaporlari() {
+  const entries = S.seflikRaporlari.slice();
+  if (entries.length && !entries.some(e => e.id === activeSeflikRaporId)) activeSeflikRaporId = entries[0].id;
+  if (!entries.length) activeSeflikRaporId = null;
+  const active = seflikRaporById(activeSeflikRaporId);
+  const listHtml = entries.length === 0 ? "" : `
+    <div class="card no-print">
+      <div class="row" style="flex-wrap:wrap;">
+        ${entries.map(e => `<button class="btn ${e.id === activeSeflikRaporId ? 'primary' : ''}" onclick="selectSeflikRaporu('${e.id}')">${escHtml(e.ay)}</button>`).join("")}
+      </div>
+    </div>`;
+  const dosyaAdi = active ? "Şeflik Aylık Raporu - " + active.ay : "Şeflik Aylık Raporu";
+  const content = active ? renderSeflikRaporDetay(active) : `<div class="card small" style="text-align:center;padding:30px 20px;">Henüz aylık rapor oluşturulmadı. "Yeni Ay Ekle" ile başlayın.</div>`;
+  return `
+  <div class="card no-print">
+    <h2>Şeflik Aylık Raporu</h2>
+    <p class="small">Alan Şefliği görevi kapsamında her ay okul müdürlüğüne sunulan Planlama ve Bakım Onarım raporu. Her satır bir tarih/tarih aralığı için yapılan işleri ve egzersiz saatini gösterir; aylık toplam otomatik hesaplanır.</p>
+    <div class="row" style="margin-top:8px;">
+      <button class="btn primary" onclick="addSeflikRaporu()">Yeni Ay Ekle</button>
+      ${active ? `<button class="btn danger" onclick="deleteSeflikRaporu('${active.id}')">Bu Ayı Sil</button>` : ""}
+    </div>
+    ${active ? belgeAracCubugu(dosyaAdi) : ""}
+  </div>
+  ${listHtml}
+  <div class="print-area">
+    <div class="card" style="overflow-x:auto;">${content}</div>
+  </div>`;
 }
 
 /* ---- Sınav Havuzu ---- */

@@ -135,6 +135,7 @@ function defaultState() {
     kalfalikUstalik: { kayitlar: [] },
     beceriSinavi: { kayitlar: [] },
     ogrenciListesi: [],
+    seflikRaporlari: [],
     kurumBilgileri: {
       okulAdi: "Soma Mesleki ve Teknik Anadolu Lisesi",
       sehir: "SOMA",
@@ -177,6 +178,7 @@ function emptyState() {
     kalfalikUstalik: { kayitlar: [] },
     beceriSinavi: { kayitlar: [] },
     ogrenciListesi: [],
+    seflikRaporlari: [],
     kurumBilgileri: {
       okulAdi: "Soma Mesleki ve Teknik Anadolu Lisesi",
       sehir: "SOMA",
@@ -334,6 +336,19 @@ function normalizeState(s) {
     if (typeof o.soyad !== "string") o.soyad = "";
     if (typeof o.cinsiyet !== "string") o.cinsiyet = "";
     if (typeof o.pansiyon !== "string") o.pansiyon = "";
+  });
+  if (!Array.isArray(s.seflikRaporlari)) s.seflikRaporlari = [];
+  s.seflikRaporlari.forEach(r => {
+    if (!r.id) r.id = uid("sr");
+    if (typeof r.ay !== "string") r.ay = "";
+    if (!Array.isArray(r.kayitlar)) r.kayitlar = [];
+    r.kayitlar.forEach(k => {
+      if (!k.id) k.id = uid("srk");
+      if (typeof k.tarih !== "string") k.tarih = "";
+      if (typeof k.gun !== "string") k.gun = "";
+      if (typeof k.saat !== "string" && typeof k.saat !== "number") k.saat = "";
+      if (typeof k.isler !== "string") k.isler = "";
+    });
   });
   if (!s.kurumBilgileri || typeof s.kurumBilgileri !== "object") s.kurumBilgileri = {};
   {
