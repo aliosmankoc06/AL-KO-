@@ -19,5 +19,8 @@ contextBridge.exposeInMainWorld("desktop", {
   importPerformansXlsx: (filePath) => ipcRenderer.invoke("import:performans-xlsx", filePath),
   openPdfDialog: () => ipcRenderer.invoke("dialog:open-pdf"),
   importOgrenciPdf: (filePath) => ipcRenderer.invoke("import:ogrenci-pdf", filePath),
-  importNotOrtalamaXlsx: (filePath) => ipcRenderer.invoke("import:not-ortalama-xlsx", filePath)
+  importNotOrtalamaXlsx: (filePath) => ipcRenderer.invoke("import:not-ortalama-xlsx", filePath),
+  openWordDialog: () => ipcRenderer.invoke("dialog:open-word"),
+  importWordTable: (filePath) => ipcRenderer.invoke("import:word-table", filePath),
+  importOgrenciWord: (filePath) => ipcRenderer.invoke("import:ogrenci-word", filePath)
 });

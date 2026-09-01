@@ -433,10 +433,10 @@ function viewStajOgrenciler() {
     <div class="row" style="max-width:200px"><button class="btn primary" onclick="addStudent()">Ekle</button></div>
   </div>
   <div class="card no-print">
-    <h2>Excel'den Toplu Ekle</h2>
-    <p class="small">Excel dosyanızdaki Sınıf, Okul No, Ad Soyad, Dal, İşletme sütunlarını seçip kopyalayın (Ctrl+C), aşağıya yapıştırın (Ctrl+V) ve "Evrak Yükle"ye basın. Her satır bir öğrenci olmalı.</p>
+    <h2>Excel / Word'den Toplu Ekle</h2>
+    <p class="small">Excel veya Word dosyanızdaki Sınıf, Okul No, Ad Soyad, Dal, İşletme sütunlarını doğrudan "Word Yükle" ile yükleyebilir, ya da seçip kopyalayıp (Ctrl+C) aşağıya yapıştırıp (Ctrl+V) "Evrak Yükle"ye basabilirsiniz. Her satır bir öğrenci olmalı.</p>
     <textarea id="bulk-student-paste" style="width:100%;height:120px;font-family:monospace;font-size:11.5px;" placeholder="12/A&#9;23014&#9;Ramazan Övek&#9;MBO&#9;TKİ Ege Linyitleri İşletmesi Müdürlüğü"></textarea>
-    <div class="row" style="max-width:200px"><button class="btn primary" onclick="bulkImportStudents()">Evrak Yükle</button></div>
+    <div class="row" style="max-width:320px"><button class="btn" onclick="wordDosyasiniTextareayaYukle('bulk-student-paste', bulkImportStudents)">Word Yükle</button><button class="btn primary" onclick="bulkImportStudents()">Evrak Yükle</button></div>
   </div>`;
 }
 /* -- Sekme 2: Not Ortalamaları -- */
@@ -467,8 +467,8 @@ function viewStajNotOrtalamalari() {
   <div class="card no-print">
     <h2>e-Okul'dan Not Ortalamalarını Yükle</h2>
     <p class="small">Programın e-Okul'a doğrudan bağlantısı yok (e-Okul'un böyle bir açık bağlantı/API imkanı yok, giriş bilgilerinizi de isteyip saklamayız). Ama e-Okul'dan indirdiğiniz not çizelgesi Excel dosyasını doğrudan buraya yükleyebilirsiniz — dosyada bir yerde <b>Okul No</b> ve <b>Not/Ortalama</b> sütunlarını arar, okul numarası burada kayıtlı bir öğrenciyle eşleşince notunu otomatik günceller.</p>
-    <div class="row" style="max-width:220px"><button class="btn primary" onclick="notOrtalamalariExcelYukle()">Excel Yükle</button></div>
-    <p class="small" style="margin-top:14px;">Excel dosyanız yoksa, Okul No ve Not sütunlarını elle kopyalayıp (Ctrl+C) aşağıya yapıştırabilirsiniz (Ctrl+V):</p>
+    <div class="row" style="max-width:400px"><button class="btn primary" onclick="notOrtalamalariExcelYukle()">Excel Yükle</button><button class="btn" onclick="wordDosyasiniTextareayaYukle('not-ort-paste', () => notOrtalamalariIceAktar())">Word Yükle</button></div>
+    <p class="small" style="margin-top:14px;">Excel/Word dosyanız yoksa, Okul No ve Not sütunlarını elle kopyalayıp (Ctrl+C) aşağıya yapıştırabilirsiniz (Ctrl+V):</p>
     <textarea id="not-ort-paste" style="width:100%;height:80px;font-family:monospace;font-size:11.5px;" placeholder="57&#9;90&#10;68&#9;50"></textarea>
     <div class="row" style="max-width:200px"><button class="btn" onclick="notOrtalamalariIceAktar()">Yapıştırılanı Yükle</button></div>
   </div>`;
@@ -812,6 +812,18 @@ function notOrtalamalariExcelYukle() {
       const kayitlar = result.kayitlar || [];
       if (!kayitlar.length) { alert("Bu dosyada Okul No ve Not/Ortalama sütunları bulunamadı."); return; }
       notOrtalamalariUygula(kayitlar);
+    }).catch(e => alert("Yükleme hatası: " + e.message));
+  });
+}
+function wordDosyasiniTextareayaYukle(textareaId, uygulaFn) {
+  if (!window.desktop || !window.desktop.isElectron) { alert("Word yükleme sadece masaüstü uygulamasında çalışır."); return; }
+  window.desktop.openWordDialog().then(filePath => {
+    if (!filePath) return;
+    window.desktop.importWordTable(filePath).then(result => {
+      const text = (result && result.text) || "";
+      if (!text.trim()) { alert("Bu Word dosyasında okunabilir bir tablo/metin bulunamadı."); return; }
+      document.getElementById(textareaId).value = text;
+      uygulaFn();
     }).catch(e => alert("Yükleme hatası: " + e.message));
   });
 }
@@ -1473,6 +1485,23 @@ function importOgrenciListesiFromPdf() {
     }).catch(e => alert("Yükleme hatası: " + e.message));
   });
 }
+function importOgrenciListesiFromWord() {
+  if (!window.desktop || !window.desktop.isElectron) { alert("Word yükleme sadece masaüstü uygulamasında çalışır."); return; }
+  window.desktop.openWordDialog().then(filePath => {
+    if (!filePath) return;
+    window.desktop.importOgrenciWord(filePath).then(result => {
+      if (!result.siniflar || !result.siniflar.length) {
+        alert("Bu Word dosyasında tanıdığım bir e-Okul Sınıf Listesi bulunamadı. Dosyanın e-Okul'dan alınan \"Sınıf Listesi\" raporu olduğundan emin olun.");
+        return;
+      }
+      const sonuc = mergeOgrenciListesiImport(result);
+      activeOgrenciListesiSinif = result.siniflar[0].sinif;
+      save();
+      renderMain();
+      alert(`Yüklendi: ${result.siniflar.length} sınıf, ${sonuc.eklenen} yeni öğrenci eklendi, ${sonuc.guncellenen} öğrenci güncellendi.`);
+    }).catch(e => alert("Yükleme hatası: " + e.message));
+  });
+}
 function addOgrenci(sinif) {
   S.ogrenciListesi.push({ id: uid("og"), sinif, okulNo: "", ad: "", soyad: "", cinsiyet: "Erkek", pansiyon: "" });
   save(); renderMain();
@@ -1514,9 +1543,10 @@ function viewOgrenciListesi() {
   return `
   <div class="card no-print">
     <h2>Öğrenci Listesi</h2>
-    <p class="small">Her öğretim yılı başında e-Okul'dan aldığınız "Sınıf Listesi" PDF'ini buraya yükleyin (birden fazla sınıf/şube aynı PDF içinde olabilir, hepsi tek seferde işlenir). Beceri Sınavı, Kalfalık/Ustalık Sınavı ve Norm Kadro gibi öğrenci listesine ihtiyaç duyan modüller bu listeyi buradan çeker — yıl değiştiğinde tek yapmanız gereken, yeni PDF'i buradan yüklemek.</p>
+    <p class="small">Her öğretim yılı başında e-Okul'dan aldığınız "Sınıf Listesi" raporunu (PDF veya Word) buraya yükleyin (birden fazla sınıf/şube aynı dosyada olabilir, hepsi tek seferde işlenir). Beceri Sınavı, Kalfalık/Ustalık Sınavı ve Norm Kadro gibi öğrenci listesine ihtiyaç duyan modüller bu listeyi buradan çeker — yıl değiştiğinde tek yapmanız gereken, yeni dosyayı buradan yüklemek.</p>
     <div class="row">
       <button class="btn primary" onclick="importOgrenciListesiFromPdf()">Sınıf Listesi PDF Yükle</button>
+      <button class="btn primary" onclick="importOgrenciListesiFromWord()">Sınıf Listesi Word Yükle</button>
       ${activeOgrenciListesiSinif ? `<button class="btn" onclick="addOgrenci('${jsq(activeOgrenciListesiSinif)}')">Elle Öğrenci Ekle</button>` : ""}
     </div>
     ${sinifBar}

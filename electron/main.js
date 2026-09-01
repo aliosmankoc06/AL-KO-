@@ -7,6 +7,8 @@ const { parseEnvanterWorkbook } = require("./xlsx-envanter-parser");
 const { parsePerformansWorkbook } = require("./xlsx-performans-parser");
 const pdfParse = require("pdf-parse");
 const { parseOgrenciPdf } = require("./pdf-ogrenci-parser");
+const mammoth = require("mammoth");
+const WordExtractor = require("word-extractor");
 
 let mainWindow;
 
@@ -146,6 +148,133 @@ ipcMain.handle("dialog:open-pdf", async () => {
 
 ipcMain.handle("import:ogrenci-pdf", async (evt, filePath) => {
   return parseOgrenciPdf(filePath, pdfParse);
+});
+
+ipcMain.handle("dialog:open-word", async () => {
+  const result = await dialog.showOpenDialog(mainWindow, {
+    title: "Word Dosyası Seç",
+    properties: ["openFile"],
+    filters: [{ name: "Word Belgesi", extensions: ["doc", "docx"] }]
+  });
+  return result.canceled || result.filePaths.length === 0 ? null : result.filePaths[0];
+});
+
+function cleanCellText(html) {
+  return html.replace(/<[^>]+>/g, " ").replace(/&nbsp;/gi, " ").replace(/&amp;/gi, "&").replace(/\s+/g, " ").trim();
+}
+
+function htmlTableRows(html) {
+  const rows = [];
+  const trRe = /<tr[^>]*>([\s\S]*?)<\/tr>/gi;
+  let trM;
+  while ((trM = trRe.exec(html))) {
+    const cellRe = /<t[dh][^>]*>([\s\S]*?)<\/t[dh]>/gi;
+    const cells = [];
+    let cM;
+    while ((cM = cellRe.exec(trM[1]))) {
+      cells.push(cleanCellText(cM[1]));
+    }
+    if (cells.length) rows.push(cells);
+  }
+  return rows;
+}
+
+/* Belgeyi baştan sona tarar; tablo satırlarını hücrelere, tablo dışındaki
+   paragrafları tek hücreli satırlara çevirir — böylece tablonun üstündeki
+   başlık paragrafı (örn. e-Okul Sınıf Listesi'nin "AMP - 10. Sınıf / A
+   Şubesi (...)" satırı) da tablo satırlarıyla aynı sırada yakalanır. */
+function htmlToRows(html) {
+  const rows = [];
+  const blockRe = /<table[^>]*>[\s\S]*?<\/table>|<p[^>]*>[\s\S]*?<\/p>/gi;
+  let m;
+  while ((m = blockRe.exec(html))) {
+    const block = m[0];
+    if (/^<table/i.test(block)) {
+      htmlTableRows(block).forEach(r => rows.push(r));
+    } else {
+      const text = cleanCellText(block);
+      if (text) rows.push([text]);
+    }
+  }
+  return rows;
+}
+
+async function extractWordRows(filePath) {
+  if (/\.docx$/i.test(filePath)) {
+    const { value: html } = await mammoth.convertToHtml({ path: filePath });
+    const rows = htmlToRows(html);
+    if (rows.length) return rows;
+    const { value: text } = await mammoth.extractRawText({ path: filePath });
+    return text.split(/\r?\n/).map(l => l.trim()).filter(Boolean).map(l => l.split(/\t+/));
+  }
+  const doc = await new WordExtractor().extract(filePath);
+  const body = doc.getBody() || "";
+  return body.split(/\r?\n/).map(l => l.replace(/\t+$/, "")).filter(l => l.trim()).map(l => l.split("\t"));
+}
+
+function rowsToTabText(rows) {
+  return rows.map(r => r.join("\t")).join("\n");
+}
+
+ipcMain.handle("import:word-table", async (evt, filePath) => {
+  const rows = await extractWordRows(filePath);
+  return { text: rowsToTabText(rows) };
+});
+
+const BASLIK_REGEX_WORD = /(AMP|MESEM)\s*-\s*(\d{1,2})\.\s*Sınıf\s*\/\s*([A-ZÇĞİÖŞÜ])\s*Şubesi\s*\(([^)]*)\)/i;
+
+/* Word'de gerçek hücre sınırları bilindiği için (PDF'teki gibi x/y konumu
+   tahmin etmeye gerek yok) sütunları başlık satırındaki metinlerden
+   (Öğrenci No / Adı / Soyadı / Cinsiyeti / Pansiyon Durum) eşleştiriyoruz. */
+function parseOgrenciWordRows(rows) {
+  const sonuclar = [];
+  let mevcut = null;
+  let colIdx = null;
+  rows.forEach(cells => {
+    const joined = cells.join(" ");
+    const baslikM = BASLIK_REGEX_WORD.exec(joined);
+    if (baslikM) {
+      if (mevcut && mevcut.ogrenciler.length) sonuclar.push(mevcut);
+      const program = baslikM[1].toUpperCase();
+      const grade = Number(baslikM[2]);
+      const sube = baslikM[3].toUpperCase();
+      const alanAdi = baslikM[4].trim();
+      mevcut = { program, sinif: grade + "-" + sube, grade, sube, alanAdi, ogrenciler: [] };
+      colIdx = null;
+      return;
+    }
+    if (!mevcut) return;
+    const norm = cells.map(c => c.toLocaleLowerCase("tr-TR").replace(/[.\s]+/g, ""));
+    const oIdx = norm.findIndex(c => c.includes("öğrenci") && c.includes("no"));
+    const adIdx = norm.findIndex(c => c === "adı" || c === "adi" || c === "ad");
+    if (oIdx >= 0 && adIdx >= 0) {
+      colIdx = {
+        okulNo: oIdx,
+        ad: adIdx,
+        soyad: norm.findIndex(c => c.includes("soyad")),
+        cinsiyet: norm.findIndex(c => c.includes("cinsiyet")),
+        pansiyon: norm.findIndex(c => c.includes("pansiyon"))
+      };
+      return;
+    }
+    if (!colIdx) return;
+    const okulNo = (cells[colIdx.okulNo] || "").trim();
+    if (!/^\d+$/.test(okulNo)) return;
+    const ad = (cells[colIdx.ad] || "").trim();
+    const soyad = colIdx.soyad >= 0 ? (cells[colIdx.soyad] || "").trim() : "";
+    if (!ad && !soyad) return;
+    let cinsiyet = colIdx.cinsiyet >= 0 ? (cells[colIdx.cinsiyet] || "").trim() : "";
+    cinsiyet = /^(Erkek|Kız)$/i.test(cinsiyet) ? cinsiyet[0].toUpperCase() + cinsiyet.slice(1).toLowerCase() : "";
+    const pansiyon = colIdx.pansiyon >= 0 ? (cells[colIdx.pansiyon] || "").trim() : "";
+    mevcut.ogrenciler.push({ okulNo, ad, soyad, cinsiyet, pansiyon });
+  });
+  if (mevcut && mevcut.ogrenciler.length) sonuclar.push(mevcut);
+  return { siniflar: sonuclar };
+}
+
+ipcMain.handle("import:ogrenci-word", async (evt, filePath) => {
+  const rows = await extractWordRows(filePath);
+  return parseOgrenciWordRows(rows);
 });
 
 ipcMain.handle("export:excel", async (evt, defaultName, sheets) => {
