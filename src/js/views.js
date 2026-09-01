@@ -438,7 +438,7 @@ function stajBySinif() {
 function viewStajOgrenciler() {
   const bySinif = stajBySinif();
   const sinifKeys = Object.keys(bySinif).sort();
-  const listHtml = sinifKeys.map(sinif => {
+  const listHtml = sinifKeys.length ? sinifKeys.map(sinif => {
     const rows = bySinif[sinif].map(st => `
       <tr>
         <td>${st.okulNo || ''}</td>
@@ -446,8 +446,8 @@ function viewStajOgrenciler() {
         <td>${st.dal || ''}</td>
         <td class="no-print"><div class="row" style="margin:0;"><button class="btn" onclick="editStudent('${st.id}')">Düzenle</button><button class="btn danger" onclick="deleteStudent('${st.id}')">Sil</button></div></td>
       </tr>`).join("");
-    return `<h2 style="margin-top:16px;">${escHtml(sinif)}</h2><table><tr><th>Okul No</th><th>Ad Soyad</th><th>Dal</th><th class="no-print"></th></tr>${rows}</table>`;
-  }).join("") || `<p class="small">Henüz öğrenci eklenmedi.</p>`;
+    return `<div class="card"><h2 style="margin-top:0;">${escHtml(sinif)}</h2><table><tr><th>Okul No</th><th>Ad Soyad</th><th>Dal</th><th class="no-print"></th></tr>${rows}</table></div>`;
+  }).join("") : `<div class="card"><p class="small">Henüz öğrenci eklenmedi.</p></div>`;
 
   return `
   <div class="card no-print">
@@ -457,7 +457,7 @@ function viewStajOgrenciler() {
   </div>
   <div class="print-area">
     ${belgeYazdirmaBasligi("Staj Yerleştirme — Öğrenciler")}
-    <div class="card">${listHtml}</div>
+    ${listHtml}
   </div>
   <div class="card no-print">
     <h2>Öğrenci Listesinden Ekle</h2>
@@ -486,7 +486,7 @@ function viewStajOgrenciler() {
 function viewStajNotOrtalamalari() {
   const bySinif = stajBySinif();
   const sinifKeys = Object.keys(bySinif).sort();
-  const listHtml = sinifKeys.map(sinif => {
+  const listHtml = sinifKeys.length ? sinifKeys.map(sinif => {
     const rows = bySinif[sinif].map(st => `
       <tr>
         <td>${st.okulNo || ''}</td>
@@ -495,8 +495,8 @@ function viewStajNotOrtalamalari() {
         <td class="no-print"><input type="text" value="${escHtml(st.not)}" style="width:70px;text-align:center;" onchange="updateStudentAlan('${st.id}','not',this.value)"></td>
         <td class="print-only-cell">${escHtml(st.not || '—')}</td>
       </tr>`).join("");
-    return `<h2 style="margin-top:16px;">${escHtml(sinif)}</h2><table><tr><th>Okul No</th><th>Ad Soyad</th><th>Dal</th><th>Not Ortalaması</th></tr>${rows}</table>`;
-  }).join("") || `<p class="small">Henüz öğrenci eklenmedi — önce Öğrenciler sekmesinden ekleyin.</p>`;
+    return `<div class="card"><h2 style="margin-top:0;">${escHtml(sinif)}</h2><table><tr><th>Okul No</th><th>Ad Soyad</th><th>Dal</th><th>Not Ortalaması</th></tr>${rows}</table></div>`;
+  }).join("") : `<div class="card"><p class="small">Henüz öğrenci eklenmedi — önce Öğrenciler sekmesinden ekleyin.</p></div>`;
   return `
   <div class="card no-print">
     <h2>Not Ortalamaları</h2>
@@ -505,7 +505,7 @@ function viewStajNotOrtalamalari() {
   </div>
   <div class="print-area">
     ${belgeYazdirmaBasligi("Staj Yerleştirme — Not Ortalamaları")}
-    <div class="card">${listHtml}</div>
+    ${listHtml}
   </div>
   <div class="card no-print">
     <h2>e-Okul'dan Not Ortalamalarını Yükle</h2>
@@ -520,7 +520,7 @@ function viewStajNotOrtalamalari() {
 function viewStajTercihler() {
   const bySinif = stajBySinif();
   const sinifKeys = Object.keys(bySinif).sort();
-  const listHtml = sinifKeys.map(sinif => {
+  const listHtml = sinifKeys.length ? sinifKeys.map(sinif => {
     const rows = bySinif[sinif].map(st => `
       <tr>
         <td>${st.okulNo || ''}</td>
@@ -530,8 +530,8 @@ function viewStajTercihler() {
         <td class="no-print"><input type="text" value="${escHtml(st.istemiyor)}" placeholder="istemediği işletmeler" style="width:100%;" onchange="updateStudentAlan('${st.id}','istemiyor',this.value)"></td>
         <td class="print-only-cell">${escHtml(st.istemiyor || '—')}</td>
       </tr>`).join("");
-    return `<h2 style="margin-top:16px;">${escHtml(sinif)}</h2><table><tr><th>Okul No</th><th>Ad Soyad</th><th>Tercihleri (öncelik sırasıyla virgülle)</th><th>İstemediği İşletmeler (virgülle)</th></tr>${rows}</table>`;
-  }).join("") || `<p class="small">Henüz öğrenci eklenmedi — önce Öğrenciler sekmesinden ekleyin.</p>`;
+    return `<div class="card" style="overflow-x:auto;"><h2 style="margin-top:0;">${escHtml(sinif)}</h2><table><tr><th>Okul No</th><th>Ad Soyad</th><th>Tercihleri (öncelik sırasıyla virgülle)</th><th>İstemediği İşletmeler (virgülle)</th></tr>${rows}</table></div>`;
+  }).join("") : `<div class="card"><p class="small">Henüz öğrenci eklenmedi — önce Öğrenciler sekmesinden ekleyin.</p></div>`;
   return `
   <div class="card no-print">
     <h2>Tercihler</h2>
@@ -540,7 +540,7 @@ function viewStajTercihler() {
   </div>
   <div class="print-area">
     ${belgeYazdirmaBasligi("Staj Yerleştirme — Tercihler")}
-    <div class="card" style="overflow-x:auto;">${listHtml}</div>
+    ${listHtml}
   </div>`;
 }
 /* -- Sekme 4: İşletme Kontenjanları -- */
@@ -570,7 +570,7 @@ function viewStajKontenjanlar() {
 function viewStajSonuc() {
   const bySinif = stajBySinif();
   const sinifKeys = Object.keys(bySinif).sort();
-  const listHtml = sinifKeys.map(sinif => {
+  const listHtml = sinifKeys.length ? sinifKeys.map(sinif => {
     const rows = bySinif[sinif].map(st => `
       <tr>
         <td>${st.okulNo || ''}</td>
@@ -579,8 +579,8 @@ function viewStajSonuc() {
         <td class="no-print"><select onchange="setStudentIsletme('${st.id}', this.value)">${studentIsletmeOptions(st.isletme)}</select>${st.yerlestirmeSirasi ? `<div class="small">${yerlestirmeSirasiPill(st.yerlestirmeSirasi)}</div>` : ""}</td>
         <td class="print-only-cell">${escHtml(st.isletme || '—')}</td>
       </tr>`).join("");
-    return `<h2 style="margin-top:16px;">${escHtml(sinif)}</h2><table><tr><th>Okul No</th><th>Ad Soyad</th><th>Dal</th><th>İşletme</th></tr>${rows}</table>`;
-  }).join("") || `<p class="small">Henüz öğrenci eklenmedi.</p>`;
+    return `<div class="card"><h2 style="margin-top:0;">${escHtml(sinif)}</h2><table><tr><th>Okul No</th><th>Ad Soyad</th><th>Dal</th><th>İşletme</th></tr>${rows}</table></div>`;
+  }).join("") : `<div class="card"><p class="small">Henüz öğrenci eklenmedi.</p></div>`;
 
   const k = S.kurumBilgileri;
   return `
@@ -592,19 +592,17 @@ function viewStajSonuc() {
   </div>
   <div class="print-area">
     ${belgeYazdirmaBasligi("Staj Yerleştirme — Sonuç")}
-    <div class="card">
-      ${listHtml}
-      <div style="margin-top:30px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:20px;">
-        <div>
-          <div>.../…/....</div>
-          <div style="margin-top:24px;font-weight:600;">${escHtml(k.alanSefiAdi)}</div>
-          <div>${escHtml(k.alanSefiUnvani)}</div>
-        </div>
-        <div style="text-align:right;">
-          <div>UYGUNDUR</div>
-          <div style="margin-top:24px;font-weight:600;">${escHtml(k.mudurAdi)}</div>
-          <div>Okul Müdürü</div>
-        </div>
+    ${listHtml}
+    <div style="margin-top:16px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:20px;">
+      <div>
+        <div>.../…/....</div>
+        <div style="margin-top:24px;font-weight:600;">${escHtml(k.alanSefiAdi)}</div>
+        <div>${escHtml(k.alanSefiUnvani)}</div>
+      </div>
+      <div style="text-align:right;">
+        <div>UYGUNDUR</div>
+        <div style="margin-top:24px;font-weight:600;">${escHtml(k.mudurAdi)}</div>
+        <div>Okul Müdürü</div>
       </div>
     </div>
   </div>`;

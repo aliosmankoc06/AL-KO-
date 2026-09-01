@@ -151,15 +151,19 @@ a:hover{text-decoration:underline;}
 .nav-btn.sub .nav-icon{width:15px;height:15px;}
 .nav-icon{width:17px;height:17px;flex-shrink:0;}
 
-/* ---- Content ---- */
+/* ---- Content ----
+   Okunabilir bir sütun genişliğinde tutuyoruz (1180px) — geniş
+   monitörlerde içerik uçtan uca yayılıp dikkat dağıtmasın diye.
+   Gerçekten geniş tablolar (ders programı ızgarası, sınav listeleri)
+   zaten kendi overflow-x:auto kartlarında kayarak gösteriliyor. */
 .content{flex:1;min-width:0;display:flex;flex-direction:column;}
-.content main{max-width:1500px;width:100%;margin:0 auto;padding:24px 26px 44px;}
+.content main{max-width:1180px;width:100%;margin:0 auto;padding:26px 28px 48px;}
 
 h2{font-family:var(--serif);font-size:16px;font-weight:700;margin:0 0 9px;letter-spacing:.005em;color:var(--heading);}
 h3{font-family:var(--serif);font-size:13.5px;font-weight:700;margin:0 0 8px;color:var(--heading);}
 .card{
   background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
-  padding:15px 17px;margin-bottom:13px;box-shadow:var(--shadow-sm);transition:box-shadow .15s ease,border-color .15s ease;
+  padding:17px 19px;margin-bottom:16px;box-shadow:var(--shadow-sm);transition:box-shadow .15s ease,border-color .15s ease;
 }
 .card.module-card:hover{border-color:var(--accent-2);box-shadow:var(--shadow-md);transform:translateY(-1px);}
 .hero-card{
