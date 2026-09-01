@@ -129,6 +129,14 @@ a:hover{text-decoration:underline;}
 
 .sidebar nav#tabbar, .sidebar nav#subtabbar{display:flex;flex-direction:column;padding:10px;gap:2px;}
 .nav-section-label{font-size:9.5px;letter-spacing:.09em;text-transform:uppercase;color:#7986A6;padding:16px 11px 5px;font-weight:600;}
+.nav-group-header{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;
+  font-family:inherit;font-size:9.5px;letter-spacing:.09em;text-transform:uppercase;color:#7986A6;
+  background:transparent;border:none;padding:14px 11px 5px;margin:0;font-weight:600;cursor:pointer;text-align:left;
+}
+.nav-group-header:hover{color:#B7C0D6;}
+.nav-group-header .nav-icon{width:12px;height:12px;transform:rotate(-90deg);transition:transform .15s ease;}
+.nav-group-header.open .nav-icon{transform:rotate(0deg);}
 .nav-btn{
   display:flex;align-items:center;gap:11px;font-family:inherit;font-size:12.5px;color:#B7C0D6;
   background:transparent;border:none;border-left:3px solid transparent;padding:9px 11px;cursor:pointer;

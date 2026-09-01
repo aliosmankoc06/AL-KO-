@@ -55,46 +55,74 @@ let activeOffTeacherId = null;
 let activePlanSistem = "maarif";
 let activePlanEntryId = { yillik: null, gunluk: null };
 
+/* ---- Sol Menü: kategori akordeonu ----
+   Modüller MODULES[].group alanına göre kategorilere ayrılır; her an
+   yalnızca bir kategori açık gösterilir (expandedGroup), diğerleri
+   başlığa küçültülmüş halde durur — kalabalığı azaltır. Bir modül
+   seçildiğinde kategorisi otomatik açılır. Alt modülü olan modüller
+   (Ders Programı, Staj Yerleştirme, Toplantılar) aktifken alt
+   sekmeleri kendi düğmesinin hemen altında satır içi açılır. */
+let expandedGroup = "Genel";
+function moduleGroupOf(id) {
+  const mod = MODULES.find(m => m.id === id) || (id === "ders-programi-secim" ? MODULES.find(m => m.id === "ders-programi") : null);
+  return mod ? mod.group : null;
+}
+function toggleGroup(g) {
+  expandedGroup = (expandedGroup === g) ? null : g;
+  renderTabbar();
+}
+function subTabButtonsFor(moduleId) {
+  if (moduleId === "ders-programi") {
+    return DERS_PROGRAMI_TABS.map(t =>
+      `<button class="nav-btn sub ${t.id === activeTab ? 'active' : ''}" onclick="setTab('${t.id}')">${icon(t.icon)}<span>${t.label}</span></button>`
+    ).join("");
+  }
+  if (moduleId === "staj-yerlestirme") {
+    return STAJ_TABS.map(t =>
+      `<button class="nav-btn sub ${t.id === activeStajTab ? 'active' : ''}" onclick="setStajTab('${t.id}')">${icon(t.icon)}<span>${t.label}</span></button>`
+    ).join("");
+  }
+  if (moduleId === "toplantilar") {
+    return TOPLANTI_TABS.map(t =>
+      `<button class="nav-btn sub ${t.id === activeToplantiTab ? 'active' : ''}" onclick="setToplantiTab('${t.id}')">${icon(t.icon)}<span>${t.label}</span></button>`
+    ).join("");
+  }
+  return "";
+}
 function renderTabbar() {
   let lastGroup = null;
-  document.getElementById("tabbar").innerHTML = MODULES.map(m => {
-    const groupHeader = m.group !== lastGroup ? `<div class="nav-section-label">${m.group}</div>` : "";
-    lastGroup = m.group;
-    return groupHeader + `<button class="nav-btn ${(m.id === activeModule || (m.id === 'ders-programi' && activeModule === 'ders-programi-secim')) ? 'active' : ''}" onclick="setModule('${m.id}')">${icon(m.icon)}<span>${m.label}</span></button>`;
-  }).join("");
+  const parts = [];
+  MODULES.forEach(m => {
+    if (m.group !== lastGroup) {
+      lastGroup = m.group;
+      const open = m.group === expandedGroup;
+      parts.push(`<button class="nav-group-header ${open ? 'open' : ''}" onclick="toggleGroup('${jsq(m.group)}')"><span>${m.group}</span>${icon("chevron")}</button>`);
+    }
+    if (m.group !== expandedGroup) return;
+    const isActive = m.id === activeModule || (m.id === 'ders-programi' && activeModule === 'ders-programi-secim');
+    parts.push(`<button class="nav-btn ${isActive ? 'active' : ''}" onclick="setModule('${m.id}')">${icon(m.icon)}<span>${m.label}</span></button>`);
+    if (isActive) parts.push(subTabButtonsFor(m.id));
+  });
+  document.getElementById("tabbar").innerHTML = parts.join("");
   renderSubTabbar();
 }
 function renderSubTabbar() {
-  const el = document.getElementById("subtabbar");
-  if (activeModule === "ders-programi") {
-    el.innerHTML = `<div class="nav-section-label">Ders Programı</div>` + DERS_PROGRAMI_TABS.map(t =>
-      `<button class="nav-btn sub ${t.id === activeTab ? 'active' : ''}" onclick="setTab('${t.id}')">${icon(t.icon)}<span>${t.label}</span></button>`
-    ).join("");
-  } else if (activeModule === "staj-yerlestirme") {
-    el.innerHTML = `<div class="nav-section-label">Staj Yerleştirme</div>` + STAJ_TABS.map(t =>
-      `<button class="nav-btn sub ${t.id === activeStajTab ? 'active' : ''}" onclick="setStajTab('${t.id}')">${icon(t.icon)}<span>${t.label}</span></button>`
-    ).join("");
-  } else if (activeModule === "toplantilar") {
-    el.innerHTML = `<div class="nav-section-label">Toplantılar</div>` + TOPLANTI_TABS.map(t =>
-      `<button class="nav-btn sub ${t.id === activeToplantiTab ? 'active' : ''}" onclick="setToplantiTab('${t.id}')">${icon(t.icon)}<span>${t.label}</span></button>`
-    ).join("");
-  } else {
-    el.innerHTML = "";
-  }
+  document.getElementById("subtabbar").innerHTML = "";
 }
 function setModule(id) {
   activeModule = id;
   if (id === "ders-programi" && !DERS_PROGRAMI_TABS.some(t => t.id === activeTab)) activeTab = "havuz";
   if (id === "staj-yerlestirme" && !STAJ_TABS.some(t => t.id === activeStajTab)) activeStajTab = "ogrenciler";
   if (id === "toplantilar" && !TOPLANTI_TABS.some(t => t.id === activeToplantiTab)) activeToplantiTab = "okul";
+  expandedGroup = moduleGroupOf(id);
   selectedTeacherCells.clear();
   multiSelectMode = false;
   renderTabbar();
   renderMain();
 }
-function setTab(id) { activeTab = id; selectedTeacherCells.clear(); multiSelectMode = false; renderSubTabbar(); renderMain(); }
-function setStajTab(id) { activeStajTab = id; renderSubTabbar(); renderMain(); }
-function setToplantiTab(id) { activeToplantiTab = id; renderSubTabbar(); renderMain(); }
+function setTab(id) { activeTab = id; selectedTeacherCells.clear(); multiSelectMode = false; renderTabbar(); renderMain(); }
+function setStajTab(id) { activeStajTab = id; renderTabbar(); renderMain(); }
+function setToplantiTab(id) { activeToplantiTab = id; renderTabbar(); renderMain(); }
 
 function renderMain() {
   const el = document.getElementById("main");

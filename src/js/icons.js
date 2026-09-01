@@ -26,7 +26,8 @@ const ICONS = {
   stack: '<path d="m12 3 9 4.5-9 4.5-9-4.5L12 3Z"/><path d="m3 12 9 4.5 9-4.5"/><path d="m3 16.5 9 4.5 9-4.5"/>',
   penSquare: '<rect x="3.5" y="3.5" width="17" height="17" rx="2"/><path d="M14.5 7.5 17 10l-6 6H8v-3Z"/>',
   percent: '<path d="M5 19 19 5"/><circle cx="7" cy="7" r="2.5"/><circle cx="17" cy="17" r="2.5"/>',
-  badge: '<circle cx="12" cy="9" r="6"/><path d="m8 14-1.5 7L12 18l5.5 3L16 14"/>'
+  badge: '<circle cx="12" cy="9" r="6"/><path d="m8 14-1.5 7L12 18l5.5 3L16 14"/>',
+  chevron: '<path d="m6 9 6 6 6-6"/>'
 };
 function icon(name) {
   const body = ICONS[name] || "";
