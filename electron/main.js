@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Menu, dialog, ipcMain } = require("electron");
+const { app, BrowserWindow, Menu, dialog, ipcMain, shell } = require("electron");
 const path = require("path");
 const fs = require("fs");
 const XLSX = require("xlsx");
@@ -112,6 +112,12 @@ ipcMain.handle("import:envanter-xlsx", async (evt, filePath) => {
 
 ipcMain.handle("import:performans-xlsx", async (evt, filePath) => {
   return parsePerformansWorkbook(filePath, XLSX);
+});
+
+ipcMain.handle("open:external", (evt, url) => {
+  if (typeof url !== "string" || !/^https:\/\//.test(url)) return false;
+  shell.openExternal(url);
+  return true;
 });
 
 ipcMain.handle("dialog:open-pdf", async () => {

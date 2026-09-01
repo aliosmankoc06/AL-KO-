@@ -19,6 +19,7 @@ const MODULES = [
   { id: "donem-raporlari", label: "Ders Kesim / Yazılı Teslim", icon: "report" },
   { id: "seflik-raporu", label: "Şeflik Aylık Raporu", icon: "calendarCheck" },
   { id: "sinav-havuzu", label: "Sınav Havuzu", icon: "question" },
+  { id: "ai-yardimci", label: "AI Yazım Yardımcısı", icon: "sparkle" },
   { id: "ayarlar", label: "Ayarlar", icon: "settings" }
 ];
 const DERS_PROGRAMI_TABS = [
@@ -83,6 +84,7 @@ function renderMain() {
   if (activeModule === "donem-raporlari") { el.innerHTML = viewDonemRaporlari(); return; }
   if (activeModule === "seflik-raporu") { el.innerHTML = viewSeflikRaporlari(); return; }
   if (activeModule === "sinav-havuzu") { el.innerHTML = viewSinavHavuzu(); return; }
+  if (activeModule === "ai-yardimci") { el.innerHTML = viewAiYardimci(); return; }
   if (activeModule === "ayarlar") { el.innerHTML = viewAyarlar(); return; }
   if (activeTab === "havuz") el.innerHTML = viewHavuz();
   else if (activeTab === "ogretmen") el.innerHTML = viewOgretmen();
@@ -3653,6 +3655,76 @@ function viewSinavHavuzu() {
   const govde = activeSinavTab === "kagitlar" ? viewKagitlarBolum(activeSinavSinifId, activeSinavCourseId) : viewSoruHavuzuBolum(activeSinavSinifId, activeSinavCourseId);
 
   return ustBar + sinifBar + dersBar + tabBar + govde;
+}
+
+/* ---- AI Yazım Yardımcısı ----
+   Bu program herhangi bir yapay zeka servisine bağlı DEĞİL (böyle bir
+   bağlantı, kullanıcı hesabı/API anahtarı ve genelde ücretli bir servis
+   gerektirir — bkz. sayfadaki açıklama). Bunun yerine, okulun/alanın
+   bilgileriyle zenginleştirilmiş, düzgün yazılmış bir istek metni
+   hazırlayıp panoya kopyalamayı ve tarayıcıda ücretsiz bir yapay zeka
+   sohbetini (Claude, ChatGPT) açmayı kolaylaştırır. */
+function aiYardimciPromptOlustur() {
+  const istekEl = document.getElementById("ai-istek");
+  const istek = (istekEl.value || "").trim();
+  if (!istek) { alert("Ne yapmak istediğinizi yazın."); return; }
+  const k = S.kurumBilgileri;
+  const baglamSatirlari = [
+    `Sen bir Türk mesleki ve teknik Anadolu lisesinde çalışan bir "${k.alanSefiUnvani || 'Alan Şefi'}"ne resmi yazışma ve belge hazırlama konusunda yardımcı oluyorsun.`,
+    k.okulAdi ? `Okul: ${k.okulAdi}` : "",
+    k.alanAdi ? `Alan: ${k.alanAdi}` : "",
+    k.alanSefiAdi ? `Yazan: ${k.alanSefiAdi}${k.alanSefiUnvani ? " (" + k.alanSefiUnvani + ")" : ""}` : "",
+    "",
+    "İstek: " + istek,
+    "",
+    "Lütfen resmi, düzgün ve profesyonel bir Türkçe ile, doğrudan kullanılabilecek şekilde yaz."
+  ].filter(s => s !== "");
+  const prompt = baglamSatirlari.join("\n");
+  const cikti = document.getElementById("ai-prompt-cikti");
+  cikti.value = prompt;
+  document.getElementById("ai-cikti-alani").style.display = "block";
+}
+function aiYardimciKopyala() {
+  const ta = document.getElementById("ai-prompt-cikti");
+  const btn = document.getElementById("ai-kopyala-btn");
+  const eskiMetin = btn.textContent;
+  const basarili = () => { btn.textContent = "Kopyalandı ✓"; setTimeout(() => { btn.textContent = eskiMetin; }, 1600); };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(ta.value).then(basarili).catch(() => {
+      ta.select(); document.execCommand("copy"); basarili();
+    });
+  } else {
+    ta.select(); document.execCommand("copy"); basarili();
+  }
+}
+function aiYardimciTarayicidaAc(url) {
+  if (window.desktop && window.desktop.isElectron && window.desktop.openExternal) window.desktop.openExternal(url);
+  else window.open(url, "_blank");
+}
+function viewAiYardimci() {
+  return `
+  <div class="card no-print">
+    <h2>AI Yazım Yardımcısı</h2>
+    <p class="small">Bu program şu an internet üzerinden bir yapay zeka servisine <b>doğrudan bağlı değil</b> — böyle bir bağlantı, ayrı bir hesap/üyelik ve genelde kullandıkça ödenen bir ücret gerektirir; bunu size sormadan, "bedava herkese açık" bir şekilde kuramam. Ama işinizi kolaylaştıracak bir kısayol hazırladım: aşağıya ne istediğinizi kendi cümlelerinizle yazın, okul ve alan bilgilerinizle birlikte düzgün bir istek metni hazırlansın. Sonra "Kopyala"ya basıp tarayıcınızda (ücretsiz) bir yapay zeka sohbetine yapıştırırsınız — o size resmi dille yazılmış cevabı verir, siz de onu kopyalayıp buraya ya da istediğiniz belgeye geri yapıştırırsınız.</p>
+    <label class="small">Ne yapmak istiyorsunuz? (kendi cümlelerinizle anlatın)</label>
+    <textarea id="ai-istek" rows="4" style="width:100%;max-width:700px;" placeholder="örn. Mayıs ayı için 12. sınıf öğrencilerine staj bitirme yazısı yaz, resmi dil kullan"></textarea>
+    <div class="row" style="margin-top:8px;">
+      <button class="btn primary" onclick="aiYardimciPromptOlustur()">Metni Hazırla</button>
+    </div>
+    <div id="ai-cikti-alani" style="display:none;margin-top:14px;">
+      <label class="small">Hazır İstek Metni (kopyalayıp yapay zeka sohbetine yapıştırın)</label>
+      <textarea id="ai-prompt-cikti" rows="9" style="width:100%;max-width:700px;" readonly></textarea>
+      <div class="row" style="margin-top:8px;flex-wrap:wrap;">
+        <button class="btn" id="ai-kopyala-btn" onclick="aiYardimciKopyala()">Kopyala</button>
+        <button class="btn" onclick="aiYardimciTarayicidaAc('https://claude.ai/new')">Claude'u Tarayıcıda Aç</button>
+        <button class="btn" onclick="aiYardimciTarayicidaAc('https://chatgpt.com')">ChatGPT'yi Tarayıcıda Aç</button>
+      </div>
+    </div>
+  </div>
+  <div class="card no-print">
+    <h3>Daha ileri seviye: programın içine gerçek bir yapay zeka sohbeti</h3>
+    <p class="small">İstersek bunu bir adım öteye taşıyıp, cevabı da doğrudan program içinde gösteren gerçek bir sohbet kutusu kurabiliriz. Bunun için sizin kendi adınıza bir yapay zeka hesabı (örn. Anthropic/Claude API anahtarı) açmanız ve genelde çok düşük, sadece kullandığınız kadar ödediğiniz bir ücret ödemeniz gerekir. Ben size "üyelik/bulut" sistemi kurup herkese bedava sınırsız erişim veremem — o başka bir şirketin ücretli servisi ve her kullanıcının kendi hesabı olması gerekir. İsterseniz bu adımı birlikte atarız: siz bir API anahtarı alırsınız, Ayarlar'a bir kere girersiniz, program sizin adınıza doğrudan o servise bağlanıp cevabı burada gösterir.</p>
+  </div>`;
 }
 
 /* ---- Ayarlar (Kurum Bilgileri) ---- */
