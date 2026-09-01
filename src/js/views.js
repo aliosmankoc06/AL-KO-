@@ -3658,18 +3658,20 @@ function viewSinavHavuzu() {
 }
 
 /* ---- AI Yazım Yardımcısı ----
-   Bu program herhangi bir yapay zeka servisine bağlı DEĞİL (böyle bir
-   bağlantı, kullanıcı hesabı/API anahtarı ve genelde ücretli bir servis
-   gerektirir — bkz. sayfadaki açıklama). Bunun yerine, okulun/alanın
-   bilgileriyle zenginleştirilmiş, düzgün yazılmış bir istek metni
-   hazırlayıp panoya kopyalamayı ve tarayıcıda ücretsiz bir yapay zeka
-   sohbetini (Claude, ChatGPT) açmayı kolaylaştırır. */
-function aiYardimciPromptOlustur() {
-  const istekEl = document.getElementById("ai-istek");
-  const istek = (istekEl.value || "").trim();
-  if (!istek) { alert("Ne yapmak istediğinizi yazın."); return; }
+   Bu program herhangi bir yapay zeka servisine bağlı DEĞİL (gerçek bir
+   bağlantı kullanıcının kendi API anahtarını gerektirir). Bunun yerine
+   sohbet görünümlü bir arayüzle: mesajınız yazılır → panoya otomatik
+   kopyalanır → tarayıcıda (ücretsiz) Claude/ChatGPT'ye yapıştırılır →
+   oradan gelen cevap buraya yapıştırılır ve konuşma geçmişine bir
+   balon olarak eklenir. Konuşma sadece bellekte tutulur (S'e/diske
+   kaydedilmez), program kapanınca kendiliğinden sıfırlanır. */
+let aiYardimciKonusma = [];
+function aiYardimciPanoyaKopyala(metin) {
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(metin).catch(() => {});
+}
+function aiYardimciBaglamliMetin(istek) {
   const k = S.kurumBilgileri;
-  const baglamSatirlari = [
+  const satirlar = [
     `Sen bir Türk mesleki ve teknik Anadolu lisesinde çalışan bir "${k.alanSefiUnvani || 'Alan Şefi'}"ne resmi yazışma ve belge hazırlama konusunda yardımcı oluyorsun.`,
     k.okulAdi ? `Okul: ${k.okulAdi}` : "",
     k.alanAdi ? `Alan: ${k.alanAdi}` : "",
@@ -3679,23 +3681,35 @@ function aiYardimciPromptOlustur() {
     "",
     "Lütfen resmi, düzgün ve profesyonel bir Türkçe ile, doğrudan kullanılabilecek şekilde yaz."
   ].filter(s => s !== "");
-  const prompt = baglamSatirlari.join("\n");
-  const cikti = document.getElementById("ai-prompt-cikti");
-  cikti.value = prompt;
-  document.getElementById("ai-cikti-alani").style.display = "block";
+  return satirlar.join("\n");
 }
-function aiYardimciKopyala() {
-  const ta = document.getElementById("ai-prompt-cikti");
-  const btn = document.getElementById("ai-kopyala-btn");
-  const eskiMetin = btn.textContent;
-  const basarili = () => { btn.textContent = "Kopyalandı ✓"; setTimeout(() => { btn.textContent = eskiMetin; }, 1600); };
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(ta.value).then(basarili).catch(() => {
-      ta.select(); document.execCommand("copy"); basarili();
-    });
-  } else {
-    ta.select(); document.execCommand("copy"); basarili();
-  }
+function aiYardimciYeniKonusma() {
+  if (aiYardimciKonusma.length && !confirm("Bu konuşma temizlensin mi?")) return;
+  aiYardimciKonusma = [];
+  renderMain();
+}
+function aiYardimciMesajGonder() {
+  const istekEl = document.getElementById("ai-istek");
+  const istek = (istekEl.value || "").trim();
+  if (!istek) { alert("Ne yapmak istediğinizi yazın."); return; }
+  const prompt = aiYardimciBaglamliMetin(istek);
+  aiYardimciKonusma.push({ rol: "siz", metin: istek, prompt });
+  istekEl.value = "";
+  aiYardimciPanoyaKopyala(prompt);
+  renderMain();
+}
+function aiYardimciTekrarKopyala(i) {
+  const m = aiYardimciKonusma[i];
+  if (!m) return;
+  aiYardimciPanoyaKopyala(m.prompt || m.metin);
+  alert("Panoya kopyalandı.");
+}
+function aiYardimciCevapEkle() {
+  const el = document.getElementById("ai-cevap-yapistir");
+  const cevap = (el.value || "").trim();
+  if (!cevap) { alert("Yapay zekadan aldığınız cevabı önce buraya yapıştırın."); return; }
+  aiYardimciKonusma.push({ rol: "ai", metin: cevap });
+  renderMain();
 }
 function aiYardimciTarayicidaAc(url) {
   if (window.desktop && window.desktop.isElectron && window.desktop.openExternal) window.desktop.openExternal(url);
@@ -3735,28 +3749,40 @@ function aiYardimciSesGirisiBaslat() {
 }
 function viewAiYardimci() {
   return `
-  <div class="card no-print">
-    <h2>AI Yazım Yardımcısı</h2>
-    <p class="small">Bu program şu an internet üzerinden bir yapay zeka servisine <b>doğrudan bağlı değil</b> — böyle bir bağlantı, ayrı bir hesap/üyelik ve genelde kullandıkça ödenen bir ücret gerektirir; bunu size sormadan, "bedava herkese açık" bir şekilde kuramam. Ama işinizi kolaylaştıracak bir kısayol hazırladım: aşağıya ne istediğinizi kendi cümlelerinizle yazın (isterseniz mikrofonla konuşarak da anlatabilirsiniz), okul ve alan bilgilerinizle birlikte düzgün bir istek metni hazırlansın. Sonra "Kopyala"ya basıp tarayıcınızda (ücretsiz) bir yapay zeka sohbetine yapıştırırsınız — o size resmi dille yazılmış cevabı verir, siz de onu kopyalayıp buraya ya da istediğiniz belgeye geri yapıştırırsınız.</p>
-    <label class="small">Ne yapmak istiyorsunuz? (kendi cümlelerinizle anlatın ya da mikrofonla söyleyin)</label>
-    <textarea id="ai-istek" rows="4" style="width:100%;max-width:700px;" placeholder="örn. Mayıs ayı için 12. sınıf öğrencilerine staj bitirme yazısı yaz, resmi dil kullan"></textarea>
-    <div class="row" style="margin-top:8px;flex-wrap:wrap;">
-      <button class="btn primary" onclick="aiYardimciPromptOlustur()">Metni Hazırla</button>
-      ${aiYardimciSesGirisiVarMi() ? `<button class="btn" id="ai-mikrofon-btn" onclick="aiYardimciSesGirisiBaslat()" title="Yazmak yerine konuşarak anlatın">🎤 Sesle Anlat</button>` : ""}
-    </div>
-    <div id="ai-cikti-alani" style="display:none;margin-top:14px;">
-      <label class="small">Hazır İstek Metni (kopyalayıp yapay zeka sohbetine yapıştırın)</label>
-      <textarea id="ai-prompt-cikti" rows="9" style="width:100%;max-width:700px;" readonly></textarea>
-      <div class="row" style="margin-top:8px;flex-wrap:wrap;">
-        <button class="btn" id="ai-kopyala-btn" onclick="aiYardimciKopyala()">Kopyala</button>
-        <button class="btn" onclick="aiYardimciTarayicidaAc('https://claude.ai/new')">Claude'u Tarayıcıda Aç</button>
-        <button class="btn" onclick="aiYardimciTarayicidaAc('https://chatgpt.com')">ChatGPT'yi Tarayıcıda Aç</button>
+  <div class="card no-print" style="display:flex;flex-direction:column;">
+    <div class="row" style="justify-content:space-between;align-items:center;flex-wrap:wrap;">
+      <h2 style="margin:0;">AI Yazım Yardımcısı</h2>
+      <div class="row" style="margin:0;">
+        <button class="btn" style="padding:5px 10px;font-size:11px;" onclick="aiYardimciTarayicidaAc('https://claude.ai/new')">Claude'u Aç</button>
+        <button class="btn" style="padding:5px 10px;font-size:11px;" onclick="aiYardimciTarayicidaAc('https://chatgpt.com')">ChatGPT'yi Aç</button>
+        <button class="btn" style="padding:5px 10px;font-size:11px;" onclick="aiYardimciYeniKonusma()">Yeni Konuşma</button>
       </div>
     </div>
-  </div>
-  <div class="card no-print">
-    <h3>Daha ileri seviye: programın içine gerçek bir yapay zeka sohbeti</h3>
-    <p class="small">İstersek bunu bir adım öteye taşıyıp, cevabı da doğrudan program içinde gösteren gerçek bir sohbet kutusu kurabiliriz. Bunun için sizin kendi adınıza bir yapay zeka hesabı (örn. Anthropic/Claude API anahtarı) açmanız ve genelde çok düşük, sadece kullandığınız kadar ödediğiniz bir ücret ödemeniz gerekir. Ben size "üyelik/bulut" sistemi kurup herkese bedava sınırsız erişim veremem — o başka bir şirketin ücretli servisi ve her kullanıcının kendi hesabı olması gerekir. İsterseniz bu adımı birlikte atarız: siz bir API anahtarı alırsınız, Ayarlar'a bir kere girersiniz, program sizin adınıza doğrudan o servise bağlanıp cevabı burada gösterir.</p>
+    <p class="small" style="margin:6px 0 10px;">Gönderdiğiniz mesaj panoya otomatik kopyalanır — Claude/ChatGPT'ye yapıştırıp cevabı alın, aşağıya yapıştırıp ekleyin. Gerçek hesap/ücret gerektirmez; program hiçbir yapay zekaya doğrudan bağlı değil.</p>
+    <div style="min-height:120px;max-height:50vh;overflow-y:auto;display:flex;flex-direction:column;padding:10px;background:var(--panel-2);border-radius:8px;">
+      ${aiYardimciKonusma.length ? aiYardimciKonusma.map((m, i) => m.rol === "siz" ? `
+        <div style="align-self:flex-end;max-width:85%;background:var(--accent-bg);color:var(--accent-ink);padding:9px 13px;border-radius:12px 12px 2px 12px;margin-bottom:8px;">
+          <div>${nlToBr(m.metin)}</div>
+          <div class="small" style="margin-top:5px;opacity:.75;">📋 Panoya kopyalandı</div>
+          <button class="btn" style="padding:2px 7px;font-size:10px;margin-top:4px;" onclick="aiYardimciTekrarKopyala(${i})">Tekrar Kopyala</button>
+        </div>` : `
+        <div style="align-self:flex-start;max-width:85%;background:var(--panel);border:1px solid var(--line);padding:9px 13px;border-radius:12px 12px 12px 2px;margin-bottom:8px;">
+          <div class="small" style="font-weight:600;margin-bottom:3px;">Yapay Zeka Cevabı</div>
+          <div>${nlToBr(m.metin)}</div>
+        </div>`).join("") : `<p class="small" style="text-align:center;margin:30px 0;">Henüz mesaj yok. Aşağıya yazın (ya da 🎤 ile söyleyin) ve gönderin.</p>`}
+      ${aiYardimciKonusma.length && aiYardimciKonusma[aiYardimciKonusma.length - 1].rol === "siz" ? `
+      <div style="align-self:flex-start;max-width:85%;width:85%;">
+        <textarea id="ai-cevap-yapistir" rows="3" placeholder="Yapay zekadan aldığınız cevabı buraya yapıştırın…" style="width:100%;"></textarea>
+        <button class="btn primary" style="margin-top:4px;padding:5px 10px;font-size:11px;" onclick="aiYardimciCevapEkle()">Cevabı Ekle</button>
+      </div>` : ""}
+    </div>
+    <div class="row" style="margin-top:10px;align-items:flex-end;">
+      <textarea id="ai-istek" rows="2" style="flex:1;min-width:200px;" placeholder="Ne yapmak istiyorsunuz? örn. Mayıs ayı için 12. sınıf öğrencilerine staj bitirme yazısı yaz, resmi dil kullan"></textarea>
+    </div>
+    <div class="row" style="margin-top:6px;">
+      <button class="btn primary" onclick="aiYardimciMesajGonder()">Gönder</button>
+      ${aiYardimciSesGirisiVarMi() ? `<button class="btn" id="ai-mikrofon-btn" onclick="aiYardimciSesGirisiBaslat()" title="Yazmak yerine konuşarak anlatın">🎤 Sesle Anlat</button>` : ""}
+    </div>
   </div>`;
 }
 
