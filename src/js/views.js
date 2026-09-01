@@ -33,8 +33,16 @@ const DERS_PROGRAMI_TABS = [
   { id: "dagitim", label: "Ders Dağıtım", icon: "shuffle" },
   { id: "programlar", label: "Programlar", icon: "grid" }
 ];
+const STAJ_TABS = [
+  { id: "ogrenciler", label: "Öğrenciler", icon: "school" },
+  { id: "not-ortalamalari", label: "Not Ortalamaları", icon: "percent" },
+  { id: "tercihler", label: "Tercihler", icon: "star" },
+  { id: "kontenjanlar", label: "İşletme Kontenjanları", icon: "building" },
+  { id: "sonuc", label: "Sonuç / Yerleştirme", icon: "badge" }
+];
 let activeModule = "ana";
 let activeTab = "havuz";
+let activeStajTab = "ogrenciler";
 let activeClassId = S.classes[0] ? S.classes[0].id : null;
 let activeTeacherId = S.teachers[0] ? S.teachers[0].id : null;
 let multiSelectMode = false;
@@ -55,6 +63,10 @@ function renderSubTabbar() {
     el.innerHTML = `<div class="nav-section-label">Ders Programı</div>` + DERS_PROGRAMI_TABS.map(t =>
       `<button class="nav-btn sub ${t.id === activeTab ? 'active' : ''}" onclick="setTab('${t.id}')">${icon(t.icon)}<span>${t.label}</span></button>`
     ).join("");
+  } else if (activeModule === "staj-yerlestirme") {
+    el.innerHTML = `<div class="nav-section-label">Staj Yerleştirme</div>` + STAJ_TABS.map(t =>
+      `<button class="nav-btn sub ${t.id === activeStajTab ? 'active' : ''}" onclick="setStajTab('${t.id}')">${icon(t.icon)}<span>${t.label}</span></button>`
+    ).join("");
   } else {
     el.innerHTML = "";
   }
@@ -62,12 +74,14 @@ function renderSubTabbar() {
 function setModule(id) {
   activeModule = id;
   if (id === "ders-programi" && !DERS_PROGRAMI_TABS.some(t => t.id === activeTab)) activeTab = "havuz";
+  if (id === "staj-yerlestirme" && !STAJ_TABS.some(t => t.id === activeStajTab)) activeStajTab = "ogrenciler";
   selectedTeacherCells.clear();
   multiSelectMode = false;
   renderTabbar();
   renderMain();
 }
 function setTab(id) { activeTab = id; selectedTeacherCells.clear(); multiSelectMode = false; renderSubTabbar(); renderMain(); }
+function setStajTab(id) { activeStajTab = id; renderSubTabbar(); renderMain(); }
 
 function renderMain() {
   const el = document.getElementById("main");
@@ -80,7 +94,14 @@ function renderMain() {
   if (activeModule === "norm-kadro") { el.innerHTML = viewNormKadro(); return; }
   if (activeModule === "okul-zumresi") { el.innerHTML = viewOkulZumresi(); return; }
   if (activeModule === "il-zumresi") { el.innerHTML = viewPlaceholderModule("İl Zümresi", "İl zümre toplantı tutanaklarınızı buraya birlikte kuracağız."); return; }
-  if (activeModule === "staj-yerlestirme") { el.innerHTML = viewStajYerlestirme(); return; }
+  if (activeModule === "staj-yerlestirme") {
+    el.innerHTML = activeStajTab === "not-ortalamalari" ? viewStajNotOrtalamalari()
+      : activeStajTab === "tercihler" ? viewStajTercihler()
+      : activeStajTab === "kontenjanlar" ? viewStajKontenjanlar()
+      : activeStajTab === "sonuc" ? viewStajSonuc()
+      : viewStajOgrenciler();
+    return;
+  }
   if (activeModule === "atolye-envanter") { el.innerHTML = viewAtolyeEnvanter(); return; }
   if (activeModule === "performans") { el.innerHTML = viewPerformans(); return; }
   if (activeModule === "sinav-notlari") { el.innerHTML = viewSinavNotlari(); return; }
@@ -361,13 +382,132 @@ function studentIsletmeOptions(selected) {
   if (selected && !names.includes(selected)) names.unshift(selected);
   return `<option value="">— seçilmedi —</option>` + names.map(n => `<option value="${n}" ${n === selected ? 'selected' : ''}>${n}</option>`).join("");
 }
-function viewStajYerlestirme() {
+function stajBySinif() {
   const bySinif = {};
   S.students.forEach(st => {
     const key = st.sinif || "—";
     if (!bySinif[key]) bySinif[key] = [];
     bySinif[key].push(st);
   });
+  return bySinif;
+}
+/* -- Sekme 1: Öğrenciler (roster + ekleme) -- */
+function viewStajOgrenciler() {
+  const bySinif = stajBySinif();
+  const sinifKeys = Object.keys(bySinif).sort();
+  const listHtml = sinifKeys.map(sinif => {
+    const rows = bySinif[sinif].map(st => `
+      <tr>
+        <td>${st.okulNo || ''}</td>
+        <td>${escHtml(st.ad)}</td>
+        <td>${st.dal || ''}</td>
+        <td class="no-print"><div class="row" style="margin:0;"><button class="btn" onclick="editStudent('${st.id}')">Düzenle</button><button class="btn danger" onclick="deleteStudent('${st.id}')">Sil</button></div></td>
+      </tr>`).join("");
+    return `<h2 style="margin-top:16px;">${escHtml(sinif)}</h2><table><tr><th>Okul No</th><th>Ad Soyad</th><th>Dal</th><th class="no-print"></th></tr>${rows}</table>`;
+  }).join("") || `<p class="small">Henüz öğrenci eklenmedi.</p>`;
+
+  return `
+  <div class="card no-print">
+    <h2>Staj Yerleştirme — Öğrenciler</h2>
+    <p class="small">Staj yerleştirmesi yapılacak öğrenci listesi. Not ortalamalarını "Not Ortalamaları", işletme tercihlerini "Tercihler" sekmesinden girin; sonuç ve yerleştirme "Sonuç / Yerleştirme" sekmesinde.</p>
+  </div>
+  <div class="card">${listHtml}</div>
+  <div class="card no-print">
+    <h2>Öğrenci Listesinden Ekle</h2>
+    <p class="small">Öğrenci Listesi modülüne aktardığınız e-Okul listesinden bu sınıfın tüm öğrencilerini tek seferde ekleyin.</p>
+    <div class="row" style="max-width:260px"><button class="btn primary" onclick="stajListedenTopluEkleModal()">Öğrenci Listesinden Toplu Ekle</button></div>
+  </div>
+  <div class="card no-print">
+    <h2>Öğrenci Ekle</h2>
+    <div class="grid3">
+      <div><label class="small">Sınıf</label><input type="text" id="ns-sinif" placeholder="örn. 12/A" style="width:100%"></div>
+      <div><label class="small">Okul No</label><input type="text" id="ns-okulno" style="width:100%"></div>
+      <div><label class="small">Ad Soyad</label><input type="text" id="ns-ad" style="width:100%"></div>
+      <div><label class="small">Dal</label><input type="text" id="ns-dal" placeholder="örn. MBO" style="width:100%"></div>
+      <div><label class="small">İşletme (opsiyonel)</label><select id="ns-isletme" style="width:100%">${studentIsletmeOptions()}</select></div>
+    </div>
+    <div class="row" style="max-width:200px"><button class="btn primary" onclick="addStudent()">Ekle</button></div>
+  </div>
+  <div class="card no-print">
+    <h2>Excel'den Toplu Ekle</h2>
+    <p class="small">Excel dosyanızdaki Sınıf, Okul No, Ad Soyad, Dal, İşletme sütunlarını seçip kopyalayın (Ctrl+C), aşağıya yapıştırın (Ctrl+V) ve "İçe Aktar"a basın. Her satır bir öğrenci olmalı.</p>
+    <textarea id="bulk-student-paste" style="width:100%;height:120px;font-family:monospace;font-size:11.5px;" placeholder="12/A&#9;23014&#9;Ramazan Övek&#9;MBO&#9;TKİ Ege Linyitleri İşletmesi Müdürlüğü"></textarea>
+    <div class="row" style="max-width:200px"><button class="btn primary" onclick="bulkImportStudents()">İçe Aktar</button></div>
+  </div>`;
+}
+/* -- Sekme 2: Not Ortalamaları -- */
+function viewStajNotOrtalamalari() {
+  const bySinif = stajBySinif();
+  const sinifKeys = Object.keys(bySinif).sort();
+  const listHtml = sinifKeys.map(sinif => {
+    const rows = bySinif[sinif].map(st => `
+      <tr>
+        <td>${st.okulNo || ''}</td>
+        <td>${escHtml(st.ad)}</td>
+        <td>${st.dal || ''}</td>
+        <td class="no-print"><input type="text" value="${escHtml(st.not)}" style="width:70px;text-align:center;" onchange="updateStudentAlan('${st.id}','not',this.value)"></td>
+        <td class="print-only-cell">${escHtml(st.not || '—')}</td>
+      </tr>`).join("");
+    return `<h2 style="margin-top:16px;">${escHtml(sinif)}</h2><table><tr><th>Okul No</th><th>Ad Soyad</th><th>Dal</th><th>Not Ortalaması</th></tr>${rows}</table>`;
+  }).join("") || `<p class="small">Henüz öğrenci eklenmedi — önce Öğrenciler sekmesinden ekleyin.</p>`;
+  return `
+  <div class="card no-print">
+    <h2>Not Ortalamaları</h2>
+    <p class="small">Her öğrencinin staj yerleştirmesinde önceliğini belirleyecek not ortalamasını girin — "Sonuç / Yerleştirme" sekmesindeki Otomatik Yerleştir, öğrencileri bu nota göre yüksekten düşüğe sıralayarak tercihleriyle eşleştirir.</p>
+    ${belgeAracCubugu("Staj Yerleştirme - Not Ortalamaları")}
+  </div>
+  <div class="print-area">
+    ${belgeYazdirmaBasligi("Staj Yerleştirme — Not Ortalamaları")}
+    <div class="card">${listHtml}</div>
+  </div>`;
+}
+/* -- Sekme 3: Tercihler -- */
+function viewStajTercihler() {
+  const bySinif = stajBySinif();
+  const sinifKeys = Object.keys(bySinif).sort();
+  const listHtml = sinifKeys.map(sinif => {
+    const rows = bySinif[sinif].map(st => `
+      <tr>
+        <td>${st.okulNo || ''}</td>
+        <td>${escHtml(st.ad)}</td>
+        <td class="no-print"><input type="text" value="${escHtml(st.tercihler)}" placeholder="1. tercih, 2. tercih, ..." style="width:100%;" onchange="updateStudentAlan('${st.id}','tercihler',this.value)"></td>
+        <td class="print-only-cell">${escHtml(st.tercihler || '—')}</td>
+        <td class="no-print"><input type="text" value="${escHtml(st.istemiyor)}" placeholder="istemediği işletmeler" style="width:100%;" onchange="updateStudentAlan('${st.id}','istemiyor',this.value)"></td>
+        <td class="print-only-cell">${escHtml(st.istemiyor || '—')}</td>
+      </tr>`).join("");
+    return `<h2 style="margin-top:16px;">${escHtml(sinif)}</h2><table><tr><th>Okul No</th><th>Ad Soyad</th><th>Tercihleri (öncelik sırasıyla virgülle)</th><th>İstemediği İşletmeler (virgülle)</th></tr>${rows}</table>`;
+  }).join("") || `<p class="small">Henüz öğrenci eklenmedi — önce Öğrenciler sekmesinden ekleyin.</p>`;
+  return `
+  <div class="card no-print">
+    <h2>Tercihler</h2>
+    <p class="small">Her öğrencinin hangi işletmeleri, hangi sırayla tercih ettiğini girin (1. tercih önce). Otomatik Yerleştirme önce bu tercihlere göre eşleştirme dener, kontenjan dolmuşsa sıradaki tercihe bakar.</p>
+    ${belgeAracCubugu("Staj Yerleştirme - Tercihler")}
+  </div>
+  <div class="print-area">
+    ${belgeYazdirmaBasligi("Staj Yerleştirme — Tercihler")}
+    <div class="card" style="overflow-x:auto;">${listHtml}</div>
+  </div>`;
+}
+/* -- Sekme 4: İşletme Kontenjanları -- */
+function viewStajKontenjanlar() {
+  const dallar = [...new Set(S.students.map(s => s.dal).filter(Boolean))];
+  const kontenjanRows = S.isletmeler.map(isl => `
+    <tr>
+      <td>${escHtml(isl.name)}</td>
+      ${dallar.map(d => `<td><input type="number" min="0" value="${escHtml(isl.kontenjanlar[d] || '')}" style="width:60px;" onchange="setIsletmeKontenjan('${isl.id}','${jsq(d)}',this.value)"></td>`).join("")}
+      <td><input type="text" value="${escHtml(isl.talep)}" placeholder="örn. Ali Rıza Yetim, Mehmet Mamak" style="width:220px;" onchange="setIsletmeTalep('${isl.id}',this.value)"></td>
+    </tr>`).join("") || `<tr><td colspan="${dallar.length + 2}" class="small">Önce Ders Programı &gt; Koordinatörlük'ten işletme ekleyin.</td></tr>`;
+  return `
+  <div class="card no-print">
+    <h2>İşletme Kontenjanları</h2>
+    <p class="small">Her işletmenin dal başına kaç öğrenci alabileceğini ve varsa özellikle istediği (isimle talep ettiği) öğrencileri buradan girin. İşletme listesi <b>Koordinatörlük</b> sekmesine eklediğiniz işletmelerden gelir.</p>
+    <table><thead><tr><th>İşletme</th>${dallar.map(d => `<th>${escHtml(d)} Kontenjanı</th>`).join("")}<th>Talep Ettiği Öğrenciler</th></tr></thead>
+    <tbody>${kontenjanRows}</tbody></table>
+  </div>`;
+}
+/* -- Sekme 5: Sonuç / Yerleştirme (çıktı) -- */
+function viewStajSonuc() {
+  const bySinif = stajBySinif();
   const sinifKeys = Object.keys(bySinif).sort();
   const listHtml = sinifKeys.map(sinif => {
     const rows = bySinif[sinif].map(st => `
@@ -377,56 +517,20 @@ function viewStajYerlestirme() {
         <td>${st.dal || ''}</td>
         <td class="no-print"><select onchange="setStudentIsletme('${st.id}', this.value)">${studentIsletmeOptions(st.isletme)}</select>${st.yerlestirmeSirasi ? `<div class="small">${yerlestirmeSirasiPill(st.yerlestirmeSirasi)}</div>` : ""}</td>
         <td class="print-only-cell">${escHtml(st.isletme || '—')}</td>
-        <td class="no-print"><div class="row" style="margin:0;"><button class="btn" onclick="editStudent('${st.id}')">Düzenle</button><button class="btn danger" onclick="deleteStudent('${st.id}')">Sil</button></div></td>
       </tr>`).join("");
-    return `<h2 style="margin-top:16px;">${escHtml(sinif)}</h2><table><tr><th>Okul No</th><th>Ad Soyad</th><th>Dal</th><th>İşletme</th><th class="no-print"></th></tr>${rows}</table>`;
+    return `<h2 style="margin-top:16px;">${escHtml(sinif)}</h2><table><tr><th>Okul No</th><th>Ad Soyad</th><th>Dal</th><th>İşletme</th></tr>${rows}</table>`;
   }).join("") || `<p class="small">Henüz öğrenci eklenmedi.</p>`;
-  const dallar = [...new Set(S.students.map(s => s.dal).filter(Boolean))];
-  const kontenjanRows = S.isletmeler.map(isl => `
-    <tr>
-      <td>${escHtml(isl.name)}</td>
-      ${dallar.map(d => `<td><input type="number" min="0" value="${escHtml(isl.kontenjanlar[d] || '')}" style="width:60px;" onchange="setIsletmeKontenjan('${isl.id}','${jsq(d)}',this.value)"></td>`).join("")}
-      <td><input type="text" value="${escHtml(isl.talep)}" placeholder="örn. Ali Rıza Yetim, Mehmet Mamak" style="width:220px;" onchange="setIsletmeTalep('${isl.id}',this.value)"></td>
-    </tr>`).join("") || `<tr><td colspan="${dallar.length + 2}" class="small">Önce Ders Programı &gt; Koordinatörlük'ten işletme ekleyin.</td></tr>`;
 
   return `
   <div class="card no-print">
-    <h2>Staj Yerleştirme — Öğrenci Listesi</h2>
-    <p class="small">Hangi öğrencinin hangi işletmede staj yaptığını burada takip edin. İşletme sütunundaki listeyi <b>Koordinatörlük</b> sekmesine eklediğiniz işletmeler doldurur.</p>
-    ${belgeAracCubugu("Staj Yerleştirme - Öğrenci Listesi")}
+    <h2>Sonuç / Yerleştirme</h2>
+    <p class="small">Not Ortalamaları ve Tercihler sekmelerinden girdiğiniz bilgilere göre, İşletme Kontenjanları sekmesindeki kontenjanları dikkate alarak otomatik işletme ataması yapar. Sırasıyla: önce işletmenin özellikle istediği öğrenciler, sonra nota göre sıralı tercih eşleştirmesi, sonra kalan kontenjana göre döngüsel dağıtım (istemediği işletmeler elenir), son çare olarak zorunlu atama. <b>Zaten işletmesi atanmış öğrenciler değiştirilmez</b>. İstediğiniz öğrencinin işletmesini buradan elle de değiştirebilirsiniz.</p>
+    <div class="row" style="max-width:260px"><button class="btn primary" onclick="stajOtomatikYerlestir()">Otomatik Yerleştir</button></div>
+    ${belgeAracCubugu("Staj Yerleştirme - Sonuç")}
   </div>
   <div class="print-area">
-    ${belgeYazdirmaBasligi("Staj Yerleştirme — Öğrenci Listesi")}
+    ${belgeYazdirmaBasligi("Staj Yerleştirme — Sonuç")}
     <div class="card">${listHtml}</div>
-  </div>
-  <div class="card no-print">
-    <h2>Öğrenci Listesinden Ekle</h2>
-    <p class="small">Öğrenci Listesi modülüne aktardığınız e-Okul listesinden bu sınıfın tüm öğrencilerini tek seferde ekleyin, sonra işletmelerini burada atayın.</p>
-    <div class="row" style="max-width:260px"><button class="btn primary" onclick="stajListedenTopluEkleModal()">Öğrenci Listesinden Toplu Ekle</button></div>
-  </div>
-  <div class="card no-print">
-    <h2>Otomatik Yerleştirme</h2>
-    <p class="small">Öğrencilerin "Düzenle" penceresinden girdiğiniz not, tercih ve istemediği işletme bilgilerine göre, aşağıdaki kontenjanları dikkate alarak otomatik işletme ataması yapar. Sırasıyla: önce işletmenin özellikle istediği öğrenciler, sonra nota göre sıralı tercih eşleştirmesi, sonra kalan kontenjana göre döngüsel dağıtım (istemediği işletmeler elenir), son çare olarak zorunlu atama. <b>Zaten işletmesi atanmış öğrenciler değiştirilmez</b> — sadece işletmesi boş olanlara uygulanır.</p>
-    <table style="margin-bottom:10px;"><thead><tr><th>İşletme</th>${dallar.map(d => `<th>${escHtml(d)} Kontenjanı</th>`).join("")}<th>Talep Ettiği Öğrenciler</th></tr></thead>
-    <tbody>${kontenjanRows}</tbody></table>
-    <div class="row" style="max-width:260px"><button class="btn primary" onclick="stajOtomatikYerlestir()">Otomatik Yerleştir</button></div>
-  </div>
-  <div class="card no-print">
-    <h2>Öğrenci Ekle</h2>
-    <div class="grid3">
-      <div><label class="small">Sınıf</label><input type="text" id="ns-sinif" placeholder="örn. 12/A" style="width:100%"></div>
-      <div><label class="small">Okul No</label><input type="text" id="ns-okulno" style="width:100%"></div>
-      <div><label class="small">Ad Soyad</label><input type="text" id="ns-ad" style="width:100%"></div>
-      <div><label class="small">Dal</label><input type="text" id="ns-dal" placeholder="örn. MBO" style="width:100%"></div>
-      <div><label class="small">İşletme</label><select id="ns-isletme" style="width:100%">${studentIsletmeOptions()}</select></div>
-    </div>
-    <div class="row" style="max-width:200px"><button class="btn primary" onclick="addStudent()">Ekle</button></div>
-  </div>
-  <div class="card no-print">
-    <h2>Excel'den Toplu Ekle</h2>
-    <p class="small">Excel dosyanızdaki Sınıf, Okul No, Ad Soyad, Dal, İşletme sütunlarını seçip kopyalayın (Ctrl+C), aşağıya yapıştırın (Ctrl+V) ve "İçe Aktar"a basın. Her satır bir öğrenci olmalı.</p>
-    <textarea id="bulk-student-paste" style="width:100%;height:120px;font-family:monospace;font-size:11.5px;" placeholder="12/A&#9;23014&#9;Ramazan Övek&#9;MBO&#9;TKİ Ege Linyitleri İşletmesi Müdürlüğü"></textarea>
-    <div class="row" style="max-width:200px"><button class="btn primary" onclick="bulkImportStudents()">İçe Aktar</button></div>
   </div>`;
 }
 function dalForSinif(sinif) {
@@ -494,9 +598,7 @@ function editStudent(id) {
         <label class="small">Okul No</label><input type="text" id="es-okulno" value="${escHtml(st.okulNo || '')}" style="width:100%">
         <label class="small">Ad Soyad</label><input type="text" id="es-ad" value="${escHtml(st.ad || '')}" style="width:100%">
         <label class="small">Dal</label><input type="text" id="es-dal" value="${escHtml(st.dal || '')}" style="width:100%">
-        <label class="small">Notu (Otomatik Yerleştirme'de öncelik sırası için — yüksek not önce yerleşir)</label><input type="text" id="es-not" value="${escHtml(st.not || '')}" style="width:100%">
-        <label class="small">Tercihleri (işletme adları, öncelik sırasıyla virgülle — 1. tercih önce)</label><input type="text" id="es-tercihler" value="${escHtml(st.tercihler || '')}" style="width:100%">
-        <label class="small">İstemediği İşletmeler (virgülle)</label><input type="text" id="es-istemiyor" value="${escHtml(st.istemiyor || '')}" style="width:100%">
+        <p class="small">Not ortalaması "Not Ortalamaları", tercihleri "Tercihler" sekmesinden girilir.</p>
         <div class="row">
           <button class="btn primary" onclick="saveStudentEdit('${id}')">Kaydet</button>
           <button class="btn" onclick="closeModal()">İptal</button>
@@ -513,15 +615,17 @@ function saveStudentEdit(id) {
   st.okulNo = document.getElementById("es-okulno").value.trim();
   st.ad = ad;
   st.dal = document.getElementById("es-dal").value.trim();
-  st.not = document.getElementById("es-not").value.trim();
-  st.tercihler = document.getElementById("es-tercihler").value.trim();
-  st.istemiyor = document.getElementById("es-istemiyor").value.trim();
   save(); closeModal(); renderMain();
 }
 function setStudentIsletme(id, isletme) {
   const st = S.students.find(s => s.id === id);
   if (st) { st.isletme = isletme; st.yerlestirmeSirasi = ""; }
   save(); renderMain();
+}
+function updateStudentAlan(id, field, value) {
+  const st = S.students.find(s => s.id === id);
+  if (st) st[field] = value.trim();
+  save();
 }
 function setIsletmeKontenjan(isletmeId, dal, value) {
   const isl = isletmeById(isletmeId);
