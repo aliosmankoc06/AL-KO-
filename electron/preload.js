@@ -18,5 +18,6 @@ contextBridge.exposeInMainWorld("desktop", {
   importEnvanterXlsx: (filePath) => ipcRenderer.invoke("import:envanter-xlsx", filePath),
   importPerformansXlsx: (filePath) => ipcRenderer.invoke("import:performans-xlsx", filePath),
   openPdfDialog: () => ipcRenderer.invoke("dialog:open-pdf"),
-  importOgrenciPdf: (filePath) => ipcRenderer.invoke("import:ogrenci-pdf", filePath)
+  importOgrenciPdf: (filePath) => ipcRenderer.invoke("import:ogrenci-pdf", filePath),
+  importNotOrtalamaXlsx: (filePath) => ipcRenderer.invoke("import:not-ortalama-xlsx", filePath)
 });

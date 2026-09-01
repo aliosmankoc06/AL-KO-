@@ -114,6 +114,27 @@ ipcMain.handle("import:performans-xlsx", async (evt, filePath) => {
   return parsePerformansWorkbook(filePath, XLSX);
 });
 
+ipcMain.handle("import:not-ortalama-xlsx", async (evt, filePath) => {
+  const wb = XLSX.readFile(filePath);
+  const sheet = wb.Sheets[wb.SheetNames[0]];
+  const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "" });
+  let okulNoCol = 0, notCol = 1, basladi = 0;
+  for (let r = 0; r < Math.min(rows.length, 5); r++) {
+    const row = rows[r].map(c => String(c).trim().toLocaleLowerCase("tr-TR"));
+    const oIdx = row.findIndex(c => c.includes("okul") && c.includes("no"));
+    const nIdx = row.findIndex(c => c.includes("not") || c.includes("ortalama") || c.includes("puan"));
+    if (oIdx >= 0 && nIdx >= 0) { okulNoCol = oIdx; notCol = nIdx; basladi = r + 1; break; }
+  }
+  const kayitlar = [];
+  for (let r = basladi; r < rows.length; r++) {
+    const okulNo = String(rows[r][okulNoCol] !== undefined ? rows[r][okulNoCol] : "").trim();
+    const not_ = String(rows[r][notCol] !== undefined ? rows[r][notCol] : "").trim();
+    if (!okulNo) continue;
+    kayitlar.push({ okulNo, not: not_ });
+  }
+  return { kayitlar };
+});
+
 ipcMain.handle("dialog:open-pdf", async () => {
   const result = await dialog.showOpenDialog(mainWindow, {
     title: "Sınıf Listesi PDF Seç",

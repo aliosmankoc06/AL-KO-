@@ -466,9 +466,11 @@ function viewStajNotOrtalamalari() {
   </div>
   <div class="card no-print">
     <h2>e-Okul'dan Not Ortalamalarını Yükle</h2>
-    <p class="small">Programın e-Okul'a doğrudan bağlantısı yok (e-Okul'un böyle bir açık bağlantı/API imkanı yok, giriş bilgilerinizi de isteyip saklamayız) — ama e-Okul'dan aldığınız not çizelgesi Excel'ini buraya yapıştırarak aynı işi yapabilirsiniz: Excel'de <b>Okul No</b> ve <b>Not Ortalaması</b> sütunlarını seçip kopyalayın (Ctrl+C), aşağıya yapıştırın (Ctrl+V) ve "Evrak Yükle"ye basın. Okul numarası burada zaten kayıtlı olan öğrenciyle eşleşince notu otomatik günceller.</p>
-    <textarea id="not-ort-paste" style="width:100%;height:100px;font-family:monospace;font-size:11.5px;" placeholder="57&#9;90&#10;68&#9;50"></textarea>
-    <div class="row" style="max-width:200px"><button class="btn primary" onclick="notOrtalamalariIceAktar()">Evrak Yükle</button></div>
+    <p class="small">Programın e-Okul'a doğrudan bağlantısı yok (e-Okul'un böyle bir açık bağlantı/API imkanı yok, giriş bilgilerinizi de isteyip saklamayız). Ama e-Okul'dan indirdiğiniz not çizelgesi Excel dosyasını doğrudan buraya yükleyebilirsiniz — dosyada bir yerde <b>Okul No</b> ve <b>Not/Ortalama</b> sütunlarını arar, okul numarası burada kayıtlı bir öğrenciyle eşleşince notunu otomatik günceller.</p>
+    <div class="row" style="max-width:220px"><button class="btn primary" onclick="notOrtalamalariExcelYukle()">Excel Yükle</button></div>
+    <p class="small" style="margin-top:14px;">Excel dosyanız yoksa, Okul No ve Not sütunlarını elle kopyalayıp (Ctrl+C) aşağıya yapıştırabilirsiniz (Ctrl+V):</p>
+    <textarea id="not-ort-paste" style="width:100%;height:80px;font-family:monospace;font-size:11.5px;" placeholder="57&#9;90&#10;68&#9;50"></textarea>
+    <div class="row" style="max-width:200px"><button class="btn" onclick="notOrtalamalariIceAktar()">Yapıştırılanı Yükle</button></div>
   </div>`;
 }
 /* -- Sekme 3: Tercihler -- */
@@ -779,23 +781,39 @@ function bulkImportStudents() {
   renderMain();
   alert(`${added} öğrenci eklendi.`);
 }
-function notOrtalamalariIceAktar() {
-  const raw = document.getElementById("not-ort-paste").value;
-  const lines = raw.split("\n").map(l => l.replace(/\r$/, "")).filter(l => l.trim());
+function notOrtalamalariUygula(kayitlar) {
   let guncellenen = 0, eslesmeyen = 0;
-  lines.forEach(line => {
-    const cols = line.split("\t");
-    if (cols.length < 2) return;
-    const okulNo = (cols[0] || "").trim();
-    const not = (cols[1] || "").trim();
+  kayitlar.forEach(k => {
+    const okulNo = String(k.okulNo || "").trim();
+    const not = String(k.not !== undefined ? k.not : "").trim();
     if (!okulNo) return;
     const st = S.students.find(s => s.okulNo === okulNo);
     if (st) { st.not = not; guncellenen++; } else { eslesmeyen++; }
   });
   save();
-  document.getElementById("not-ort-paste").value = "";
   renderMain();
   alert(`${guncellenen} öğrencinin not ortalaması güncellendi.` + (eslesmeyen ? ` ${eslesmeyen} okul numarası burada kayıtlı öğrenciyle eşleşmedi — önce Öğrenciler sekmesinden ekleyin.` : ""));
+}
+function notOrtalamalariIceAktar() {
+  const raw = document.getElementById("not-ort-paste").value;
+  const lines = raw.split("\n").map(l => l.replace(/\r$/, "")).filter(l => l.trim());
+  const kayitlar = lines.map(line => {
+    const cols = line.split("\t");
+    return { okulNo: cols[0], not: cols[1] };
+  }).filter(k => k.okulNo !== undefined && k.not !== undefined);
+  document.getElementById("not-ort-paste").value = "";
+  notOrtalamalariUygula(kayitlar);
+}
+function notOrtalamalariExcelYukle() {
+  if (!window.desktop || !window.desktop.isElectron) { alert("Excel yükleme sadece masaüstü uygulamasında çalışır."); return; }
+  window.desktop.openXlsxDialog().then(filePath => {
+    if (!filePath) return;
+    window.desktop.importNotOrtalamaXlsx(filePath).then(result => {
+      const kayitlar = result.kayitlar || [];
+      if (!kayitlar.length) { alert("Bu dosyada Okul No ve Not/Ortalama sütunları bulunamadı."); return; }
+      notOrtalamalariUygula(kayitlar);
+    }).catch(e => alert("Yükleme hatası: " + e.message));
+  });
 }
 
 function viewPlaceholderModule(title, hint) {
@@ -1120,8 +1138,8 @@ function importPlanFromExcel() {
       if (eklenen.yillik) parcalar.push(eklenen.yillik + " yıllık plan");
       if (eklenen.gunluk) parcalar.push(eklenen.gunluk + " günlük plan");
       if (result.takvim) parcalar.push("akademik takvim (" + result.takvim.haftalar.length + " hafta)");
-      alert("İçe aktarıldı: " + parcalar.join(", ") + ".");
-    }).catch(e => alert("İçe aktarma hatası: " + e.message));
+      alert("Yüklendi: " + parcalar.join(", ") + ".");
+    }).catch(e => alert("Yükleme hatası: " + e.message));
   });
 }
 function renderYillikPlanTable(p) {
@@ -1451,8 +1469,8 @@ function importOgrenciListesiFromPdf() {
       activeOgrenciListesiSinif = result.siniflar[0].sinif;
       save();
       renderMain();
-      alert(`İçe aktarıldı: ${result.siniflar.length} sınıf, ${sonuc.eklenen} yeni öğrenci eklendi, ${sonuc.guncellenen} öğrenci güncellendi.`);
-    }).catch(e => alert("İçe aktarma hatası: " + e.message));
+      alert(`Yüklendi: ${result.siniflar.length} sınıf, ${sonuc.eklenen} yeni öğrenci eklendi, ${sonuc.guncellenen} öğrenci güncellendi.`);
+    }).catch(e => alert("Yükleme hatası: " + e.message));
   });
 }
 function addOgrenci(sinif) {
@@ -2260,8 +2278,8 @@ function importEnvanterFromExcel() {
         }
       });
       save(); renderMain();
-      alert("İçe aktarıldı: " + eklenen + " yeni makine, " + guncellenen + " güncellenen makine.");
-    }).catch(e => alert("İçe aktarma hatası: " + e.message));
+      alert("Yüklendi: " + eklenen + " yeni makine, " + guncellenen + " güncellenen makine.");
+    }).catch(e => alert("Yükleme hatası: " + e.message));
   });
 }
 function viewMakinelerBolumu() {
@@ -2754,7 +2772,7 @@ function importPerformansFromExcel() {
       });
       save(); renderMain();
       alert("Yüklendi: " + eklenen + " yeni kayıt, " + guncellenen + " güncellenen kayıt.\n\nNot: yüklenen sınıf/şube adlarını kontrol edin — kaynak Excel dosyasında bazen elle yazım hatası olabiliyor (örn. \"123/A\" gibi), \"Bilgileri Düzenle\" ile düzeltebilirsiniz.");
-    }).catch(e => alert("İçe aktarma hatası: " + e.message));
+    }).catch(e => alert("Yükleme hatası: " + e.message));
   });
 }
 function renderPerformansKayitDetay(k) {
