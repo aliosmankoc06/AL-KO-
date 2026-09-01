@@ -3489,8 +3489,7 @@ function viewKalfalikUstalik() {
   </div>
   ${activeSnBelge === "cizelge" ? snIsDosyasiKriterAciklamasi() : ""}
   <div class="print-area">
-    ${belgeYazdirmaBasligi(baslik)}
-    ${activeSnBelge === "cizelge" ? snRosterTablo("ku", kayitlar) : snEkBelgeGovde("ku", kayitlar, { tur: activeKuTur, dal: activeKuDal }, baslik)}
+    ${activeSnBelge === "cizelge" ? belgeYazdirmaBasligi(baslik) + snRosterTablo("ku", kayitlar) : snEkBelgeGovde("ku", kayitlar, { tur: activeKuTur, dal: activeKuDal }, baslik)}
   </div>`;
 }
 
@@ -3520,8 +3519,7 @@ function viewBeceriSinavi() {
   </div>
   ${activeSnBelge === "cizelge" ? snIsDosyasiKriterAciklamasi() + beceriKomisyonKararKarti(activeBeceriSinif, aktifSinifTanimi.dal) : ""}
   <div class="print-area">
-    ${belgeYazdirmaBasligi(baslik)}
-    ${activeSnBelge === "cizelge" ? snRosterTablo("bs", kayitlar) : snEkBelgeGovde("bs", kayitlar, { sinif: activeBeceriSinif }, baslik)}
+    ${activeSnBelge === "cizelge" ? belgeYazdirmaBasligi(baslik) + snRosterTablo("bs", kayitlar) : snEkBelgeGovde("bs", kayitlar, { sinif: activeBeceriSinif }, baslik)}
   </div>`;
 }
 function aktifDalIcinEkle() {
