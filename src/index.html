@@ -33,6 +33,10 @@
       </button>
     </div>
     <div class="school-line" id="sidebar-school-line">Soma Mesleki ve Teknik Anadolu Lisesi<br>Makine Teknolojisi Alanı</div>
+    <div class="save-status-bar no-print">
+      <button class="btn" id="kaydet-btn" onclick="kaydetManuel()">💾 Kaydet</button>
+      <div class="small" id="son-kayit-metni">Henüz kayıt yok</div>
+    </div>
     <div class="sidebar-search">
       <input type="text" id="global-search-input" placeholder="Ara: sınıf, öğretmen, öğrenci, makine..." autocomplete="off" oninput="onGlobalSearchInput(this.value)" onkeydown="if(event.key==='Escape'){this.value='';onGlobalSearchInput('');this.blur();}">
       <div id="global-search-results"></div>

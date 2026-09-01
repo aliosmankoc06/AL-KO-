@@ -3947,8 +3947,14 @@ function toggleTheme() {
   applyTheme(next);
 }
 
-/* ---- Kaydedildi Bildirimi / Geri Al ---- */
+/* ---- Kaydedildi Bildirimi / Geri Al ----
+   showSaveToast her save() çağrısında (yani hemen hemen her alan
+   değişikliğinde) otomatik çalışır — kısa süreli bir "Kaydedildi"
+   uyarısı gösterir. Ama bu uyarı birkaç saniyede kayboluyor; sol
+   menüdeki "Son kayıt" yazısı ise KALICI — istediğiniz an bakıp son
+   kaydın ne zaman olduğunu görebilirsiniz, kaçırma endişesi olmadan. */
 function showSaveToast(offerUndo) {
+  sonKayitZamaniniGuncelle();
   const root = document.getElementById("toast-root");
   if (!root) return;
   let el = document.getElementById("save-toast");
@@ -3964,6 +3970,20 @@ function showSaveToast(offerUndo) {
   requestAnimationFrame(() => el.classList.add("show"));
   clearTimeout(el._hideTimer);
   el._hideTimer = setTimeout(() => { el.classList.remove("show"); }, offerUndo ? 5000 : 1400);
+}
+function sonKayitZamaniniGuncelle() {
+  const el = document.getElementById("son-kayit-metni");
+  if (!el) return;
+  const saat = new Date().toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" });
+  el.textContent = "✓ Son kayıt: " + saat;
+}
+function kaydetManuel() {
+  save();
+  const btn = document.getElementById("kaydet-btn");
+  if (!btn) return;
+  const eski = btn.textContent;
+  btn.textContent = "✓ Kaydedildi";
+  setTimeout(() => { btn.textContent = eski; }, 1200);
 }
 
 /* ---- Genel Arama ---- */
@@ -5334,7 +5354,10 @@ function showDagitimSonuc(r) {
 }
 
 /* ---- Programlar (Çıktılar) ---- */
+let activeProgramlarOgretmenId = "__ALL__";
+function selectProgramlarOgretmen(id) { activeProgramlarOgretmenId = id; renderMain(); }
 function viewProgramlar() {
+  if (activeProgramlarOgretmenId !== "__ALL__" && !S.teachers.some(t => t.id === activeProgramlarOgretmenId)) activeProgramlarOgretmenId = "__ALL__";
   const hoursSummary = S.teachers.map(t => {
     const h = teacherTotalHours(t.id);
     const mode = t.hoursMode || "min";
@@ -5344,16 +5367,25 @@ function viewProgramlar() {
     else ok = (typeof target !== "number") || (h >= target);
     return `<span class="pill ${ok ? 'ok' : 'warn'}" style="margin-right:6px;">${t.name}: ${h} sa</span>`;
   }).join("");
-  const body = S.teachers.map(t => renderEditableTeacherGrid(t.id)).join('<hr style="margin:22px 0;border:none;border-top:1px solid var(--line);">');
+  const secilenOgretmen = teacherById(activeProgramlarOgretmenId);
+  const gosterilecekOgretmenler = secilenOgretmen ? [secilenOgretmen] : S.teachers;
+  const secenekler = [{ value: "__ALL__", label: "Tümü (" + S.teachers.length + " öğretmen)" }].concat(S.teachers.map(t => ({ value: t.id, label: t.name })));
+  const body = gosterilecekOgretmenler.map(t => renderEditableTeacherGrid(t.id)).join('<hr style="margin:22px 0;border:none;border-top:1px solid var(--line);">');
+  const dosyaAdi = secilenOgretmen ? "Öğretmen Programı - " + secilenOgretmen.name : "Öğretmen Programları";
   return `
   <div class="card no-print">
     <h2>Programlar</h2>
     <p class="small">Boş bir hücreye tıklayın: ders ekleyin ya da o saati boşta kilitleyin. Dolu bir hücreye tıklayın: dersi kilitleyin ya da kaldırın. Bir öğretmenin programında birden fazla hücrede aynı anda işlem yapmak için o öğretmenin başlığındaki <b>Çoklu Seçim</b>'i açın.</p>
     <div style="margin-bottom:10px;">${hoursSummary}</div>
-    ${belgeAracCubugu("Öğretmen Programları")}
+    <div class="row" style="flex-wrap:wrap;margin-bottom:6px;">
+      <span class="small" style="align-self:center;font-weight:600;">Ekranda göster:</span>
+      ${sekmeDropdown("programlar-ogretmen", secenekler, activeProgramlarOgretmenId, "selectProgramlarOgretmen('{v}')")}
+    </div>
+    <p class="small no-print" style="margin-bottom:6px;">Tek bir öğretmen seçerseniz sayfa çok kısalır, okuması kolaylaşır. Hepsini birden yazdırmak/indirmek isterseniz "Tümü"nü seçin.</p>
+    ${belgeAracCubugu(dosyaAdi)}
   </div>
   <div class="print-area">
-    ${belgeYazdirmaBasligi("Öğretmen Programları")}
+    ${belgeYazdirmaBasligi(dosyaAdi)}
     <div class="card">${body}</div>
   </div>`;
 }
