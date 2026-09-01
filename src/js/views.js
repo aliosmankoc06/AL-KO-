@@ -1222,9 +1222,11 @@ function renderYillikPlanTable(p) {
   <div class="print-only" style="margin-bottom:10px;">
     <b>1.D 1.Sınav:</b> ${escHtml(st.d1s1 || "-")} · <b>1.D 2.Sınav:</b> ${escHtml(st.d1s2 || "-")} · <b>2.D 1.Sınav:</b> ${escHtml(st.d2s1 || "-")} · <b>2.D 2.Sınav:</b> ${escHtml(st.d2s2 || "-")}
   </div>` : "";
+  const ogretimYili = S.akademikTakvim ? S.akademikTakvim.ogretimYili : "";
   return `
   <div class="card no-print">
     <div class="row small" style="flex-wrap:wrap;gap:14px;align-items:center;">
+      <span><b>Eğitim-Öğretim Yılı:</b> ${escHtml(ogretimYili || "-")}</span>
       <span><b>Ders:</b> ${escHtml(p.ders)}</span>
       <span><b>Sınıf:</b> ${escHtml(p.sinif)}</span>
       <span><b>Ders Saati:</b> ${escHtml(p.dersSaati || "-")}</span>
@@ -1233,13 +1235,27 @@ function renderYillikPlanTable(p) {
     </div>
   </div>
   <div class="print-only" style="margin-bottom:10px;">
-    <b>Ders:</b> ${escHtml(p.ders)} · <b>Sınıf:</b> ${escHtml(p.sinif)} · <b>Ders Saati:</b> ${escHtml(p.dersSaati || "-")} · <b>Alan/Dal:</b> ${escHtml(p.alanDal || "-")}
+    <b>Eğitim-Öğretim Yılı:</b> ${escHtml(ogretimYili || "-")} · <b>Ders:</b> ${escHtml(p.ders)} · <b>Sınıf:</b> ${escHtml(p.sinif)} · <b>Ders Saati:</b> ${escHtml(p.dersSaati || "-")} · <b>Alan/Dal:</b> ${escHtml(p.alanDal || "-")}
   </div>
   ${sinavHtml}
   <div class="card" style="overflow-x:auto;">
     <table style="width:100%;"><thead><tr><th style="width:90px;">Tarih</th><th>Kazanımlar</th><th>Konular</th><th>Öğrenme-Öğretme Yöntem ve Teknikleri</th><th>Kullanılan Eğitim Teknolojileri, Araç ve Gereçler</th><th>Değerlendirme</th><th class="no-print"></th></tr></thead>
     <tbody>${rows}</tbody></table>
     <div class="row no-print"><button class="btn" onclick="addYillikHafta('${p.id}')">Hafta Ekle</button></div>
+  </div>
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:20px;">
+      <div>
+        <div>.../…/....</div>
+        <div style="margin-top:24px;font-weight:600;">${escHtml(S.kurumBilgileri.alanSefiAdi || "")}</div>
+        <div>Alan Şefi</div>
+      </div>
+      <div style="text-align:right;">
+        <div>UYGUNDUR</div>
+        <div style="margin-top:24px;font-weight:600;">${escHtml(S.kurumBilgileri.mudurAdi || "")}</div>
+        <div>Okul Müdürü</div>
+      </div>
+    </div>
   </div>`;
 }
 function renderGunlukPlanTable(p) {
@@ -1265,6 +1281,7 @@ function renderGunlukPlanTable(p) {
   <div class="card no-print">
     <div class="row small" style="flex-wrap:wrap;gap:14px;align-items:center;">
       <span><b>Ders:</b> ${escHtml(p.ders)}</span>
+      <span><b>Alan/Dal:</b> ${escHtml(p.alanDal || "-")}</span>
       <span><b>Sınıf:</b> ${escHtml(p.sinif)}</span>
       <span><b>Öğretmen:</b> ${escHtml(p.ogretmen || "-")}</span>
       <span><b>Ders Saati:</b> ${escHtml(p.dersSaati || "-")}</span>
@@ -1273,10 +1290,24 @@ function renderGunlukPlanTable(p) {
     </div>
   </div>
   <div class="print-only" style="margin-bottom:10px;">
-    <b>Ders:</b> ${escHtml(p.ders)} · <b>Sınıf:</b> ${escHtml(p.sinif)} · <b>Öğretmen:</b> ${escHtml(p.ogretmen || "-")} · <b>Ders Saati:</b> ${escHtml(p.dersSaati || "-")} · <b>Ders Günü:</b> ${escHtml(p.dersGunu || "-")}
+    <b>Ders:</b> ${escHtml(p.ders)} · <b>Alan/Dal:</b> ${escHtml(p.alanDal || "-")} · <b>Sınıf:</b> ${escHtml(p.sinif)} · <b>Öğretmen:</b> ${escHtml(p.ogretmen || "-")} · <b>Ders Saati:</b> ${escHtml(p.dersSaati || "-")} · <b>Ders Günü:</b> ${escHtml(p.dersGunu || "-")}
   </div>
   ${kayitlarHtml}
-  <div class="row no-print"><button class="btn" onclick="addGunlukKayit('${p.id}')">Ders Kaydı Ekle</button></div>`;
+  <div class="row no-print"><button class="btn" onclick="addGunlukKayit('${p.id}')">Ders Kaydı Ekle</button></div>
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:20px;">
+      <div>
+        <div>.../…/....</div>
+        <div style="margin-top:24px;font-weight:600;">${escHtml(S.kurumBilgileri.alanSefiAdi || "")}</div>
+        <div>Alan Şefi / Öğretmen</div>
+      </div>
+      <div style="text-align:right;">
+        <div>UYGUNDUR</div>
+        <div style="margin-top:24px;font-weight:600;">${escHtml(S.kurumBilgileri.mudurAdi || "")}</div>
+        <div>Okul Müdürü</div>
+      </div>
+    </div>
+  </div>`;
 }
 function viewPlanModule(kind) {
   const title = kind === "yillik" ? "Yıllık Plan" : "Günlük Plan";
@@ -1402,7 +1433,7 @@ function renderDbfDetay(r) {
     <div style="margin-top:14px;">
       <div style="font-weight:600;">${escHtml(m.modulAdi)}${m.modulSuresi ? " (" + escHtml(m.modulSuresi) + ")" : ""}</div>
       ${m.modulAmaci ? `<p class="small" style="margin:4px 0;">${escHtml(m.modulAmaci)}</p>` : ""}
-      ${(m.kazanimlar && m.kazanimlar.length) ? `<ul style="margin:4px 0 4px 18px;">${m.kazanimlar.map(k => `<li>${escHtml(k)}</li>`).join("")}</ul>` : ""}
+      ${(m.kazanimlar && m.kazanimlar.length) ? `<div class="small" style="margin-top:4px;"><b>Kazanımlar:</b><ul style="margin:4px 0 0 18px;">${m.kazanimlar.map(k => `<li>${escHtml(k)}</li>`).join("")}</ul></div>` : ""}
       ${(m.aciklamalar && m.aciklamalar.length) ? `<div class="small" style="margin-top:4px;"><b>Açıklamalar:</b><ul style="margin:4px 0 0 18px;">${m.aciklamalar.map(a => `<li>${escHtml(a)}</li>`).join("")}</ul></div>` : ""}
     </div>`).join("") : "";
   return `
@@ -1601,6 +1632,12 @@ function viewOgrenciListesi() {
         <thead><tr><th>S.No</th><th>Öğrenci No</th><th>Adı</th><th>Soyadı</th><th>Cinsiyeti</th><th>Pansiyon</th><th class="no-print"></th></tr></thead>
         <tbody>${rows || `<tr><td colspan="7" class="small">Bu sınıfta henüz öğrenci yok.</td></tr>`}</tbody>
       </table>
+      <div class="print-only" style="margin-top:14px;">
+        <div>Sınıf Öğretmeni: ..................................</div>
+        <div style="margin-top:8px;">Sınıf Müdür Yrd: ..................................</div>
+        <div style="margin-top:8px;">Sınıf Başkan Yrd: ..................................</div>
+        <div style="margin-top:8px;">Sınıf Başkanı: ..................................</div>
+      </div>
       <p class="small" style="margin-top:8px;">Kız Öğrenci Sayısı: ${kiz} · Erkek Öğrenci Sayısı: ${erkek} · Toplam: ${ogrenciler.length}</p>
     </div>
   </div>` : `<div class="card small" style="text-align:center;padding:30px 20px;">Henüz hiçbir sınıf için öğrenci listesi yok. Yukarıdan PDF yükleyebilir ya da bir sınıf seçip elle ekleyebilirsiniz.</div>`}`;
@@ -1623,6 +1660,10 @@ function normKadroGrupSayisi(grade, ogrenciSayisi) {
   if (!ogrenciSayisi || ogrenciSayisi <= 0) return null;
   if (grade === 9) return ogrenciSayisi <= 20 ? 1 : Math.ceil((ogrenciSayisi - 20) / 10) + 1;
   return ogrenciSayisi <= 16 ? 1 : Math.ceil((ogrenciSayisi - 16) / 8) + 1;
+}
+function setNormKadroSayisi(value) {
+  S.normKadro.normKadroSayisi = value;
+  save(); renderMain();
 }
 function setNormKadroOgrenciSayisi(classId, value) {
   const n = parseInt(value);
@@ -1750,6 +1791,8 @@ function viewNormKadro() {
     </div>
     <div class="card" style="text-align:center;">
       <h2 style="margin:0;">GENEL TOPLAM DERS YÜKÜ: ${genelToplam} SAAT</h2>
+      <div class="no-print" style="margin-top:10px;"><label class="small">NORM KADRO: <input type="text" value="${escHtml(S.normKadro.normKadroSayisi)}" style="width:60px;text-align:center;" onchange="setNormKadroSayisi(this.value)"></label></div>
+      ${S.normKadro.normKadroSayisi ? `<p class="print-only" style="font-weight:700;margin-top:8px;">NORM KADRO: ${escHtml(S.normKadro.normKadroSayisi)}</p>` : ""}
       <p class="small print-only" style="margin-top:16px;">Makine ve Tasarım Teknolojisi Alan Şefi<br><b>${alanSefi ? escHtml(alanSefi.name) : ''}</b></p>
     </div>
   </div>`;
@@ -2017,6 +2060,8 @@ function renderToplantiDetay(top) {
 
   const turEtiket = top.tur === 'sube' ? 'Şube Öğretmenler Kurulu' : top.tur === 'veli' ? 'Veli Toplantısı' : 'Zümre Toplantısı';
   const sirkuOptions = S.imzaSirkuleri.map(im => `<option value="${im.id}">${escHtml(im.adSoyad)} — ${escHtml(im.unvan)}</option>`).join("");
+  const baskanEtiket = isVeli ? 'Sınıf Öğretmeni' : (top.tur === 'sube' ? 'Kurul Başkanı' : 'Zümre Başkanı');
+  const gundemListesi = top.gundemMaddeleri.map((g, i) => `<li>${escHtml(g.baslik)}</li>`).join("");
   return `
   <div class="card no-print">
     <div class="row small" style="flex-wrap:wrap;gap:14px;align-items:center;">
@@ -2024,17 +2069,22 @@ function renderToplantiDetay(top) {
       <span><b>Sınıf/Ders:</b> ${escHtml(top.sinifVeyaDers || '-')}</span>
       <span><b>Öğretim Yılı:</b> ${escHtml(top.ogretimYili || '-')}</span>
       <span><b>Dönem:</b> ${escHtml(top.donem || '-')}</span>
-      <span><b>${isVeli ? 'Sınıf Öğretmeni' : 'Başkan'}:</b> ${escHtml(top.baskan || '-')}</span>
+      <span><b>${baskanEtiket}:</b> ${escHtml(top.baskan || '-')}</span>
       <span><b>Tarih:</b> ${escHtml(top.tarih || '-')}</span>
       <span><b>Yer:</b> ${escHtml(top.yer || '-')}</span>
       <span><b>Saat:</b> ${escHtml(top.saat || '-')}</span>
       <button class="btn" onclick="editToplantiMeta('${top.id}')">Bilgileri Düzenle</button>
     </div>
   </div>
-  <div class="print-only" style="margin-bottom:10px;">
-    <b>Öğretim Yılı:</b> ${escHtml(top.ogretimYili || '-')} · <b>Dönem:</b> ${escHtml(top.donem || '-')} · <b>${isVeli ? 'Sınıf Öğretmeni' : 'Başkan'}:</b> ${escHtml(top.baskan || '-')} ·
-    <b>Zümre No:</b> ${escHtml(top.zumreNo || '-')} · <b>Tarih:</b> ${escHtml(top.tarih || '-')} · <b>Yer:</b> ${escHtml(top.yer || '-')} · <b>Saat:</b> ${escHtml(top.saat || '-')}
+  <div class="print-only" style="text-align:center;margin-bottom:12px;">
+    <div style="font-weight:700;">${escHtml((S.kurumBilgileri.okulAdi || "").toLocaleUpperCase("tr-TR"))}</div>
+    <div style="font-weight:700;">${escHtml(top.ogretimYili || '')} EĞİTİM-ÖĞRETİM YILI ${escHtml((S.kurumBilgileri.alanAdi || "").toLocaleUpperCase("tr-TR"))} ALANI ${turEtiket.toLocaleUpperCase("tr-TR")} TUTANAĞIDIR</div>
   </div>
+  <table class="print-only" style="margin-bottom:12px;">
+    <tr><td><b>Zümre No</b></td><td>${escHtml(top.zumreNo || '-')}</td><td><b>Dersin Adı</b></td><td>${escHtml(top.sinifVeyaDers || '-')}</td></tr>
+    <tr><td><b>${baskanEtiket}</b></td><td>${escHtml(top.baskan || '-')}</td><td><b>Toplantı Yeri</b></td><td>${escHtml(top.yer || '-')}</td></tr>
+    <tr><td><b>Toplantı Tarihi</b></td><td>${escHtml(top.tarih || '-')}</td><td><b>Toplantı Saati</b></td><td>${escHtml(top.saat || '-')}</td></tr>
+  </table>
   <div class="card">
     <h2>${isVeli ? 'Toplantıya Katılan Veliler' : 'Toplantıya Katılanlar'}</h2>
     <table><thead><tr><th>${katilimciAdPlaceholder}</th><th>${katilimciIkinciPlaceholder}</th><th class="print-only">İmza</th><th class="no-print"></th></tr></thead>
@@ -2060,7 +2110,26 @@ function renderToplantiDetay(top) {
     <h2>Gündem Maddeleri</h2>
     <div class="row"><button class="btn" onclick="addGundemMaddesi('${top.id}')">Gündem Maddesi Ekle</button></div>
   </div>
-  ${gundemHtml}`;
+  <div class="card print-only">
+    <h2>GÜNDEM</h2>
+    <ol>${gundemListesi || '<li class="small">—</li>'}</ol>
+  </div>
+  <h2 class="print-only" style="margin-top:6px;">GÜNDEM MADDELERİNİN GÖRÜŞÜLMESİ</h2>
+  ${gundemHtml}
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:20px;">
+      <div>
+        <div>${escHtml(top.tarih || ".../.../....")}</div>
+        <div style="margin-top:24px;font-weight:600;">${escHtml(top.baskan)}</div>
+        <div>${baskanEtiket}</div>
+      </div>
+      <div style="text-align:right;">
+        <div>UYGUNDUR</div>
+        <div style="margin-top:24px;font-weight:600;">${escHtml(S.kurumBilgileri.mudurAdi)}</div>
+        <div>Okul Müdürü</div>
+      </div>
+    </div>
+  </div>`;
 }
 function viewOkulZumresi() {
   const entries = S.toplantilar.slice().sort((a, b) => (a.baslik || "").localeCompare(b.baslik || "", "tr"));
@@ -2322,12 +2391,19 @@ function renderMakineOzetTablosu(list) {
       <td class="print-only-cell">${escHtml(m.notlar)}</td>
       <td class="no-print"><button class="btn" onclick="selectMakine('${m.id}')">Detay</button> <button class="btn danger" onclick="deleteMakine('${m.id}')">Sil</button></td>
     </tr>`).join("");
+  const arizali = list.filter(m => /ar[ıi]z/i.test(m.durum || "")).length;
   return `
   <div class="card">
     <h2>Tüm Makine Listesi</h2>
     <div style="overflow-x:auto;">
     <table><thead><tr><th>S.N</th><th>Laboratuvar/Atölye</th><th>Makine Adı</th><th>Marka</th><th>Model</th><th>Seri No</th><th>Durum</th><th>Notlar</th><th class="no-print"></th></tr></thead>
     <tbody>${rows || `<tr><td colspan="9" class="small">Henüz makine eklenmedi.</td></tr>`}</tbody></table>
+    </div>
+    <div style="margin-top:12px;">
+      <div style="font-weight:700;">ÖZET</div>
+      <div>Toplam Makine: ${list.length}</div>
+      <div>Çalışan: ${list.length - arizali}</div>
+      <div>Arızalı: ${arizali}</div>
     </div>
   </div>`;
 }
@@ -2561,6 +2637,10 @@ function renderDurumTespitDetay(f) {
     <b class="print-only-inline">Açıklama ve Görüş</b>
     <textarea class="no-print" rows="4" style="width:100%;margin-top:6px;border:1px solid var(--line);border-radius:4px;padding:6px;resize:vertical;font-family:inherit;font-size:11.5px;" oninput="updateDurumTespitAciklama('${f.id}',this.value)" onblur="save()">${escHtml(f.aciklamaGorus)}</textarea>
     <div class="print-only" style="margin-top:4px;">${nlToBr(f.aciklamaGorus) || '<span class="small">—</span>'}</div>
+  </div>
+  <div class="card" style="text-align:right;">
+    <div style="font-weight:600;">${escHtml(f.atolyeSefi || '')}</div>
+    <div>Laboratuvar Şefi</div>
   </div>`;
 }
 function viewDurumTespitBolumu() {
@@ -3606,12 +3686,12 @@ function viewBeceriSinavi() {
       <button class="btn primary" onclick="snEkleKayit('bs',{sinif:activeBeceriSinif,dal:aktifDalIcinEkle()})">Öğrenci Ekle</button>
       <button class="btn" onclick="snListedenTopluEkleModal('bs')">Öğrenci Listesinden Toplu Ekle</button>
     </div>
-    ${snBelgeSeciciBar()}
+    ${snBelgeSeciciBar("bs")}
     ${belgeAracCubugu(dosyaAdi)}
   </div>
-  ${activeSnBelge === "cizelge" ? snIsDosyasiKriterAciklamasi() + beceriKomisyonKararKarti(activeBeceriSinif, aktifSinifTanimi.dal) : ""}
+  ${activeSnBelge === "cizelge" ? snIsDosyasiKriterAciklamasi() : ""}
   <div class="print-area">
-    ${activeSnBelge === "cizelge" ? belgeYazdirmaBasligi(baslik) + snRosterTablo("bs", kayitlar) : snEkBelgeGovde("bs", kayitlar, { sinif: activeBeceriSinif }, baslik)}
+    ${activeSnBelge === "cizelge" ? belgeYazdirmaBasligi(baslik) + snRosterTablo("bs", kayitlar) : snEkBelgeGovde("bs", kayitlar, { sinif: activeBeceriSinif, dal: aktifSinifTanimi.dal }, baslik)}
   </div>`;
 }
 function aktifDalIcinEkle() {
@@ -3622,12 +3702,29 @@ function aktifDalIcinEkle() {
 }
 function beceriKomisyonKararKarti(sinif, dal) {
   const k = S.kurumBilgileri;
+  const ogretimYili = S.akademikTakvim ? S.akademikTakvim.ogretimYili : "";
   return `
-  <div class="card no-print">
-    <h3>Beceri Sınavı Komisyonu Karar Tutanağı (Yazdırma Önizlemesi)</h3>
-    <p class="small">${escHtml(k.okulAdi)} ${escHtml(k.alanAdi)} ${escHtml(dal ? (DAL_LABELS[dal] || dal) + " Dalı" : "")} ${escHtml(sinif)} sınıfı öğrencilerinin ${escHtml(S.akademikTakvim ? S.akademikTakvim.ogretimYili : "")} Eğitim-Öğretim Yılı İşletmelerde Beceri Eğitimi Yıl Sonu Beceri Sınavının, Millî Eğitim Bakanlığı Ortaöğretim Kurumları Yönetmeliği'nin 46. maddesinin 1. fıkrası hükmü uyarınca komisyonumuzun takdir yetkisi dahilinde yazılı sınav biçiminde yapılmasına; söz konusu sınavın 9, 10, 11 ve 12. sınıf öğretim programlarını kapsayan konulardan oluşan 50 (elli) soruluk çoktan seçmeli (4 şıklı) olarak uygulanmasına ve değerlendirmenin 100 (yüz) tam puan üzerinden yapılmasına komisyonumuzca oybirliği ile karar verilmiştir.</p>
-    <p class="small">Dayanak: MEB Ortaöğretim Kurumları Yönetmeliği Madde 46/1 — "Bu sınav, dersin özelliğine göre komisyonca alınacak karar doğrultusunda uygulamalı ve/veya yazılı olarak yapılır."</p>
-    <p class="small">İmza için Ayarlar &gt; İmza Sirküsü'nden komisyon üyelerini ekleyip belgeyi yazdırırken elle tamamlayabilirsiniz.</p>
+  <div style="text-align:center;margin-bottom:12px;">
+    <div style="font-weight:700;">${escHtml((k.okulAdi || "").toLocaleUpperCase("tr-TR"))}</div>
+    <div style="font-weight:700;">BECERİ SINAVI KOMİSYONU KARAR TUTANAĞI</div>
+  </div>
+  <table style="margin-bottom:12px;">
+    <tr><td><b>Sınıf</b></td><td>${escHtml(sinif || '-')}</td><td><b>Alan/Dal</b></td><td>${escHtml(dal ? (DAL_LABELS[dal] || dal) : '-')}</td></tr>
+    <tr><td><b>Eğitim Yılı</b></td><td>${escHtml(ogretimYili || '-')}</td><td><b>Sınav Türü</b></td><td>Yazılı (Çoktan Seçmeli)</td></tr>
+  </table>
+  <p class="small" style="margin-bottom:14px;">${escHtml(k.okulAdi)} ${escHtml(k.alanAdi)} ${escHtml(dal ? (DAL_LABELS[dal] || dal) + " Dalı" : "")} ${escHtml(sinif)} sınıfı öğrencilerinin ${escHtml(ogretimYili)} Eğitim-Öğretim Yılı İşletmelerde Beceri Eğitimi Yıl Sonu Beceri Sınavının, Millî Eğitim Bakanlığı Ortaöğretim Kurumları Yönetmeliği'nin 46. maddesinin 1. fıkrası hükmü uyarınca komisyonumuzun takdir yetkisi dahilinde yazılı sınav biçiminde yapılmasına; söz konusu sınavın 9, 10, 11 ve 12. sınıf öğretim programlarını kapsayan konulardan oluşan 50 (elli) soruluk çoktan seçmeli (4 şıklı) olarak uygulanmasına ve değerlendirmenin 100 (yüz) tam puan üzerinden yapılmasına komisyonumuzca oybirliği ile karar verilmiştir.</p>
+  <p class="small" style="margin-bottom:20px;">Dayanak: MEB Ortaöğretim Kurumları Yönetmeliği Madde 46/1 — "Bu sınav, dersin özelliğine göre komisyonca alınacak karar doğrultusunda uygulamalı ve/veya yazılı olarak yapılır."</p>
+  <p class="small no-print">İmza için Ayarlar &gt; İmza Sirküsü'nden komisyon üyelerini ekleyip belgeyi yazdırırken elle tamamlayabilirsiniz; aşağıdaki alan şefi/okul müdürü bilgileri Ayarlar'dan otomatik gelir.</p>
+  <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:20px;margin-top:20px;">
+    <div>
+      <div style="margin-top:24px;font-weight:600;">${escHtml(k.alanSefiAdi || "")}</div>
+      <div>${escHtml(k.alanSefiUnvani || "Alan Şefi")}</div>
+    </div>
+    <div style="text-align:right;">
+      <div>Komisyon Başkanı</div>
+      <div style="margin-top:24px;font-weight:600;">${escHtml(k.mudurAdi || "")}</div>
+      <div>Okul Müdürü</div>
+    </div>
   </div>`;
 }
 
@@ -3642,13 +3739,14 @@ function beceriKomisyonKararKarti(sinif, dal) {
    girmeye gerek kalmaz. */
 let activeSnBelge = "cizelge";
 function setSnBelge(id) { activeSnBelge = id; renderMain(); }
-function snBelgeSeciciBar() {
+function snBelgeSeciciBar(kind) {
   const secenekler = [
     { id: "cizelge", label: "Değerlendirme Çizelgesi" },
     { id: "tutanak", label: "Sınav Tutanağı" },
     { id: "sonuc-tutanak", label: "Sınav Sonuç Tutanağı" },
     { id: "sarf-not", label: "Sarf / Not Çizelgesi" }
   ];
+  if (kind === "bs") secenekler.push({ id: "komisyon-karar", label: "Komisyon Karar Tutanağı" });
   return `<div class="row no-print" style="flex-wrap:wrap;">${secenekler.map(s => `<button class="btn ${s.id === activeSnBelge ? 'primary' : ''}" onclick="setSnBelge('${s.id}')">${s.label}</button>`).join("")}</div>`;
 }
 function sinavTutanagiAnahtari(kind, ekAlanlar) {
@@ -3789,6 +3887,7 @@ function snEkBelgeGovde(kind, kayitlar, ekAlanlar, baslik) {
     const t = sinavTutanagiOlusturVeyaGetir(kind, ekAlanlar);
     return renderSarfNotCizelgesi(kind, kayitlar, t, baslik);
   }
+  if (activeSnBelge === "komisyon-karar" && kind === "bs") return beceriKomisyonKararKarti(ekAlanlar.sinif, ekAlanlar.dal);
   return null;
 }
 
@@ -3987,11 +4086,12 @@ function renderDonemRaporDetay(tur, r) {
   <p class="small" style="margin-bottom:14px;">${paragraf}</p>
   <table><thead><tr>
     <th>Sınıfı</th><th>Dersi</th>
-    ${isYazili ? '<th>1. Yazılı</th><th>2. Yazılı</th>' : '<th>Konular</th>'}
+    ${isYazili ? '<th>1.YAZILI SINAVI</th><th>2.YAZILI SINAVI</th>' : '<th>Konular</th>'}
     <th class="no-print"></th>
   </tr></thead>
-  <tbody>${rows || `<tr><td colspan="${isYazili ? 5 : 4}" class="small">Henüz satır yok. "Ders Programından Yenile" ile öğretmenin ders atamalarından otomatik doldurabilirsiniz.</td></tr>`}</tbody></table>
-  ${isYazili ? `<div class="small" style="margin-top:8px;font-weight:600;">TOPLAM ${toplam} ADET</div>` : ''}
+  <tbody>${rows || `<tr><td colspan="${isYazili ? 5 : 4}" class="small">Henüz satır yok. "Ders Programından Yenile" ile öğretmenin ders atamalarından otomatik doldurabilirsiniz.</td></tr>`}
+  ${isYazili ? `<tr><td colspan="2"><b>TOPLAM</b></td><td colspan="2"><b>${toplam} ADET</b></td><td class="no-print"></td></tr>` : ''}
+  </tbody></table>
   <div class="row no-print" style="margin-top:10px;"><button class="btn" onclick="addDonemRaporSatir('${tur}','${r.id}')">Satır Ekle</button></div>
   <div style="margin-top:36px;text-align:right;">
     <div>${escHtml(r.tarih || '')}</div>
@@ -4355,9 +4455,10 @@ function renderSeflikRaporDetay(r) {
     <div>${escHtml(k.alanSefiUnvani)}</div>
   </div>
   <table><thead><tr><th style="width:110px;">Tarih</th><th style="width:100px;">Gün</th><th style="width:60px;">Egzersiz Saati</th><th>Yapılan İşler</th><th class="no-print"></th></tr></thead>
-  <tbody>${rows || `<tr><td colspan="5" class="small">Henüz satır yok.</td></tr>`}</tbody></table>
-  <p class="small" style="margin-top:6px;">Not: Rapor, izin veya tatil saatleri Egzersiz Saatinden düşülecektir.</p>
-  <p class="small" style="font-weight:700;">AYLIK TOPLAM EGZERSİZ SAATİ: ${toplam} SAAT</p>
+  <tbody>${rows || `<tr><td colspan="5" class="small">Henüz satır yok.</td></tr>`}
+  <tr><td colspan="4" class="small">Not: Rapor, izin veya tatil saatleri Egzersiz Saatinden düşülecektir.</td><td class="no-print"></td></tr>
+  <tr><td colspan="2" style="font-weight:700;">AYLIK TOPLAM EGZERSİZ SAATİ:</td><td style="font-weight:700;">${toplam}</td><td style="font-weight:700;">SAAT</td><td class="no-print"></td></tr>
+  </tbody></table>
   <div style="margin-top:30px;">
     <div>UYGUNDUR</div>
     <div>.../…/....</div>

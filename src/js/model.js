@@ -238,6 +238,7 @@ function normalizeState(s) {
   if (!s.normKadro || typeof s.normKadro !== "object") s.normKadro = {};
   if (!s.normKadro.ogrenciSayilari || typeof s.normKadro.ogrenciSayilari !== "object") s.normKadro.ogrenciSayilari = {};
   if (!Array.isArray(s.normKadro.koordinatorlukSatirlari)) s.normKadro.koordinatorlukSatirlari = [];
+  if (typeof s.normKadro.normKadroSayisi !== "string") s.normKadro.normKadroSayisi = "";
   if (!Array.isArray(s.toplantilar)) s.toplantilar = [];
   s.toplantilar.forEach(top => {
     if (!top.id) top.id = uid("top");
