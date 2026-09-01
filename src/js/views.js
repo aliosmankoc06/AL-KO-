@@ -297,6 +297,11 @@ function viewStajYerlestirme() {
     <div class="card">${listHtml}</div>
   </div>
   <div class="card no-print">
+    <h2>Öğrenci Listesinden Ekle</h2>
+    <p class="small">Öğrenci Listesi modülüne aktardığınız e-Okul listesinden bu sınıfın tüm öğrencilerini tek seferde ekleyin, sonra işletmelerini burada atayın.</p>
+    <div class="row" style="max-width:260px"><button class="btn primary" onclick="stajListedenTopluEkleModal()">Öğrenci Listesinden Toplu Ekle</button></div>
+  </div>
+  <div class="card no-print">
     <h2>Öğrenci Ekle</h2>
     <div class="grid3">
       <div><label class="small">Sınıf</label><input type="text" id="ns-sinif" placeholder="örn. 12/A" style="width:100%"></div>
@@ -313,6 +318,44 @@ function viewStajYerlestirme() {
     <textarea id="bulk-student-paste" style="width:100%;height:120px;font-family:monospace;font-size:11.5px;" placeholder="12/A&#9;23014&#9;Ramazan Övek&#9;MBO&#9;TKİ Ege Linyitleri İşletmesi Müdürlüğü"></textarea>
     <div class="row" style="max-width:200px"><button class="btn primary" onclick="bulkImportStudents()">İçe Aktar</button></div>
   </div>`;
+}
+function dalForSinif(sinif) {
+  const cls = S.classes.find(c => c.name === sinif);
+  return cls ? cls.dal : "";
+}
+function stajListedenTopluEkleModal() {
+  const siniflar = ogrenciListesiSiniflari();
+  const root = document.getElementById("modal-root");
+  root.innerHTML = `
+    <div class="modal-bg" onclick="if(event.target===this) closeModal()">
+      <div class="modal" style="width:380px;">
+        <h3>Öğrenci Listesinden Toplu Ekle</h3>
+        <p class="small">Öğrenci Listesi modülünde kayıtlı bir sınıf seçin — o sınıftaki, burada henüz olmayan tüm öğrenciler tek seferde eklensin (işletme ataması boş gelir, siz atarsınız).</p>
+        <label class="small">Sınıf</label>
+        <select id="staj-liste-sinif" style="width:100%">
+          ${siniflar.map(s => `<option value="${jsq(s)}">${escHtml(s)} (${ogrencilerForSinif(s).length} öğrenci)</option>`).join("")}
+        </select>
+        <div class="row">
+          <button class="btn primary" onclick="stajListedenTopluEkleUygula()">Ekle</button>
+          <button class="btn" onclick="closeModal()">İptal</button>
+        </div>
+      </div>
+    </div>`;
+}
+function stajListedenTopluEkleUygula() {
+  const secim = document.getElementById("staj-liste-sinif");
+  if (!secim) return;
+  const sinif = secim.value;
+  const mevcut = new Set(S.students.filter(s => s.sinif === sinif && s.okulNo).map(s => s.okulNo));
+  const dal = dalForSinif(sinif);
+  let eklenen = 0;
+  ogrencilerForSinif(sinif).forEach(o => {
+    if (mevcut.has(o.okulNo)) return;
+    S.students.push({ id: uid("st"), sinif, okulNo: o.okulNo, ad: (o.ad + " " + o.soyad).trim(), dal, isletme: "" });
+    eklenen++;
+  });
+  save(); closeModal(); renderMain();
+  alert(eklenen ? `${eklenen} öğrenci eklendi.` : "Eklenecek yeni öğrenci bulunamadı (hepsi zaten listede ya da seçilen sınıfta kayıt yok).");
 }
 function addStudent() {
   const sinif = document.getElementById("ns-sinif").value.trim();
