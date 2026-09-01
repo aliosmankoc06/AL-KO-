@@ -434,9 +434,9 @@ function viewStajOgrenciler() {
   </div>
   <div class="card no-print">
     <h2>Excel'den Toplu Ekle</h2>
-    <p class="small">Excel dosyanızdaki Sınıf, Okul No, Ad Soyad, Dal, İşletme sütunlarını seçip kopyalayın (Ctrl+C), aşağıya yapıştırın (Ctrl+V) ve "İçe Aktar"a basın. Her satır bir öğrenci olmalı.</p>
+    <p class="small">Excel dosyanızdaki Sınıf, Okul No, Ad Soyad, Dal, İşletme sütunlarını seçip kopyalayın (Ctrl+C), aşağıya yapıştırın (Ctrl+V) ve "Evrak Yükle"ye basın. Her satır bir öğrenci olmalı.</p>
     <textarea id="bulk-student-paste" style="width:100%;height:120px;font-family:monospace;font-size:11.5px;" placeholder="12/A&#9;23014&#9;Ramazan Övek&#9;MBO&#9;TKİ Ege Linyitleri İşletmesi Müdürlüğü"></textarea>
-    <div class="row" style="max-width:200px"><button class="btn primary" onclick="bulkImportStudents()">İçe Aktar</button></div>
+    <div class="row" style="max-width:200px"><button class="btn primary" onclick="bulkImportStudents()">Evrak Yükle</button></div>
   </div>`;
 }
 /* -- Sekme 2: Not Ortalamaları -- */
@@ -463,6 +463,12 @@ function viewStajNotOrtalamalari() {
   <div class="print-area">
     ${belgeYazdirmaBasligi("Staj Yerleştirme — Not Ortalamaları")}
     <div class="card">${listHtml}</div>
+  </div>
+  <div class="card no-print">
+    <h2>e-Okul'dan Not Ortalamalarını Yükle</h2>
+    <p class="small">Programın e-Okul'a doğrudan bağlantısı yok (e-Okul'un böyle bir açık bağlantı/API imkanı yok, giriş bilgilerinizi de isteyip saklamayız) — ama e-Okul'dan aldığınız not çizelgesi Excel'ini buraya yapıştırarak aynı işi yapabilirsiniz: Excel'de <b>Okul No</b> ve <b>Not Ortalaması</b> sütunlarını seçip kopyalayın (Ctrl+C), aşağıya yapıştırın (Ctrl+V) ve "Evrak Yükle"ye basın. Okul numarası burada zaten kayıtlı olan öğrenciyle eşleşince notu otomatik günceller.</p>
+    <textarea id="not-ort-paste" style="width:100%;height:100px;font-family:monospace;font-size:11.5px;" placeholder="57&#9;90&#10;68&#9;50"></textarea>
+    <div class="row" style="max-width:200px"><button class="btn primary" onclick="notOrtalamalariIceAktar()">Evrak Yükle</button></div>
   </div>`;
 }
 /* -- Sekme 3: Tercihler -- */
@@ -531,16 +537,31 @@ function viewStajSonuc() {
     return `<h2 style="margin-top:16px;">${escHtml(sinif)}</h2><table><tr><th>Okul No</th><th>Ad Soyad</th><th>Dal</th><th>İşletme</th></tr>${rows}</table>`;
   }).join("") || `<p class="small">Henüz öğrenci eklenmedi.</p>`;
 
+  const k = S.kurumBilgileri;
   return `
   <div class="card no-print">
     <h2>Sonuç / Yerleştirme</h2>
-    <p class="small">Not Ortalamaları ve Tercihler sekmelerinden girdiğiniz bilgilere göre, İşletme Kontenjanları sekmesindeki kontenjanları dikkate alarak otomatik işletme ataması yapar. Sırasıyla: önce işletmenin özellikle istediği öğrenciler, sonra nota göre sıralı tercih eşleştirmesi, sonra kalan kontenjana göre döngüsel dağıtım (istemediği işletmeler elenir), son çare olarak zorunlu atama. <b>Zaten işletmesi atanmış öğrenciler değiştirilmez</b>. İstediğiniz öğrencinin işletmesini buradan elle de değiştirebilirsiniz.</p>
+    <p class="small">Not Ortalamaları ve Tercihler sekmelerinden girdiğiniz bilgilere göre, İşletme Kontenjanları sekmesindeki kontenjanları dikkate alarak otomatik işletme ataması yapar. Sırasıyla: önce işletmenin özellikle istediği öğrenciler, sonra nota göre sıralı tercih eşleştirmesi, sonra kalan kontenjana göre döngüsel dağıtım (istemediği işletmeler elenir), son çare olarak zorunlu atama. <b>Zaten işletmesi atanmış öğrenciler değiştirilmez</b>. İstediğiniz öğrencinin işletmesini buradan elle de değiştirebilirsiniz. İşlem bitince kaç öğrencinin nasıl yerleştiği size ayrıca bildirilir.</p>
     <div class="row" style="max-width:260px"><button class="btn primary" onclick="stajOtomatikYerlestir()">Otomatik Yerleştir</button></div>
     ${belgeAracCubugu("Staj Yerleştirme - Sonuç")}
   </div>
   <div class="print-area">
     ${belgeYazdirmaBasligi("Staj Yerleştirme — Sonuç")}
-    <div class="card">${listHtml}</div>
+    <div class="card">
+      ${listHtml}
+      <div style="margin-top:30px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:20px;">
+        <div>
+          <div>.../…/....</div>
+          <div style="margin-top:24px;font-weight:600;">${escHtml(k.alanSefiAdi)}</div>
+          <div>${escHtml(k.alanSefiUnvani)}</div>
+        </div>
+        <div style="text-align:right;">
+          <div>UYGUNDUR</div>
+          <div style="margin-top:24px;font-weight:600;">${escHtml(k.mudurAdi)}</div>
+          <div>Okul Müdürü</div>
+        </div>
+      </div>
+    </div>
   </div>`;
 }
 function dalForSinif(sinif) {
@@ -757,6 +778,24 @@ function bulkImportStudents() {
   document.getElementById("bulk-student-paste").value = "";
   renderMain();
   alert(`${added} öğrenci eklendi.`);
+}
+function notOrtalamalariIceAktar() {
+  const raw = document.getElementById("not-ort-paste").value;
+  const lines = raw.split("\n").map(l => l.replace(/\r$/, "")).filter(l => l.trim());
+  let guncellenen = 0, eslesmeyen = 0;
+  lines.forEach(line => {
+    const cols = line.split("\t");
+    if (cols.length < 2) return;
+    const okulNo = (cols[0] || "").trim();
+    const not = (cols[1] || "").trim();
+    if (!okulNo) return;
+    const st = S.students.find(s => s.okulNo === okulNo);
+    if (st) { st.not = not; guncellenen++; } else { eslesmeyen++; }
+  });
+  save();
+  document.getElementById("not-ort-paste").value = "";
+  renderMain();
+  alert(`${guncellenen} öğrencinin not ortalaması güncellendi.` + (eslesmeyen ? ` ${eslesmeyen} okul numarası burada kayıtlı öğrenciyle eşleşmedi — önce Öğrenciler sekmesinden ekleyin.` : ""));
 }
 
 function viewPlaceholderModule(title, hint) {
@@ -1066,7 +1105,7 @@ function mergePlanImportResult(result) {
   return { yillik, gunluk };
 }
 function importPlanFromExcel() {
-  if (!window.desktop || !window.desktop.isElectron) { alert("Excel'den içe aktarma sadece masaüstü uygulamasında çalışır."); return; }
+  if (!window.desktop || !window.desktop.isElectron) { alert("Excel yükleme sadece masaüstü uygulamasında çalışır."); return; }
   window.desktop.openXlsxDialog().then(filePath => {
     if (!filePath) return;
     window.desktop.importPlanXlsx(filePath).then(result => {
@@ -1171,8 +1210,8 @@ function renderGunlukPlanTable(p) {
 function viewPlanModule(kind) {
   const title = kind === "yillik" ? "Yıllık Plan" : "Günlük Plan";
   const aciklama = kind === "yillik"
-    ? "Her dersin haftalık kazanım/konu dağılımı. Kendi Excel dosyanızı içe aktararak veya elle düzenleyerek doldurabilirsiniz."
-    : "Her dersin konu/kazanım/giriş-gelişme-sonuç/yöntem/ölçme-değerlendirme detayları. Kendi Excel dosyanızı içe aktararak veya elle düzenleyerek doldurabilirsiniz.";
+    ? "Her dersin haftalık kazanım/konu dağılımı. Kendi Excel dosyanızı yükleyerek veya elle düzenleyerek doldurabilirsiniz."
+    : "Her dersin konu/kazanım/giriş-gelişme-sonuç/yöntem/ölçme-değerlendirme detayları. Kendi Excel dosyanızı yükleyerek veya elle düzenleyerek doldurabilirsiniz.";
   if (S.eskiSistemKaldirildi) activePlanSistem = "maarif";
   const sistemler = S.eskiSistemKaldirildi ? ["maarif"] : ["maarif", "eski"];
   const tabs = sistemler.map(id =>
@@ -1217,7 +1256,7 @@ function viewPlanModule(kind) {
     }).join("");
     const kaynakDosya = kind === "yillik" ? "YILLIK_PLANLAR.xlsx" : "GÜNLÜK_PLANLAR.xlsx";
     contentHtml = gradeCards + `<div class="card small no-print" style="text-align:center;padding:30px 20px;">
-      Bu sistem için henüz içe aktarılmış ${title.toLowerCase()} yok — yukarıda öğrenme birimi özetini görüyorsunuz. "Excel'den İçe Aktar" ile kendi ${kaynakDosya} dosyanızı yükleyerek tam, düzenlenebilir planı oluşturabilirsiniz.
+      Bu sistem için henüz yüklenmiş ${title.toLowerCase()} yok — yukarıda öğrenme birimi özetini görüyorsunuz. "Excel Yükle" ile kendi ${kaynakDosya} dosyanızı yükleyerek tam, düzenlenebilir planı oluşturabilirsiniz.
     </div>`;
   }
 
@@ -1231,7 +1270,7 @@ function viewPlanModule(kind) {
     <div class="row" style="margin-top:10px;">${tabs}${eskiSistemButon}</div>
     <div class="row" style="margin-top:8px;">
       <button class="btn primary" onclick="addPlanEntry('${kind}')">Yeni Ders Planı Ekle</button>
-      <button class="btn" onclick="importPlanFromExcel()">Excel'den İçe Aktar</button>
+      <button class="btn" onclick="importPlanFromExcel()">Excel Yükle</button>
       ${activeEntry ? `<button class="btn" onclick="planiYeniYilaKopyala('${kind}','${activeEntry.id}')">Yeni Öğretim Yılı İçin Kopyala</button><button class="btn danger" onclick="deletePlanEntry('${kind}','${activeEntry.id}')">Bu Planı Sil</button>` : ""}
     </div>
     ${belgeAracCubugu(dosyaAdi)}
@@ -1400,7 +1439,7 @@ function mergeOgrenciListesiImport(result) {
   return { eklenen, guncellenen };
 }
 function importOgrenciListesiFromPdf() {
-  if (!window.desktop || !window.desktop.isElectron) { alert("PDF'den içe aktarma sadece masaüstü uygulamasında çalışır."); return; }
+  if (!window.desktop || !window.desktop.isElectron) { alert("PDF yükleme sadece masaüstü uygulamasında çalışır."); return; }
   window.desktop.openPdfDialog().then(filePath => {
     if (!filePath) return;
     window.desktop.importOgrenciPdf(filePath).then(result => {
@@ -1457,9 +1496,9 @@ function viewOgrenciListesi() {
   return `
   <div class="card no-print">
     <h2>Öğrenci Listesi</h2>
-    <p class="small">Her öğretim yılı başında e-Okul'dan aldığınız "Sınıf Listesi" PDF'ini buraya içe aktarın (birden fazla sınıf/şube aynı PDF içinde olabilir, hepsi tek seferde işlenir). Beceri Sınavı, Kalfalık/Ustalık Sınavı ve Norm Kadro gibi öğrenci listesine ihtiyaç duyan modüller bu listeyi buradan çeker — yıl değiştiğinde tek yapmanız gereken, yeni PDF'i buradan içe aktarmak.</p>
+    <p class="small">Her öğretim yılı başında e-Okul'dan aldığınız "Sınıf Listesi" PDF'ini buraya yükleyin (birden fazla sınıf/şube aynı PDF içinde olabilir, hepsi tek seferde işlenir). Beceri Sınavı, Kalfalık/Ustalık Sınavı ve Norm Kadro gibi öğrenci listesine ihtiyaç duyan modüller bu listeyi buradan çeker — yıl değiştiğinde tek yapmanız gereken, yeni PDF'i buradan yüklemek.</p>
     <div class="row">
-      <button class="btn primary" onclick="importOgrenciListesiFromPdf()">Sınıf Listesi PDF'inden İçe Aktar</button>
+      <button class="btn primary" onclick="importOgrenciListesiFromPdf()">Sınıf Listesi PDF Yükle</button>
       ${activeOgrenciListesiSinif ? `<button class="btn" onclick="addOgrenci('${jsq(activeOgrenciListesiSinif)}')">Elle Öğrenci Ekle</button>` : ""}
     </div>
     ${sinifBar}
@@ -1475,7 +1514,7 @@ function viewOgrenciListesi() {
       </table>
       <p class="small" style="margin-top:8px;">Kız Öğrenci Sayısı: ${kiz} · Erkek Öğrenci Sayısı: ${erkek} · Toplam: ${ogrenciler.length}</p>
     </div>
-  </div>` : `<div class="card small" style="text-align:center;padding:30px 20px;">Henüz hiçbir sınıf için öğrenci listesi yok. Yukarıdan PDF içe aktarabilir ya da bir sınıf seçip elle ekleyebilirsiniz.</div>`}`;
+  </div>` : `<div class="card small" style="text-align:center;padding:30px 20px;">Henüz hiçbir sınıf için öğrenci listesi yok. Yukarıdan PDF yükleyebilir ya da bir sınıf seçip elle ekleyebilirsiniz.</div>`}`;
 }
 
 /* ---- Norm Kadro ----
@@ -1504,7 +1543,7 @@ function setNormKadroOgrenciSayisi(classId, value) {
 }
 function normKadroOgrenciSayisiniListedenDoldur(classId, sinifAdi) {
   const n = ogrencilerForSinif(sinifAdi).length;
-  if (!n) { alert(`"${sinifAdi}" için Öğrenci Listesi'nde henüz kayıt yok. Önce Öğrenci Listesi modülünden PDF içe aktarın.`); return; }
+  if (!n) { alert(`"${sinifAdi}" için Öğrenci Listesi'nde henüz kayıt yok. Önce Öğrenci Listesi modülünden PDF yükleyin.`); return; }
   S.normKadro.ogrenciSayilari[classId] = n;
   save(); renderMain();
 }
@@ -2204,7 +2243,7 @@ function renderMakineOzetTablosu(list) {
   </div>`;
 }
 function importEnvanterFromExcel() {
-  if (!window.desktop || !window.desktop.isElectron) { alert("Excel'den içe aktarma sadece masaüstü uygulamasında çalışır."); return; }
+  if (!window.desktop || !window.desktop.isElectron) { alert("Excel yükleme sadece masaüstü uygulamasında çalışır."); return; }
   window.desktop.openXlsxDialog().then(filePath => {
     if (!filePath) return;
     window.desktop.importEnvanterXlsx(filePath).then(result => {
@@ -2245,10 +2284,10 @@ function viewMakinelerBolumu() {
   return `
   <div class="card no-print">
     <h2>Makine Envanteri</h2>
-    <p class="small">Atölye/laboratuvar makinelerinizi burada tutun — genel bilgiler, arıza/onarım/bakım kayıtları, yedek parça listesi ve kullanım talimatı. Elle ekleyebilir ya da mevcut Excel envanter listenizi içe aktarabilirsiniz.</p>
+    <p class="small">Atölye/laboratuvar makinelerinizi burada tutun — genel bilgiler, arıza/onarım/bakım kayıtları, yedek parça listesi ve kullanım talimatı. Elle ekleyebilir ya da mevcut Excel envanter listenizi yükleyebilirsiniz.</p>
     <div class="row">
       <button class="btn primary" onclick="addMakine()">Makine Ekle</button>
-      <button class="btn" onclick="importEnvanterFromExcel()">Excel'den İçe Aktar</button>
+      <button class="btn" onclick="importEnvanterFromExcel()">Excel Yükle</button>
       ${active ? `<button class="btn danger" onclick="deleteMakine('${active.id}')">Bu Makineyi Sil</button>` : ""}
     </div>
     ${belgeAracCubugu(dosyaAdi)}
@@ -2693,7 +2732,7 @@ function removeOgrenci(kayitId, id) {
   save(); renderMain();
 }
 function importPerformansFromExcel() {
-  if (!window.desktop || !window.desktop.isElectron) { alert("Excel'den içe aktarma sadece masaüstü uygulamasında çalışır."); return; }
+  if (!window.desktop || !window.desktop.isElectron) { alert("Excel yükleme sadece masaüstü uygulamasında çalışır."); return; }
   window.desktop.openXlsxDialog().then(filePath => {
     if (!filePath) return;
     window.desktop.importPerformansXlsx(filePath).then(result => {
@@ -2714,7 +2753,7 @@ function importPerformansFromExcel() {
         }
       });
       save(); renderMain();
-      alert("İçe aktarıldı: " + eklenen + " yeni kayıt, " + guncellenen + " güncellenen kayıt.\n\nNot: içe aktarılan sınıf/şube adlarını kontrol edin — kaynak Excel dosyasında bazen elle yazım hatası olabiliyor (örn. \"123/A\" gibi), \"Bilgileri Düzenle\" ile düzeltebilirsiniz.");
+      alert("Yüklendi: " + eklenen + " yeni kayıt, " + guncellenen + " güncellenen kayıt.\n\nNot: yüklenen sınıf/şube adlarını kontrol edin — kaynak Excel dosyasında bazen elle yazım hatası olabiliyor (örn. \"123/A\" gibi), \"Bilgileri Düzenle\" ile düzeltebilirsiniz.");
     }).catch(e => alert("İçe aktarma hatası: " + e.message));
   });
 }
@@ -2774,7 +2813,7 @@ function viewPerformansBolum(tur) {
     <p class="small">Önce sınıf, sonra dönem, sonra ders seçin — her ders için öğrenci listesi ve puan çizelgesi açılır.</p>
     <div class="row">
       <button class="btn" onclick="editPerformansAgirliklari('${tur}')">Kriter Ağırlıklarını Düzenle</button>
-      <button class="btn" onclick="importPerformansFromExcel()">Excel'den İçe Aktar</button>
+      <button class="btn" onclick="importPerformansFromExcel()">Excel Yükle</button>
     </div>
   </div>`;
 
@@ -2817,7 +2856,7 @@ function viewPerformansBolum(tur) {
   </div>`;
 
   if (!active) {
-    return ustBar + sinifBar + donemBar + dersBar + `<div class="card small" style="text-align:center;padding:30px 20px;">Bu sınıf ve dönem için henüz ders eklenmedi. "+ Ders Ekle" ile elle oluşturabilir ya da yukarıdan Excel dosyanızı içe aktarabilirsiniz.</div>`;
+    return ustBar + sinifBar + donemBar + dersBar + `<div class="card small" style="text-align:center;padding:30px 20px;">Bu sınıf ve dönem için henüz ders eklenmedi. "+ Ders Ekle" ile elle oluşturabilir ya da yukarıdan Excel dosyanızı yükleyebilirsiniz.</div>`;
   }
 
   const dosyaAdi = baslik + " - " + active.sinif + " " + active.donem + " " + active.ders;
@@ -4753,7 +4792,7 @@ function renderAkademikTakvimKarti() {
   return `
   <div class="card">
     <h2>Akademik Takvim</h2>
-    <p class="small">Her öğretim yılı başında burayı güncelleyin — Yıllık Plan, Günlük Plan, Norm Kadro, Ders Kesim/Yazılı Teslim ve diğer belgeler bu bilgiyi otomatik kullanır. Excel'den içe aktararak da doldurabilirsiniz (bkz. Yıllık Plan / Günlük Plan sayfası), ama Excel dosyası hazırlamak zorunda değilsiniz — aşağıdan doğrudan da düzenleyebilirsiniz.</p>
+    <p class="small">Her öğretim yılı başında burayı güncelleyin — Yıllık Plan, Günlük Plan, Norm Kadro, Ders Kesim/Yazılı Teslim ve diğer belgeler bu bilgiyi otomatik kullanır. Excel'den yükleyerek da doldurabilirsiniz (bkz. Yıllık Plan / Günlük Plan sayfası), ama Excel dosyası hazırlamak zorunda değilsiniz — aşağıdan doğrudan da düzenleyebilirsiniz.</p>
     <div class="row" style="flex-wrap:wrap;gap:14px;">
       <div>
         <label class="small">Öğretim Yılı</label>
@@ -4883,7 +4922,7 @@ function anaSayfaUyarilari() {
     uyarilar.push({ text: `${isletmesizOgrenci} öğrencinin staj işletmesi henüz atanmamış`, moduleId: "staj-yerlestirme" });
   }
   if (!S.akademikTakvim) {
-    uyarilar.push({ text: `Akademik takvim henüz yüklenmedi (Yıllık Plan'dan Excel içe aktarabilirsiniz)`, moduleId: "yillik-plan" });
+    uyarilar.push({ text: `Akademik takvim henüz yüklenmedi (Yıllık Plan'dan Excel yükleyebilirsiniz)`, moduleId: "yillik-plan" });
   }
   return uyarilar;
 }
