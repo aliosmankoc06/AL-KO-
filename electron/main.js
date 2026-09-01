@@ -5,6 +5,8 @@ const XLSX = require("xlsx");
 const { parsePlanWorkbook } = require("./xlsx-plan-parser");
 const { parseEnvanterWorkbook } = require("./xlsx-envanter-parser");
 const { parsePerformansWorkbook } = require("./xlsx-performans-parser");
+const pdfParse = require("pdf-parse");
+const { parseOgrenciPdf } = require("./pdf-ogrenci-parser");
 
 let mainWindow;
 
@@ -110,6 +112,19 @@ ipcMain.handle("import:envanter-xlsx", async (evt, filePath) => {
 
 ipcMain.handle("import:performans-xlsx", async (evt, filePath) => {
   return parsePerformansWorkbook(filePath, XLSX);
+});
+
+ipcMain.handle("dialog:open-pdf", async () => {
+  const result = await dialog.showOpenDialog(mainWindow, {
+    title: "Sınıf Listesi PDF Seç",
+    properties: ["openFile"],
+    filters: [{ name: "PDF Dosyası", extensions: ["pdf"] }]
+  });
+  return result.canceled || result.filePaths.length === 0 ? null : result.filePaths[0];
+});
+
+ipcMain.handle("import:ogrenci-pdf", async (evt, filePath) => {
+  return parseOgrenciPdf(filePath, pdfParse);
 });
 
 ipcMain.handle("export:excel", async (evt, defaultName, sheets) => {

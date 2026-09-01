@@ -134,6 +134,7 @@ function defaultState() {
     imzaSirkuleri: [],
     kalfalikUstalik: { kayitlar: [] },
     beceriSinavi: { kayitlar: [] },
+    ogrenciListesi: [],
     kurumBilgileri: {
       okulAdi: "Soma Mesleki ve Teknik Anadolu Lisesi",
       sehir: "SOMA",
@@ -175,6 +176,7 @@ function emptyState() {
     imzaSirkuleri: [],
     kalfalikUstalik: { kayitlar: [] },
     beceriSinavi: { kayitlar: [] },
+    ogrenciListesi: [],
     kurumBilgileri: {
       okulAdi: "Soma Mesleki ve Teknik Anadolu Lisesi",
       sehir: "SOMA",
@@ -322,6 +324,16 @@ function normalizeState(s) {
     if (typeof k.sinif !== "string" || !k.sinif) k.sinif = "12-A";
     if (typeof k.dal !== "string" || !k.dal) k.dal = "MBO";
     return k;
+  });
+  if (!Array.isArray(s.ogrenciListesi)) s.ogrenciListesi = [];
+  s.ogrenciListesi.forEach(o => {
+    if (!o.id) o.id = uid("og");
+    if (typeof o.sinif !== "string") o.sinif = "";
+    if (typeof o.okulNo !== "string") o.okulNo = String(o.okulNo || "");
+    if (typeof o.ad !== "string") o.ad = "";
+    if (typeof o.soyad !== "string") o.soyad = "";
+    if (typeof o.cinsiyet !== "string") o.cinsiyet = "";
+    if (typeof o.pansiyon !== "string") o.pansiyon = "";
   });
   if (!s.kurumBilgileri || typeof s.kurumBilgileri !== "object") s.kurumBilgileri = {};
   {

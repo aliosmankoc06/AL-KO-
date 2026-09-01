@@ -7,6 +7,7 @@ const MODULES = [
   { id: "ders-programi", label: "Ders Programı", icon: "calendar" },
   { id: "yillik-plan", label: "Yıllık Plan", icon: "note" },
   { id: "gunluk-plan", label: "Günlük Plan", icon: "book" },
+  { id: "ogrenci-listesi", label: "Öğrenci Listesi", icon: "school" },
   { id: "norm-kadro", label: "Norm Kadro", icon: "chart" },
   { id: "okul-zumresi", label: "Toplantı Tutanakları", icon: "users" },
   { id: "il-zumresi", label: "İl Zümresi", icon: "building" },
@@ -69,6 +70,7 @@ function renderMain() {
   if (activeModule === "ders-programi-secim") { el.innerHTML = viewDersProgramiChooser(); return; }
   if (activeModule === "yillik-plan") { el.innerHTML = viewPlanModule("yillik"); return; }
   if (activeModule === "gunluk-plan") { el.innerHTML = viewPlanModule("gunluk"); return; }
+  if (activeModule === "ogrenci-listesi") { el.innerHTML = viewOgrenciListesi(); return; }
   if (activeModule === "norm-kadro") { el.innerHTML = viewNormKadro(); return; }
   if (activeModule === "okul-zumresi") { el.innerHTML = viewOkulZumresi(); return; }
   if (activeModule === "il-zumresi") { el.innerHTML = viewPlaceholderModule("İl Zümresi", "İl zümre toplantı tutanaklarınızı buraya birlikte kuracağız."); return; }
@@ -836,6 +838,118 @@ function viewPlanModule(kind) {
   </div>`;
 }
 
+/* ---- Öğrenci Listesi (tek merkezi kaynak) ----
+   Her öğretim yılı başında e-Okul'dan alınan "Sınıf Listesi" PDF'i buraya
+   içe aktarılır; Beceri Sınavı, Kalfalık/Ustalık Sınavı ve Norm Kadro gibi
+   öğrenci listesine ihtiyaç duyan modüller listeyi buradan çeker — her
+   modülde ayrı ayrı öğrenci girmeye gerek kalmaz. */
+let activeOgrenciListesiSinif = null;
+function ogrencilerForSinif(sinif) {
+  return S.ogrenciListesi.filter(o => o.sinif === sinif).sort((a, b) => (Number(a.okulNo) || 0) - (Number(b.okulNo) || 0));
+}
+function ogrenciListesiSiniflari() {
+  const set = new Set(S.ogrenciListesi.map(o => o.sinif));
+  S.classes.filter(c => c.grade > 0 && !c.excludeFromDistribution).forEach(c => set.add(c.name));
+  return Array.from(set).sort((a, b) => a.localeCompare(b, "tr"));
+}
+function mergeOgrenciListesiImport(result) {
+  let eklenen = 0, guncellenen = 0;
+  (result.siniflar || []).forEach(s => {
+    s.ogrenciler.forEach(o => {
+      const existing = S.ogrenciListesi.find(x => x.sinif === s.sinif && x.okulNo === o.okulNo);
+      if (existing) {
+        Object.assign(existing, { ad: o.ad, soyad: o.soyad, cinsiyet: o.cinsiyet, pansiyon: o.pansiyon });
+        guncellenen++;
+      } else {
+        S.ogrenciListesi.push(Object.assign({ id: uid("og"), sinif: s.sinif }, o));
+        eklenen++;
+      }
+    });
+  });
+  return { eklenen, guncellenen };
+}
+function importOgrenciListesiFromPdf() {
+  if (!window.desktop || !window.desktop.isElectron) { alert("PDF'den içe aktarma sadece masaüstü uygulamasında çalışır."); return; }
+  window.desktop.openPdfDialog().then(filePath => {
+    if (!filePath) return;
+    window.desktop.importOgrenciPdf(filePath).then(result => {
+      if (!result.siniflar || !result.siniflar.length) {
+        alert("Bu PDF'te tanıdığım bir e-Okul Sınıf Listesi bulunamadı. Dosyanın e-Okul'dan alınan \"Sınıf Listesi\" raporu olduğundan emin olun.");
+        return;
+      }
+      const sonuc = mergeOgrenciListesiImport(result);
+      activeOgrenciListesiSinif = result.siniflar[0].sinif;
+      save();
+      renderMain();
+      alert(`İçe aktarıldı: ${result.siniflar.length} sınıf, ${sonuc.eklenen} yeni öğrenci eklendi, ${sonuc.guncellenen} öğrenci güncellendi.`);
+    }).catch(e => alert("İçe aktarma hatası: " + e.message));
+  });
+}
+function addOgrenci(sinif) {
+  S.ogrenciListesi.push({ id: uid("og"), sinif, okulNo: "", ad: "", soyad: "", cinsiyet: "Erkek", pansiyon: "" });
+  save(); renderMain();
+}
+function updateOgrenci(id, field, value) {
+  const o = S.ogrenciListesi.find(x => x.id === id);
+  if (!o) return;
+  o[field] = value;
+  save();
+}
+function deleteOgrenci(id) {
+  if (!confirm("Bu öğrenci listeden silinsin mi?")) return;
+  S.ogrenciListesi = S.ogrenciListesi.filter(x => x.id !== id);
+  save(); renderMain();
+}
+function setOgrenciListesiSinif(sinif) { activeOgrenciListesiSinif = sinif; renderMain(); }
+function viewOgrenciListesi() {
+  const siniflar = ogrenciListesiSiniflari();
+  if (!activeOgrenciListesiSinif || !siniflar.includes(activeOgrenciListesiSinif)) activeOgrenciListesiSinif = siniflar[0] || null;
+  const sinifBar = `<div class="row no-print" style="flex-wrap:wrap;">${siniflar.map(s => {
+    const sayi = ogrencilerForSinif(s).length;
+    return `<button class="btn ${s === activeOgrenciListesiSinif ? 'primary' : ''}" onclick="setOgrenciListesiSinif('${jsq(s)}')">${escHtml(s)} (${sayi})</button>`;
+  }).join("")}</div>`;
+  const ogrenciler = activeOgrenciListesiSinif ? ogrencilerForSinif(activeOgrenciListesiSinif) : [];
+  const rows = ogrenciler.map((o, i) => `
+    <tr>
+      <td>${i + 1}</td>
+      <td><input class="no-print" type="text" value="${escHtml(o.okulNo)}" style="width:70px" onchange="updateOgrenci('${o.id}','okulNo',this.value)"><span class="print-only-inline">${escHtml(o.okulNo)}</span></td>
+      <td><input class="no-print" type="text" value="${escHtml(o.ad)}" style="width:130px" onchange="updateOgrenci('${o.id}','ad',this.value)"><span class="print-only-inline">${escHtml(o.ad)}</span></td>
+      <td><input class="no-print" type="text" value="${escHtml(o.soyad)}" style="width:130px" onchange="updateOgrenci('${o.id}','soyad',this.value)"><span class="print-only-inline">${escHtml(o.soyad)}</span></td>
+      <td class="no-print"><select onchange="updateOgrenci('${o.id}','cinsiyet',this.value)">
+        <option value="Erkek" ${o.cinsiyet === "Erkek" ? "selected" : ""}>Erkek</option>
+        <option value="Kız" ${o.cinsiyet === "Kız" ? "selected" : ""}>Kız</option>
+      </select></td>
+      <td class="print-only-cell">${escHtml(o.cinsiyet)}</td>
+      <td><input class="no-print" type="text" value="${escHtml(o.pansiyon)}" placeholder="-" style="width:80px" onchange="updateOgrenci('${o.id}','pansiyon',this.value)"><span class="print-only-inline">${escHtml(o.pansiyon || "-")}</span></td>
+      <td class="no-print"><button class="btn danger" onclick="deleteOgrenci('${o.id}')">Sil</button></td>
+    </tr>`).join("");
+  const erkek = ogrenciler.filter(o => o.cinsiyet === "Erkek").length;
+  const kiz = ogrenciler.filter(o => o.cinsiyet === "Kız").length;
+  const dosyaAdi = "Sınıf Listesi - " + (activeOgrenciListesiSinif || "");
+  return `
+  <div class="card no-print">
+    <h2>Öğrenci Listesi</h2>
+    <p class="small">Her öğretim yılı başında e-Okul'dan aldığınız "Sınıf Listesi" PDF'ini buraya içe aktarın (birden fazla sınıf/şube aynı PDF içinde olabilir, hepsi tek seferde işlenir). Beceri Sınavı, Kalfalık/Ustalık Sınavı ve Norm Kadro gibi öğrenci listesine ihtiyaç duyan modüller bu listeyi buradan çeker — yıl değiştiğinde tek yapmanız gereken, yeni PDF'i buradan içe aktarmak.</p>
+    <div class="row">
+      <button class="btn primary" onclick="importOgrenciListesiFromPdf()">Sınıf Listesi PDF'inden İçe Aktar</button>
+      ${activeOgrenciListesiSinif ? `<button class="btn" onclick="addOgrenci('${jsq(activeOgrenciListesiSinif)}')">Elle Öğrenci Ekle</button>` : ""}
+    </div>
+    ${sinifBar}
+    ${activeOgrenciListesiSinif ? belgeAracCubugu(dosyaAdi) : ""}
+  </div>
+  ${activeOgrenciListesiSinif ? `
+  <div class="print-area">
+    ${belgeYazdirmaBasligi(dosyaAdi)}
+    <div class="card" style="overflow-x:auto;">
+      <table style="width:100%;">
+        <thead><tr><th>S.No</th><th>Öğrenci No</th><th>Adı</th><th>Soyadı</th><th>Cinsiyeti</th><th>Pansiyon</th><th class="no-print"></th></tr></thead>
+        <tbody>${rows || `<tr><td colspan="7" class="small">Bu sınıfta henüz öğrenci yok.</td></tr>`}</tbody>
+      </table>
+      <p class="small" style="margin-top:8px;">Kız Öğrenci Sayısı: ${kiz} · Erkek Öğrenci Sayısı: ${erkek} · Toplam: ${ogrenciler.length}</p>
+    </div>
+  </div>` : `<div class="card small" style="text-align:center;padding:30px 20px;">Henüz hiçbir sınıf için öğrenci listesi yok. Yukarıdan PDF içe aktarabilir ya da bir sınıf seçip elle ekleyebilirsiniz.</div>`}`;
+}
+
 /* ---- Norm Kadro ----
    Grup sayısı öğretmenin ders programındaki fiili atama sayısına DEĞİL,
    öğrenci sayısına endeksli resmi norm formülüne göre hesaplanır (kullanıcı
@@ -858,6 +972,12 @@ function setNormKadroOgrenciSayisi(classId, value) {
   const n = parseInt(value);
   if (Number.isFinite(n) && n >= 0) S.normKadro.ogrenciSayilari[classId] = n;
   else delete S.normKadro.ogrenciSayilari[classId];
+  save(); renderMain();
+}
+function normKadroOgrenciSayisiniListedenDoldur(classId, sinifAdi) {
+  const n = ogrencilerForSinif(sinifAdi).length;
+  if (!n) { alert(`"${sinifAdi}" için Öğrenci Listesi'nde henüz kayıt yok. Önce Öğrenci Listesi modülünden PDF içe aktarın.`); return; }
+  S.normKadro.ogrenciSayilari[classId] = n;
   save(); renderMain();
 }
 function addKoordSatir() {
@@ -901,6 +1021,7 @@ function viewNormKadro() {
         <h3 style="margin:0;">${escHtml(cls.name)} Sınıfı</h3>
         <label class="small" style="margin-left:10px;">Öğrenci Sayısı:</label>
         <input type="number" min="0" value="${ogrenciSayisi !== undefined ? ogrenciSayisi : ''}" style="width:70px" onchange="setNormKadroOgrenciSayisi('${cls.id}',this.value)">
+        <button class="btn" style="padding:4px 8px;font-size:11px;" onclick="normKadroOgrenciSayisiniListedenDoldur('${cls.id}','${jsq(cls.name)}')" title="Öğrenci Listesi modülündeki güncel sayıyla doldur">Listeden Doldur</button>
         <span class="small">(Grup Sayısı: ${grup === null ? '—' : grup}, norm formülüne göre otomatik)</span>
       </div>
       <p class="print-only" style="font-weight:700;margin:10px 0 4px;">${escHtml(cls.name)} Sınıfı — Öğrenci Sayısı: ${ogrenciSayisi !== undefined ? ogrenciSayisi : '—'}</p>
@@ -2205,16 +2326,57 @@ function snSonucRengi(sonuc) {
   return "background:var(--warn-bg);color:var(--warn);";
 }
 function snDeposu(kind) { return kind === "ku" ? S.kalfalikUstalik : S.beceriSinavi; }
-function snEkleKayit(kind, ekAlanlar) {
-  const dep = snDeposu(kind);
-  dep.kayitlar.push(Object.assign({
+function snYeniKayitNesnesi(kind, ekAlanlar) {
+  return Object.assign({
     id: uid(kind), ogrenciNo: "", ad: "", soyad: "", kod: "",
     d1: { t1: "", t2: "", ih1: "", ih2: "", proje: "", deney: "" },
     d2: { t1: "", t2: "", ih1: "", ih2: "", proje: "", deney: "" },
     isDosyasi: { k1: "", k2: "", k3: "", k4: "" }, isDosyasiTeslimEtmedi: false,
     sinavPuani: "", aciklama: ""
-  }, ekAlanlar));
+  }, ekAlanlar);
+}
+function snEkleKayit(kind, ekAlanlar) {
+  snDeposu(kind).kayitlar.push(snYeniKayitNesnesi(kind, ekAlanlar));
   save(); renderMain();
+}
+function snEkAlanlariHesapla(kind) {
+  return kind === "ku" ? { tur: activeKuTur, dal: activeKuDal } : { sinif: activeBeceriSinif, dal: aktifDalIcinEkle() };
+}
+function snListedenTopluEkleModal(kind) {
+  const siniflar = ogrenciListesiSiniflari();
+  const onerilenSinif = kind === "bs" ? activeBeceriSinif : (siniflar[0] || "");
+  const root = document.getElementById("modal-root");
+  root.innerHTML = `
+    <div class="modal-bg" onclick="if(event.target===this) closeModal()">
+      <div class="modal" style="width:380px;">
+        <h3>Öğrenci Listesinden Toplu Ekle</h3>
+        <p class="small">Öğrenci Listesi modülünde kayıtlı bir sınıf seçin — o sınıftaki, bu çizelgede henüz olmayan tüm öğrenciler tek seferde eklensin.</p>
+        <label class="small">Sınıf</label>
+        <select id="sn-liste-sinif" style="width:100%">
+          ${siniflar.map(s => `<option value="${jsq(s)}" ${s === onerilenSinif ? "selected" : ""}>${escHtml(s)} (${ogrencilerForSinif(s).length} öğrenci)</option>`).join("")}
+        </select>
+        <div class="row">
+          <button class="btn primary" onclick="snListedenTopluEkleUygula('${kind}')">Ekle</button>
+          <button class="btn" onclick="closeModal()">İptal</button>
+        </div>
+      </div>
+    </div>`;
+}
+function snListedenTopluEkleUygula(kind) {
+  const sinifSecim = document.getElementById("sn-liste-sinif");
+  if (!sinifSecim) return;
+  const sinif = sinifSecim.value;
+  const dep = snDeposu(kind);
+  const mevcutNolar = new Set(dep.kayitlar.filter(k => k.ogrenciNo).map(k => k.ogrenciNo));
+  const ekAlanlar = snEkAlanlariHesapla(kind);
+  let eklenen = 0;
+  ogrencilerForSinif(sinif).forEach(o => {
+    if (mevcutNolar.has(o.okulNo)) return;
+    dep.kayitlar.push(snYeniKayitNesnesi(kind, Object.assign({ ogrenciNo: o.okulNo, ad: o.ad, soyad: o.soyad }, ekAlanlar)));
+    eklenen++;
+  });
+  save(); closeModal(); renderMain();
+  alert(eklenen ? `${eklenen} öğrenci eklendi.` : "Eklenecek yeni öğrenci bulunamadı (hepsi zaten listede ya da seçilen sınıfta kayıt yok).");
 }
 function snSilKayit(kind, id) {
   if (!confirm("Bu öğrencinin kaydı silinsin mi?")) return;
@@ -2359,6 +2521,7 @@ function viewKalfalikUstalik() {
     ${dalBar}
     <div class="row" style="margin-top:8px;">
       <button class="btn primary" onclick="snEkleKayit('ku',{tur:activeKuTur,dal:activeKuDal})">Öğrenci Ekle</button>
+      <button class="btn" onclick="snListedenTopluEkleModal('ku')">Öğrenci Listesinden Toplu Ekle</button>
     </div>
     ${belgeAracCubugu(dosyaAdi)}
   </div>
@@ -2388,6 +2551,7 @@ function viewBeceriSinavi() {
     ${sinifBar}
     <div class="row" style="margin-top:8px;">
       <button class="btn primary" onclick="snEkleKayit('bs',{sinif:activeBeceriSinif,dal:aktifDalIcinEkle()})">Öğrenci Ekle</button>
+      <button class="btn" onclick="snListedenTopluEkleModal('bs')">Öğrenci Listesinden Toplu Ekle</button>
     </div>
     ${belgeAracCubugu(dosyaAdi)}
   </div>
