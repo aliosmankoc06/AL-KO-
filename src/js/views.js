@@ -7,6 +7,7 @@ const MODULES = [
   { id: "ders-programi", label: "Ders Programı", icon: "calendar" },
   { id: "yillik-plan", label: "Yıllık Plan", icon: "note" },
   { id: "gunluk-plan", label: "Günlük Plan", icon: "book" },
+  { id: "ders-bilgi-formu", label: "Ders Bilgi Formları", icon: "stack" },
   { id: "ogrenci-listesi", label: "Öğrenci Listesi", icon: "school" },
   { id: "norm-kadro", label: "Norm Kadro", icon: "chart" },
   { id: "okul-zumresi", label: "Toplantı Tutanakları", icon: "users" },
@@ -72,6 +73,7 @@ function renderMain() {
   if (activeModule === "ders-programi-secim") { el.innerHTML = viewDersProgramiChooser(); return; }
   if (activeModule === "yillik-plan") { el.innerHTML = viewPlanModule("yillik"); return; }
   if (activeModule === "gunluk-plan") { el.innerHTML = viewPlanModule("gunluk"); return; }
+  if (activeModule === "ders-bilgi-formu") { el.innerHTML = viewDersBilgiFormu(); return; }
   if (activeModule === "ogrenci-listesi") { el.innerHTML = viewOgrenciListesi(); return; }
   if (activeModule === "norm-kadro") { el.innerHTML = viewNormKadro(); return; }
   if (activeModule === "okul-zumresi") { el.innerHTML = viewOkulZumresi(); return; }
@@ -910,6 +912,132 @@ function viewPlanModule(kind) {
   <div class="print-area">
     ${belgeYazdirmaBasligi(dosyaAdi)}
     ${contentHtml}
+  </div>`;
+}
+
+/* ---- Ders Bilgi Formları (MEB çerçeve öğretim programı kaynak belgeleri) ----
+   src/js/ders-bilgi-formu-data.js içindeki DERS_BILGI_FORMLARI dizisinden
+   okunur — kaydedilebilir bir S alanı değil, sadece MEB'in yayınladığı
+   ders bilgi formu belgelerinin (AMP ve MESEM) programa gömülmüş, salt
+   okunur bir kopyası. Üç farklı belge şekli var: (1) MESEM tam formlar —
+   amaç/kazanım/modül tablosu hepsi ayrı ayrı; (2) AMP tablo formatlı
+   belgeler — aynı alanlar var ama bazı alt alanlar (konular, modül süresi
+   vb.) o belge biçiminde ayrı sütun olarak yer almıyor; (3) bazı kaynak
+   PDF'ler sadece ham metin olarak çıkarılabildi (yapılandırılmış tablo
+   yok) — bu durumda kaynak metin olduğu gibi gösterilir. */
+let activeDbfProgram = null;
+let activeDbfSinif = null;
+let activeDbfDersAdi = null;
+function dbfKayitlar() { return (typeof DERS_BILGI_FORMLARI !== "undefined" ? DERS_BILGI_FORMLARI : []); }
+function dbfProgramlar() { return [...new Set(dbfKayitlar().map(r => r.program))]; }
+function dbfSiniflar(program) {
+  return [...new Set(dbfKayitlar().filter(r => r.program === program).map(r => r.sinif))]
+    .sort((a, b) => a.localeCompare(b, "tr", { numeric: true }));
+}
+function dbfDersler(program, sinif) {
+  return dbfKayitlar().filter(r => r.program === program && r.sinif === sinif)
+    .sort((a, b) => a.dersAdi.localeCompare(b.dersAdi, "tr"));
+}
+function dbfKayit(program, sinif, dersAdi) {
+  return dbfKayitlar().find(r => r.program === program && r.sinif === sinif && r.dersAdi === dersAdi);
+}
+function selectDbfProgram(v) { activeDbfProgram = v; activeDbfSinif = null; activeDbfDersAdi = null; renderMain(); }
+function selectDbfSinif(v) { activeDbfSinif = v; activeDbfDersAdi = null; renderMain(); }
+function selectDbfDers(v) { activeDbfDersAdi = v; renderMain(); }
+function renderDbfDetay(r) {
+  const yapilandirilmisVarMi = !!(r.dersAmaci || (r.modulTablosu && r.modulTablosu.length) || (r.moduller && r.moduller.length));
+  if (!yapilandirilmisVarMi) {
+    return `
+    <div class="card small no-print" style="margin-bottom:10px;background:var(--bg-2, #f4f4f8);">
+      Bu ders için kaynak belgeden çıkarılan ham metin bulunuyor; belge biçimi nedeniyle amaç/kazanım/modül tablosu ayrı ayrı ayrıştırılamadı. Aşağıda kaynak belgenin metni olduğu gibi gösteriliyor.
+    </div>
+    <div style="white-space:pre-wrap;font-family:inherit;font-size:12.5px;line-height:1.5;">${nlToBr(r.metinIcerik || "")}</div>
+    <p class="small" style="margin-top:14px;">Kaynak: ${escHtml(r.kaynakDosya || "")}</p>`;
+  }
+  const kazanimlarHtml = (r.kazanimlar && r.kazanimlar.length)
+    ? `<ul style="margin:6px 0 14px 18px;">${r.kazanimlar.map(k => `<li>${escHtml(k)}</li>`).join("")}</ul>`
+    : `<p class="small" style="margin-bottom:14px;">Kazanım bilgisi bu belge biçiminde ayrı olarak listelenmemiş.</p>`;
+  const tabloHtml = (r.modulTablosu && r.modulTablosu.length) ? `
+    <table style="margin-top:6px;"><thead><tr><th>Modül Adı</th><th>Konular</th><th>Kazanım Sayısı (Modül)</th><th>Kazanım Sayısı (Ders)</th><th>Ders Saati</th><th>Ağırlık (%)</th></tr></thead>
+    <tbody>${r.modulTablosu.map(m => `<tr><td>${escHtml(m.modulAdi)}</td><td>${escHtml(m.konular)}</td><td>${escHtml(m.kazanimSayisiModul)}</td><td>${escHtml(m.kazanimSayisiDers)}</td><td>${escHtml(m.dersSaati)}</td><td>${escHtml(m.agirlik)}</td></tr>`).join("")}</tbody></table>` : "";
+  const modullerHtml = (r.moduller && r.moduller.length) ? r.moduller.map(m => `
+    <div style="margin-top:14px;">
+      <div style="font-weight:600;">${escHtml(m.modulAdi)}${m.modulSuresi ? " (" + escHtml(m.modulSuresi) + ")" : ""}</div>
+      ${m.modulAmaci ? `<p class="small" style="margin:4px 0;">${escHtml(m.modulAmaci)}</p>` : ""}
+      ${(m.kazanimlar && m.kazanimlar.length) ? `<ul style="margin:4px 0 4px 18px;">${m.kazanimlar.map(k => `<li>${escHtml(k)}</li>`).join("")}</ul>` : ""}
+      ${(m.aciklamalar && m.aciklamalar.length) ? `<div class="small" style="margin-top:4px;"><b>Açıklamalar:</b><ul style="margin:4px 0 0 18px;">${m.aciklamalar.map(a => `<li>${escHtml(a)}</li>`).join("")}</ul></div>` : ""}
+    </div>`).join("") : "";
+  return `
+  <div style="margin-bottom:10px;"><b>Dersin Adı:</b> ${escHtml(r.dersAdi)}</div>
+  <div class="row small" style="flex-wrap:wrap;gap:16px;margin-bottom:10px;">
+    ${r.dersSuresi ? `<span><b>Ders Süresi:</b> ${escHtml(r.dersSuresi)}</span>` : ""}
+    ${r.dersSinifi ? `<span><b>Dersin Sınıfı:</b> ${escHtml(r.dersSinifi)}</span>` : ""}
+  </div>
+  ${r.dersAmaci ? `<p style="margin-bottom:10px;"><b>Dersin Amacı:</b> ${escHtml(r.dersAmaci)}</p>` : ""}
+  <div style="font-weight:600;margin-top:10px;">Dersin Kazanımları</div>
+  ${kazanimlarHtml}
+  ${tabloHtml ? `<div style="font-weight:600;margin-top:14px;">Modül-Kazanım-Süre Tablosu</div>${tabloHtml}` : ""}
+  ${modullerHtml ? `<div style="font-weight:600;margin-top:16px;">Modüller</div>${modullerHtml}` : ""}
+  <p class="small no-print" style="margin-top:16px;">Kaynak: ${escHtml(r.kaynakDosya || "")}</p>`;
+}
+function viewDersBilgiFormu() {
+  const programlar = dbfProgramlar();
+  if (programlar.length === 0) {
+    return `<div class="card no-print"><h2>Ders Bilgi Formları</h2><p class="small">Henüz kaynak belge yüklenmemiş.</p></div>`;
+  }
+  if (activeDbfProgram && !programlar.includes(activeDbfProgram)) activeDbfProgram = null;
+
+  const ustBar = `
+  <div class="card no-print">
+    <h2>Ders Bilgi Formları</h2>
+    <p class="small">MEB çerçeve öğretim programlarına ait ders bilgi formları — dersin amacı, kazanımları ve modül/konu tablosu. Yıllık Plan ve Günlük Plan hazırlarken referans olarak kullanabilirsiniz. Program, sonra sınıf, sonra ders seçin.</p>
+  </div>`;
+
+  const programBar = `
+  <div class="card no-print">
+    <div class="small" style="margin-bottom:6px;font-weight:600;">1) Program</div>
+    <div class="row" style="flex-wrap:wrap;">
+      ${sekmeDropdown("dbf-program", programlar.map(p => ({ value: p, label: p })), activeDbfProgram, "selectDbfProgram('{v}')")}
+    </div>
+  </div>`;
+
+  if (!activeDbfProgram) return ustBar + programBar;
+
+  const siniflar = dbfSiniflar(activeDbfProgram);
+  if (activeDbfSinif && !siniflar.includes(activeDbfSinif)) activeDbfSinif = null;
+  const sinifBar = `
+  <div class="card no-print">
+    <div class="small" style="margin-bottom:6px;font-weight:600;">2) Sınıf</div>
+    <div class="row" style="flex-wrap:wrap;">
+      ${sekmeDropdown("dbf-sinif", siniflar.map(s => ({ value: s, label: s })), activeDbfSinif, "selectDbfSinif('{v}')")}
+    </div>
+  </div>`;
+
+  if (!activeDbfSinif) return ustBar + programBar + sinifBar;
+
+  const dersler = dbfDersler(activeDbfProgram, activeDbfSinif);
+  if (activeDbfDersAdi && !dersler.some(d => d.dersAdi === activeDbfDersAdi)) activeDbfDersAdi = null;
+  const dersBar = `
+  <div class="card no-print">
+    <div class="small" style="margin-bottom:6px;font-weight:600;">3) Ders</div>
+    <div class="row" style="flex-wrap:wrap;">
+      ${sekmeDropdown("dbf-ders", dersler.map(d => ({ value: d.dersAdi, label: d.dersAdi })), activeDbfDersAdi, "selectDbfDers('{v}')")}
+    </div>
+  </div>`;
+
+  if (!activeDbfDersAdi) return ustBar + programBar + sinifBar + dersBar;
+
+  const kayit = dbfKayit(activeDbfProgram, activeDbfSinif, activeDbfDersAdi);
+  const dosyaAdi = "Ders Bilgi Formu - " + activeDbfDersAdi + " - " + activeDbfSinif;
+  return `
+  ${ustBar}
+  ${programBar}
+  ${sinifBar}
+  ${dersBar}
+  <div class="card no-print">${belgeAracCubugu(dosyaAdi)}</div>
+  <div class="print-area">
+    ${belgeYazdirmaBasligi("Ders Bilgi Formu")}
+    <div class="card" style="overflow-x:auto;">${kayit ? renderDbfDetay(kayit) : '<p class="small">Kayıt bulunamadı.</p>'}</div>
   </div>`;
 }
 
@@ -3908,6 +4036,11 @@ function globalSearch(query) {
   S.performansKayitlari.forEach(k => {
     if (trLower(k.sinif).includes(q) || trLower(k.ders).includes(q)) {
       results.push({ tip: "Performans Kaydı", ad: k.sinif + " · " + k.ders, action: () => { setModule("performans"); activePerformansTab = k.tur; activePerformansSinif = k.sinif; activePerformansDonem = k.donem; activePerformansId[k.tur] = k.id; } });
+    }
+  });
+  dbfKayitlar().forEach(r => {
+    if (trLower(r.dersAdi).includes(q)) {
+      results.push({ tip: "Ders Bilgi Formu", ad: r.dersAdi + " · " + r.program + " " + r.sinif, action: () => { setModule("ders-bilgi-formu"); selectDbfProgram(r.program); selectDbfSinif(r.sinif); selectDbfDers(r.dersAdi); } });
     }
   });
   return results.slice(0, 20);
