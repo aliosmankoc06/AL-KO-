@@ -388,6 +388,7 @@ function normalizeState(s) {
       if (typeof k.sinav1 !== "string") k.sinav1 = String(k.sinav1 !== undefined ? k.sinav1 : "");
       if (typeof k.sinav2 !== "string") k.sinav2 = String(k.sinav2 !== undefined ? k.sinav2 : "");
       if (typeof k.uygulama !== "string") k.uygulama = String(k.uygulama !== undefined ? k.uygulama : "");
+      if (typeof k.grup !== "string" || !k.grup) k.grup = "1";
     });
   });
   if (!Array.isArray(s.performansNotlari)) s.performansNotlari = [];
@@ -409,6 +410,7 @@ function normalizeState(s) {
       while (k.perf2.length < n.perf2Sayisi) k.perf2.push("");
       k.perf1 = k.perf1.slice(0, n.perf1Sayisi).map(v => String(v !== undefined && v !== null ? v : ""));
       k.perf2 = k.perf2.slice(0, n.perf2Sayisi).map(v => String(v !== undefined && v !== null ? v : ""));
+      if (typeof k.grup !== "string" || !k.grup) k.grup = "1";
     });
   });
   if (!Array.isArray(s.donemArsivi)) s.donemArsivi = [];

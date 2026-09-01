@@ -3020,7 +3020,12 @@ function sinavNotlariById(id) { return S.sinavNotlari.find(x => x.id === id); }
 function sinavNotlariBul(sinif, ders, donem) { return S.sinavNotlari.find(n => n.sinif === sinif && n.ders === ders && n.donem === donem); }
 function sinavNotlariOlusturVeyaGetir(sinif, ders, donem) {
   let n = sinavNotlariBul(sinif, ders, donem);
-  if (!n) { n = { id: uid("sn"), sinif, ders, donem, uygulamaSinaviVarMi: true, kayitlar: [] }; S.sinavNotlari.push(n); }
+  if (!n) {
+    const kayitlar = ogrencilerForSinif(sinif).map(o => ({ id: uid("snk"), okulNo: o.okulNo, ad: (o.ad + " " + o.soyad).trim(), sinav1: "", sinav2: "", uygulama: "", grup: "1" }));
+    n = { id: uid("sn"), sinif, ders, donem, uygulamaSinaviVarMi: true, kayitlar };
+    S.sinavNotlari.push(n);
+    save();
+  }
   return n;
 }
 function sinavNotlariSenkronizeEt(entryId) {
@@ -3030,7 +3035,7 @@ function sinavNotlariSenkronizeEt(entryId) {
   ogrencilerForSinif(n.sinif).forEach(o => {
     const varMi = n.kayitlar.some(k => k.okulNo === o.okulNo && k.ad === (o.ad + " " + o.soyad).trim());
     if (varMi) return;
-    n.kayitlar.push({ id: uid("snk"), okulNo: o.okulNo, ad: (o.ad + " " + o.soyad).trim(), sinav1: "", sinav2: "", uygulama: "" });
+    n.kayitlar.push({ id: uid("snk"), okulNo: o.okulNo, ad: (o.ad + " " + o.soyad).trim(), sinav1: "", sinav2: "", uygulama: "", grup: "1" });
     eklenen++;
   });
   save(); renderMain();
@@ -3042,11 +3047,12 @@ function updateSinavNotuAlan(entryId, kayitId, field, value) {
   if (!k) return;
   k[field] = value;
   save();
+  if (field === "grup") renderMain();
 }
 function addSinavNotuKayitManuel(entryId) {
   const n = sinavNotlariById(entryId);
   if (!n) return;
-  n.kayitlar.push({ id: uid("snk"), okulNo: "", ad: "", sinav1: "", sinav2: "", uygulama: "" });
+  n.kayitlar.push({ id: uid("snk"), okulNo: "", ad: "", sinav1: "", sinav2: "", uygulama: "", grup: "1" });
   save(); renderMain();
 }
 function removeSinavNotuKayit(entryId, kayitId) {
@@ -3066,9 +3072,18 @@ function setSinavNotlariUygulama(entryId, value) {
   n.uygulamaSinaviVarMi = value;
   save(); renderMain();
 }
+function grupluKayitlar(kayitlar) {
+  const gruplar = {};
+  kayitlar.forEach(k => { const g = k.grup || "1"; (gruplar[g] = gruplar[g] || []).push(k); });
+  return Object.keys(gruplar).sort((a, b) => (parseInt(a, 10) || 0) - (parseInt(b, 10) || 0) || a.localeCompare(b, "tr")).map(g => ({ grup: g, kayitlar: gruplar[g] }));
+}
+function grupBasligiSatiri(grup, kolonSayisi) {
+  return `<tr><td colspan="${kolonSayisi}" style="background:var(--panel-2);font-weight:700;">${escHtml(grup)}. GRUP</td></tr>`;
+}
 function renderSinavNotlariDetay(n) {
   let siraNo = 0;
-  const satirlar = n.kayitlar.map(k => {
+  const kolonSayisi = n.uygulamaSinaviVarMi ? 7 : 6;
+  const satirlar = grupluKayitlar(n.kayitlar).map(blok => grupBasligiSatiri(blok.grup, kolonSayisi) + blok.kayitlar.map(k => {
     siraNo++;
     return `<tr>
       <td>${siraNo}</td>
@@ -3077,9 +3092,9 @@ function renderSinavNotlariDetay(n) {
       <td><input class="no-print" type="text" value="${escHtml(k.sinav1)}" style="width:50px;text-align:center;" onchange="updateSinavNotuAlan('${n.id}','${k.id}','sinav1',this.value)"><span class="print-only-inline">${escHtml(k.sinav1)}</span></td>
       <td><input class="no-print" type="text" value="${escHtml(k.sinav2)}" style="width:50px;text-align:center;" onchange="updateSinavNotuAlan('${n.id}','${k.id}','sinav2',this.value)"><span class="print-only-inline">${escHtml(k.sinav2)}</span></td>
       ${n.uygulamaSinaviVarMi ? `<td><input class="no-print" type="text" value="${escHtml(k.uygulama)}" style="width:50px;text-align:center;" onchange="updateSinavNotuAlan('${n.id}','${k.id}','uygulama',this.value)"><span class="print-only-inline">${escHtml(k.uygulama)}</span></td>` : ""}
-      <td class="no-print"><button class="btn danger" onclick="removeSinavNotuKayit('${n.id}','${k.id}')">Sil</button></td>
+      <td class="no-print"><input type="text" value="${escHtml(k.grup)}" style="width:32px;text-align:center;" title="Grup" onchange="updateSinavNotuAlan('${n.id}','${k.id}','grup',this.value)"><button class="btn danger" onclick="removeSinavNotuKayit('${n.id}','${k.id}')">Sil</button></td>
     </tr>`;
-  }).join("");
+  }).join("")).join("");
   return `
   <div class="card no-print">
     <div class="row small" style="flex-wrap:wrap;gap:14px;align-items:center;">
@@ -3098,7 +3113,7 @@ function renderSinavNotlariDetay(n) {
   </div>
   <table style="font-size:11px;">
     <thead><tr><th style="width:34px;">Sıra<br>No</th><th style="width:56px;">Okul<br>No</th><th>Adı ve Soyadı</th><th style="width:50px;">1.<br>Sınav</th><th style="width:50px;">2.<br>Sınav</th>${n.uygulamaSinaviVarMi ? '<th style="width:56px;">Uygulama<br>Sınavı</th>' : ""}<th class="no-print"></th></tr></thead>
-    <tbody>${satirlar || `<tr><td colspan="7" class="small">Henüz öğrenci yok — "Öğrenci Listesinden Senkronize Et" ile Öğrenci Listesi modülündeki sınıf listesini buraya getirin.</td></tr>`}</tbody>
+    <tbody>${satirlar || `<tr><td colspan="7" class="small">Bu sınıfta Öğrenci Listesi'nde kayıtlı öğrenci bulunamadı. Önce Öğrenci Listesi modülünden bu sınıfın öğrencilerini ekleyin (PDF/Word/Excel yükleyerek ya da elle) — sonra "Öğrenci Listesinden Senkronize Et"e basın, ya da "Satır Ekle" ile burada elle de girebilirsiniz.</td></tr>`}</tbody>
   </table>`;
 }
 function viewSinavNotlari() {
@@ -3116,7 +3131,12 @@ function performansNotlariById(id) { return S.performansNotlari.find(x => x.id =
 function performansNotlariBul(sinif, ders, donem) { return S.performansNotlari.find(n => n.sinif === sinif && n.ders === ders && n.donem === donem); }
 function performansNotlariOlusturVeyaGetir(sinif, ders, donem) {
   let n = performansNotlariBul(sinif, ders, donem);
-  if (!n) { n = { id: uid("pn"), sinif, ders, donem, perf1Sayisi: 3, perf2Sayisi: 3, kayitlar: [] }; S.performansNotlari.push(n); }
+  if (!n) {
+    const kayitlar = ogrencilerForSinif(sinif).map(o => ({ id: uid("pnk"), okulNo: o.okulNo, ad: (o.ad + " " + o.soyad).trim(), perf1: new Array(3).fill(""), perf2: new Array(3).fill(""), grup: "1" }));
+    n = { id: uid("pn"), sinif, ders, donem, perf1Sayisi: 3, perf2Sayisi: 3, kayitlar };
+    S.performansNotlari.push(n);
+    save();
+  }
   return n;
 }
 function performansOrt(arr) {
@@ -3131,7 +3151,7 @@ function performansNotlariSenkronizeEt(entryId) {
   ogrencilerForSinif(n.sinif).forEach(o => {
     const varMi = n.kayitlar.some(k => k.okulNo === o.okulNo && k.ad === (o.ad + " " + o.soyad).trim());
     if (varMi) return;
-    n.kayitlar.push({ id: uid("pnk"), okulNo: o.okulNo, ad: (o.ad + " " + o.soyad).trim(), perf1: new Array(n.perf1Sayisi).fill(""), perf2: new Array(n.perf2Sayisi).fill("") });
+    n.kayitlar.push({ id: uid("pnk"), okulNo: o.okulNo, ad: (o.ad + " " + o.soyad).trim(), perf1: new Array(n.perf1Sayisi).fill(""), perf2: new Array(n.perf2Sayisi).fill(""), grup: "1" });
     eklenen++;
   });
   save(); renderMain();
@@ -3143,6 +3163,7 @@ function updatePerformansAlan(entryId, kayitId, field, value) {
   if (!k) return;
   k[field] = value;
   save();
+  if (field === "grup") renderMain();
 }
 function updatePerformansPerf(entryId, kayitId, hangi, idx, value) {
   const n = performansNotlariById(entryId);
@@ -3154,7 +3175,7 @@ function updatePerformansPerf(entryId, kayitId, hangi, idx, value) {
 function addPerformansKayitManuel(entryId) {
   const n = performansNotlariById(entryId);
   if (!n) return;
-  n.kayitlar.push({ id: uid("pnk"), okulNo: "", ad: "", perf1: new Array(n.perf1Sayisi).fill(""), perf2: new Array(n.perf2Sayisi).fill("") });
+  n.kayitlar.push({ id: uid("pnk"), okulNo: "", ad: "", perf1: new Array(n.perf1Sayisi).fill(""), perf2: new Array(n.perf2Sayisi).fill(""), grup: "1" });
   save(); renderMain();
 }
 function removePerformansKayit(entryId, kayitId) {
@@ -3182,8 +3203,9 @@ function setPerformansSayisi(entryId, field, value) {
 }
 function renderPerformansNotlariDetay(n) {
   const perfBaslik = sayi => new Array(sayi).fill(0).map((_, i) => `<th style="width:30px;">${i + 1}</th>`).join("") + `<th style="width:56px;">Ort. /<br>Girildi</th>`;
+  const kolonSayisi = 3 + (n.perf1Sayisi + 1) + (n.perf2Sayisi + 1) + 1;
   let siraNo = 0;
-  const satirlar = n.kayitlar.map(k => {
+  const satirlar = grupluKayitlar(n.kayitlar).map(blok => grupBasligiSatiri(blok.grup, kolonSayisi) + blok.kayitlar.map(k => {
     siraNo++;
     const perf1Dolu = k.perf1.filter(v => v !== "").length;
     const perf2Dolu = k.perf2.filter(v => v !== "").length;
@@ -3195,10 +3217,9 @@ function renderPerformansNotlariDetay(n) {
       <td><input class="no-print" type="text" value="${escHtml(k.ad)}" style="width:160px;" onchange="updatePerformansAlan('${n.id}','${k.id}','ad',this.value)"><span class="print-only-inline">${escHtml(k.ad)}</span></td>
       ${perf1Cells}<td><b>${performansOrt(k.perf1)}</b><div class="small">${perf1Dolu}/${n.perf1Sayisi} girildi</div></td>
       ${perf2Cells}<td><b>${performansOrt(k.perf2)}</b><div class="small">${perf2Dolu}/${n.perf2Sayisi} girildi</div></td>
-      <td class="no-print"><button class="btn danger" onclick="removePerformansKayit('${n.id}','${k.id}')">Sil</button></td>
+      <td class="no-print"><input type="text" value="${escHtml(k.grup)}" style="width:32px;text-align:center;" title="Grup" onchange="updatePerformansAlan('${n.id}','${k.id}','grup',this.value)"><button class="btn danger" onclick="removePerformansKayit('${n.id}','${k.id}')">Sil</button></td>
     </tr>`;
-  }).join("");
-  const kolonSayisi = 3 + (n.perf1Sayisi + 1) + (n.perf2Sayisi + 1) + 1;
+  }).join("")).join("");
   return `
   <div class="card no-print">
     <div class="row small" style="flex-wrap:wrap;gap:14px;align-items:center;">
@@ -3228,7 +3249,7 @@ function renderPerformansNotlariDetay(n) {
       </tr>
       <tr>${perfBaslik(n.perf1Sayisi)}${perfBaslik(n.perf2Sayisi)}</tr>
     </thead>
-    <tbody>${satirlar || `<tr><td colspan="${kolonSayisi}" class="small">Henüz öğrenci yok — "Öğrenci Listesinden Senkronize Et" ile Öğrenci Listesi modülündeki sınıf listesini buraya getirin.</td></tr>`}</tbody>
+    <tbody>${satirlar || `<tr><td colspan="${kolonSayisi}" class="small">Bu sınıfta Öğrenci Listesi'nde kayıtlı öğrenci bulunamadı. Önce Öğrenci Listesi modülünden bu sınıfın öğrencilerini ekleyin (PDF/Word/Excel yükleyerek ya da elle) — sonra "Öğrenci Listesinden Senkronize Et"e basın, ya da "Satır Ekle" ile burada elle de girebilirsiniz.</td></tr>`}</tbody>
   </table>`;
 }
 function viewPerformansNotlari() {
