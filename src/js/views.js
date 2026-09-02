@@ -1490,7 +1490,15 @@ function renderDbfDetay(r) {
       <div style="font-weight:600;">${escHtml(m.modulAdi)}${m.modulSuresi ? " (" + escHtml(m.modulSuresi) + ")" : ""}</div>
       ${m.modulAmaci ? `<p class="small" style="margin:4px 0;">${escHtml(m.modulAmaci)}</p>` : ""}
       ${(m.konular && m.konular.length) ? `<div class="small" style="margin-top:4px;"><b>Konular:</b><ul style="margin:4px 0 0 18px;">${m.konular.map(k => `<li>${escHtml(k)}</li>`).join("")}</ul></div>` : ""}
-      ${(m.kazanimlar && m.kazanimlar.length) ? `<div class="small" style="margin-top:4px;"><b>Kazanımlar:</b><ul style="margin:4px 0 0 18px;">${m.kazanimlar.map(k => `<li>${escHtml(k)}</li>`).join("")}</ul></div>` : ""}
+      ${(m.kazanimBasarimOlcutleri && m.kazanimBasarimOlcutleri.length) ? `<div class="small" style="margin-top:4px;"><b>Kazanımlar ve Başarım Ölçütleri:</b>${m.kazanimBasarimOlcutleri.map(kb => `
+        <div style="margin:6px 0 0 8px;">
+          <div>• ${escHtml(kb.kazanim)}</div>
+          ${kb.basarimOlcutleri ? (Array.isArray(kb.basarimOlcutleri)
+            ? `<ul style="margin:2px 0 0 26px;">${kb.basarimOlcutleri.map(o => `<li>${escHtml(o)}</li>`).join("")}</ul>`
+            : `${(kb.basarimOlcutleri.bilgi && kb.basarimOlcutleri.bilgi.length) ? `<div style="margin:2px 0 0 18px;"><i>Bilgi:</i><ul style="margin:2px 0 0 18px;">${kb.basarimOlcutleri.bilgi.map(o => `<li>${escHtml(o)}</li>`).join("")}</ul></div>` : ""}${(kb.basarimOlcutleri.beceri && kb.basarimOlcutleri.beceri.length) ? `<div style="margin:2px 0 0 18px;"><i>Beceri:</i><ul style="margin:2px 0 0 18px;">${kb.basarimOlcutleri.beceri.map(o => `<li>${escHtml(o)}</li>`).join("")}</ul></div>` : ""}`) : ""}
+        </div>`).join("")}</div>`
+        : (m.kazanimlar && m.kazanimlar.length) ? `<div class="small" style="margin-top:4px;"><b>Kazanımlar:</b><ul style="margin:4px 0 0 18px;">${m.kazanimlar.map(k => `<li>${escHtml(k)}</li>`).join("")}</ul></div>` : ""}
+      ${(m.basarimOlcutleriModulSeviyesi && m.basarimOlcutleriModulSeviyesi.length) ? `<div class="small" style="margin-top:4px;"><b>Başarım Ölçütleri:</b><ul style="margin:4px 0 0 18px;">${m.basarimOlcutleriModulSeviyesi.map(o => `<li>${escHtml(o)}</li>`).join("")}</ul></div>` : ""}
       ${(m.aciklamalar && m.aciklamalar.length) ? `<div class="small" style="margin-top:4px;"><b>Açıklamalar:</b><ul style="margin:4px 0 0 18px;">${m.aciklamalar.map(a => `<li>${escHtml(a)}</li>`).join("")}</ul></div>` : ""}
       ${(m.icerikMaddeleri && m.icerikMaddeleri.length) ? `<div class="small" style="margin-top:4px;"><b>Konular ve Kazanımlar:</b><ul style="margin:4px 0 0 18px;">${m.icerikMaddeleri.map(k => `<li>${escHtml(k)}</li>`).join("")}</ul></div>` : ""}
     </div>`).join("") : "";
