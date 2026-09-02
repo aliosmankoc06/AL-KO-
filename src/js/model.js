@@ -703,9 +703,6 @@ function roomById(id) { return S.rooms.find(r => r.id === id); }
 function classById(id) { return S.classes.find(c => c.id === id); }
 function isletmeById(id) { return S.isletmeler.find(i => i.id === id); }
 
-function coursesForClass(cls) {
-  return S.courses.filter(c =>
-    (c.grade === cls.grade && (c.dal === cls.dal || c.dal === "HERDAL" || c.dal === "ORTAK9" || c.dal === "ORTAK")) ||
-    (c.dal === "SERT" && cls.grade >= 11)
-  );
+function assignedCoursesForClass(cls) {
+  return (cls.assignments || []).map(a => courseById(a.courseId)).filter(Boolean);
 }

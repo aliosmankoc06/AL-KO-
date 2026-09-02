@@ -3085,7 +3085,7 @@ function notSecimBarlari(baslik, aciklama) {
   if (!activeNotSinifId) return { html: ustBar + sinifBar, cls: null, course: null, done: false };
 
   const cls = classById(activeNotSinifId);
-  const dersler = cls ? coursesForClass(cls) : [];
+  const dersler = cls ? assignedCoursesForClass(cls) : [];
   if (activeNotCourseId && !dersler.some(c => c.id === activeNotCourseId)) activeNotCourseId = null;
   const dersBar = `
   <div class="card no-print">
@@ -5160,7 +5160,7 @@ function viewSinavHavuzu() {
   if (!activeSinavSinifId) return ustBar + sinifBar;
 
   const cls = classById(activeSinavSinifId);
-  const dersler = cls ? coursesForClass(cls) : [];
+  const dersler = cls ? assignedCoursesForClass(cls) : [];
   if (activeSinavCourseId && !dersler.some(c => c.id === activeSinavCourseId)) activeSinavCourseId = null;
 
   const dersBar = `
@@ -5754,13 +5754,10 @@ function viewOgretmen() {
 
   return `
   <div class="card no-print">
-    <h2>Öğretmenler</h2>
-    <p class="small">Buraya girdiğiniz saat <b>sadece ders (öğretim) saatidir</b> — koordinatörlük buna dahil değildir, "Programı Yenile" çalıştığınızda koordinatörlük saatleri bunun <b>üzerine ayrıca</b> eklenir (ör. 30 saat ders hedefi + 8 saat koordinatörlük = 38 saat genel toplam). "Koordinatörlük Alsın" kutusunu işaretlerseniz o öğretmen otomatik koordinatörlük dağıtımına dahil olur; hiç koordinatörlük almaması gerekenler için bu kutuyu boş bırakın. Belirli bir saati boşta bırakmak için <b>Programlar → Öğretmen Programı</b> ekranından ilgili hücreye tıklayıp "İzinli Yap" seçeneğini kullanın.</p>
     <div class="row" style="max-width:400px">
       <input type="text" id="new-teacher" placeholder="Yeni öğretmen adı">
       <button class="btn primary" onclick="addTeacher()">Ekle</button>
     </div>
-    ${belgeAracCubugu("Öğretmenler")}
   </div>
   <div class="print-area">
     ${belgeYazdirmaBasligi("Öğretmenler")}
@@ -5924,21 +5921,30 @@ function deleteTeacher(id) {
 }
 
 /* ---- Sınıflar ve Ders Atama ---- */
+function sinifDersHavuzuDropdown(clsId, available) {
+  const items = available.map(c => `
+    <div class="tab-dropdown-item" onclick="addAssignment('${jsq(clsId)}','${jsq(c.id)}'); toggleTabDropdown('sinif-ders-havuzu');">${escHtml(c.name)} <span class="small">(${c.hours} sa)</span></div>`).join("")
+    || `<div class="tab-dropdown-item small">Eklenebilecek başka ders yok.</div>`;
+  return `<div class="tab-dropdown no-print">
+    <button class="btn primary" onclick="toggleTabDropdown('sinif-ders-havuzu')">Ders Havuzundan Ekle ▾</button>
+    <div id="tabdd-sinif-ders-havuzu" class="tab-dropdown-menu">${items}</div>
+  </div>`;
+}
 function viewSinif() {
   const listHtml = S.classes.filter(c => !c.id.startsWith("isletme-")).map(c => `
     <div class="list-item ${c.id === activeClassId ? 'active' : ''}" onclick="setActiveClass('${c.id}')">
       <span>${c.name} <span class="small">(${DAL_LABELS[c.dal] || c.dal})</span> ${c.excludeFromDistribution ? '<span class="pill warn">Dahil değil</span>' : ''}</span>
+      <span style="display:flex;gap:8px;flex-shrink:0;margin-left:6px;">
+        <span onclick="event.stopPropagation(); editClass('${c.id}');" style="cursor:pointer;" title="Sınıfı düzenle">✎</span>
+        <span onclick="event.stopPropagation(); deleteClass('${c.id}');" style="cursor:pointer;" title="Sınıfı sil">✕</span>
+      </span>
     </div>`).join("");
 
   const cls = classById(activeClassId);
   let detail = `<p class="small">Soldan bir sınıf seçin.</p>`;
   if (cls) {
-    const available = coursesForClass(cls).filter(c => !cls.assignments.some(a => a.courseId === c.id));
-    const availRows = available.map(c => `
-      <div class="chk-row">
-        <span style="flex:1">${c.name} <span class="small">(${c.hours} sa)</span></span>
-        <button class="btn" onclick="addAssignment('${cls.id}','${c.id}')">Ekle</button>
-      </div>`).join("") || `<p class="small">Eklenebilecek başka ders yok.</p>`;
+    const available = S.courses.filter(c => c.id !== KOORD_COURSE_ID && !cls.assignments.some(a => a.courseId === c.id));
+    const dersHavuzuDropdown = sinifDersHavuzuDropdown(cls.id, available);
 
     const assignedRows = cls.assignments.map(a => {
       const course = courseById(a.courseId);
@@ -6010,17 +6016,9 @@ function viewSinif() {
       </div>` : ``}
       <h2>${cls.name} — Atanmış Dersler</h2>
       ${assignedRows || '<p class="small">Henüz ders atanmadı.</p>'}
-      <h2 style="margin-top:20px;">Ders Havuzundan Ekle</h2>
-      ${availRows}
+      <div style="margin-top:20px;">${dersHavuzuDropdown}</div>
     `;
   }
-
-  const printRows = cls ? cls.assignments.map(a => {
-    const course = courseById(a.courseId);
-    if (!course) return "";
-    const teacherNames = (a.eligibleTeacherIds || []).map(id => { const t = S.teachers.find(x => x.id === id); return t ? t.name : ""; }).filter(Boolean).join(", ") || "—";
-    return `<tr><td>${escHtml(course.name)}</td><td>${course.hours}</td><td>${escHtml(teacherNames)}</td><td>${escHtml(assignmentPlacementSummary(cls.id, a.id))}</td></tr>`;
-  }).join("") : "";
 
   return `
   <div class="two-col no-print">
@@ -6031,21 +6029,12 @@ function viewSinif() {
         <input type="text" id="new-class-name" placeholder="Sınıf adı (örn. 10-A)" style="width:100%">
       </div>
       <div class="row">
-        <select id="new-class-grade" style="width:100%"><option>9</option><option>10</option><option>11</option><option>12</option></select>
-        <select id="new-class-dal" style="width:100%">
-          <option value="MBO">Makine Bakım Onarım</option>
-          <option value="BMI">Bilgisayarlı Makine İmalatı</option>
-        </select>
+        <input type="number" id="new-class-grade" placeholder="Sınıf seviyesi (örn. 9)" style="width:100%">
+        <input type="text" id="new-class-dal" placeholder="Dal / Bölüm adı" style="width:100%">
       </div>
       <div class="row"><button class="btn primary" onclick="addClass()">Sınıf Ekle</button></div>
-      ${cls ? `<div class="row"><button class="btn" onclick="editClass('${cls.id}')">Seçili Sınıfı Düzenle</button><button class="btn danger" onclick="deleteClass('${cls.id}')">Seçili Sınıfı Sil</button></div>` : ""}
     </div>
     <div class="card">${detail}</div>
-  </div>
-  <div class="card no-print">${belgeAracCubugu(cls ? "Sınıflar ve Ders Atama - " + cls.name : "Sınıflar ve Ders Atama")}</div>
-  <div class="print-area">
-    ${belgeYazdirmaBasligi(cls ? "Sınıflar ve Ders Atama · " + cls.name : "Sınıflar ve Ders Atama")}
-    ${cls ? `<div class="card"><table><tr><th>Ders</th><th>Haftalık Saat</th><th>Öğretmen(ler)</th><th>Yerleşim</th></tr>${printRows}</table></div>` : `<p class="small">Soldan bir sınıf seçin.</p>`}
   </div>`;
 }
 function setActiveClass(id) { activeClassId = id; renderMain(); }
@@ -6110,8 +6099,8 @@ function toggleSchoolDay(classId, day) {
 }
 function addClass() {
   const name = document.getElementById("new-class-name").value.trim();
-  const grade = parseInt(document.getElementById("new-class-grade").value);
-  const dal = document.getElementById("new-class-dal").value;
+  const grade = parseInt(document.getElementById("new-class-grade").value) || 0;
+  const dal = document.getElementById("new-class-dal").value.trim();
   if (!name) { alert("Sınıf adı girin."); return; }
   const id = uid("cl");
   S.classes.push({ id, name, grade, dal, assignments: [] });
@@ -6135,12 +6124,9 @@ function editClass(id) {
         <h3>Sınıfı Düzenle</h3>
         <label class="small">Sınıf Adı</label><input type="text" id="ecl-name" value="${escHtml(cls.name)}" style="width:100%">
         <label class="small">Sınıf Seviyesi</label>
-        <select id="ecl-grade" style="width:100%">${[9,10,11,12].map(g => `<option ${cls.grade === g ? 'selected' : ''}>${g}</option>`).join("")}</select>
+        <input type="number" id="ecl-grade" value="${cls.grade}" style="width:100%">
         <label class="small">Dal</label>
-        <select id="ecl-dal" style="width:100%">
-          <option value="MBO" ${cls.dal === 'MBO' ? 'selected' : ''}>Makine Bakım Onarım</option>
-          <option value="BMI" ${cls.dal === 'BMI' ? 'selected' : ''}>Bilgisayarlı Makine İmalatı</option>
-        </select>
+        <input type="text" id="ecl-dal" value="${escHtml(cls.dal)}" style="width:100%">
         <div class="row">
           <button class="btn primary" onclick="saveClassEdit('${id}')">Kaydet</button>
           <button class="btn" onclick="closeModal()">İptal</button>
@@ -6154,8 +6140,8 @@ function saveClassEdit(id) {
   const name = document.getElementById("ecl-name").value.trim();
   if (!name) { alert("Sınıf adı girin."); return; }
   cls.name = name;
-  cls.grade = parseInt(document.getElementById("ecl-grade").value);
-  cls.dal = document.getElementById("ecl-dal").value;
+  cls.grade = parseInt(document.getElementById("ecl-grade").value) || 0;
+  cls.dal = document.getElementById("ecl-dal").value.trim();
   save(); closeModal(); renderMain();
 }
 function addAssignment(classId, courseId) {
@@ -6303,7 +6289,6 @@ function viewKoordinatorluk() {
     <h2>Öğretmen Ata (opsiyonel)</h2>
     <p class="small">İstemezseniz boş bırakın — "Programı Yenile" sırasında sistem her işletmeye, o günlerde tam gün müsait olan ve o an en az yüklü öğretmeni otomatik atar. Sadece belirli bir işletmeye mutlaka belirli bir öğretmenin gitmesini istiyorsanız burada seçin.</p>
     <table><tr><th>İşletme</th><th>Gün Grubu</th><th>Öğretmen</th></tr>${teacherAssignRows}</table>
-    ${belgeAracCubugu("Koordinatörlük")}
   </div>
   <div class="print-area">
     ${belgeYazdirmaBasligi("Koordinatörlük / İşletme Listesi")}
@@ -6351,7 +6336,6 @@ function viewDagitim() {
     <button class="btn danger" onclick="resetAll()">Tüm Dağıtımı Sıfırla</button></div>
     <div id="dagitim-sonuc"></div>
     <table style="margin-top:14px;"><tr><th>Sınıf</th><th>Toplam Saat</th><th>Dağıtılmış</th><th>Durum</th><th></th></tr>${rows}</table>
-    ${belgeAracCubugu("Ders Dağıtım Durumu")}
   </div>
   <div class="print-area">
     ${belgeYazdirmaBasligi("Ders Dağıtım Durumu")}
@@ -6714,8 +6698,6 @@ function viewProgramlar() {
       <span class="small" style="align-self:center;font-weight:600;">Ekranda göster:</span>
       ${sekmeDropdown("programlar-ogretmen", secenekler, activeProgramlarOgretmenId, "selectProgramlarOgretmen('{v}')")}
     </div>
-    <p class="small no-print" style="margin-bottom:6px;">Tek bir öğretmen seçerseniz sayfa çok kısalır, okuması kolaylaşır. Hepsini birden yazdırmak/indirmek isterseniz "Tümü"nü seçin.</p>
-    ${belgeAracCubugu(dosyaAdi)}
   </div>
   <div class="print-area">
     ${belgeYazdirmaBasligi(dosyaAdi)}
