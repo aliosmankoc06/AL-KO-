@@ -220,6 +220,8 @@ tbody tr:nth-child(even){background:rgba(20,30,50,0.015);}
 .list-item:hover{background:var(--panel-2);}
 .list-item.active{background:var(--navy);color:#fff;}
 
+.sched-table{table-layout:fixed;}
+.sched-table th:first-child,.sched-table td:first-child{width:44px;}
 .sched-table td{height:36px;vertical-align:top;padding:2px 3px;font-size:10px;}
 .sched-cell{height:100%;cursor:pointer;border-radius:6px;padding:2px 4px;overflow:hidden;-webkit-user-select:none;user-select:none;transition:background .1s ease;}
 .sched-cell:hover{background:var(--panel-2);}
@@ -269,5 +271,7 @@ label.small{font-size:11px;color:var(--ink-soft);display:block;margin:8px 0 3px;
   table{page-break-inside:auto;}
   tr{page-break-inside:avoid;page-break-after:auto;}
   a[href]:after{content:"";}
+  .print-page-break{page-break-before:always;}
+  .sched-print-page{min-height:182mm;display:flex;flex-direction:column;justify-content:center;}
   @page{size:A4;margin:14mm 12mm;}
 }

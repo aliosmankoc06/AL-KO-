@@ -220,6 +220,20 @@ function performansMigrasyonDagit(toplam, weights) {
 
 function normalizeState(s) {
   s.hoursPerDay = 10;
+  if (!s.schedule || typeof s.schedule !== "object") s.schedule = {};
+  // Ders Programı — "Program 1/2/3..." adlı birden fazla ders dağıtım
+  // denemesi tutulabilsin diye: öğretmen/sınıf/ders havuzu/koordinatörlük
+  // HEP ORTAK kalır, sadece S.schedule'ın kendisi program başına ayrı
+  // saklanır. S.schedule her zaman aktif programın canlı çalışma kopyasıdır;
+  // save() her seferinde onu aktif programın içine senkronize eder.
+  if (!Array.isArray(s.schedulePrograms) || s.schedulePrograms.length === 0) {
+    const id = uid("prog");
+    s.schedulePrograms = [{ id, name: "Program 1", schedule: JSON.parse(JSON.stringify(s.schedule)) }];
+    s.activeScheduleProgramId = id;
+  }
+  if (!s.activeScheduleProgramId || !s.schedulePrograms.some(p => p.id === s.activeScheduleProgramId)) {
+    s.activeScheduleProgramId = s.schedulePrograms[0].id;
+  }
   if (!s.blockedSlots) s.blockedSlots = {};
   if (!s.teacherBlockedSlots) s.teacherBlockedSlots = {};
   if (!s.coordAssignments) s.coordAssignments = [];
@@ -587,20 +601,6 @@ function normalizeState(s) {
       if (cell.classId && cell.classId.startsWith("koord-")) delete s.schedule[k];
     });
   }
-  if (!s.courses.find(c => c.id === "crs-koordinatorluk")) {
-    s.courses.push({ id: "crs-koordinatorluk", code: "KOORD", name: "Koordinatörlük (İşletme Ziyareti)", dal: "KOORD", grade: 0, hours: 8, blocks: [8] });
-  }
-  [9, 10, 11, 12].forEach(grade => {
-    const id = "c-reh-" + grade;
-    if (!s.courses.find(c => c.id === id)) {
-      s.courses.push({ id, code: "REH", name: "Rehberlik", dal: "ORTAK", grade, hours: 1, blocks: [1] });
-    }
-  });
-  [["cl-9b", "9-B", 9, "ORTAK9", 2], ["cl-10b", "10-B", 10, "MBO", 3], ["cl-11b", "11-B", 11, "MBO", 2]].forEach(([id, name, grade, dal, maxT]) => {
-    if (!s.classes.find(c => c.id === id)) {
-      s.classes.push({ id, name, grade, dal, maxTeachersPerCourse: maxT, excludeFromDistribution: true, assignments: [] });
-    }
-  });
   s.teachers.forEach(t => {
     if (!t.timeOff) t.timeOff = {};
     if (typeof t.hoursMode !== "string") {
@@ -648,7 +648,13 @@ function save() {
   window.__lastActionWasDelete = false;
   localStorage.setItem(LS_KEY, JSON.stringify(S));
   surumSenkronizeEt();
+  scheduleProgramSenkronizeEt();
   if (typeof showSaveToast === "function") showSaveToast(!undoing && lastSnapshotWasDelete);
+}
+function scheduleProgramSenkronizeEt() {
+  if (!Array.isArray(S.schedulePrograms) || !S.activeScheduleProgramId) return;
+  const p = S.schedulePrograms.find(x => x.id === S.activeScheduleProgramId);
+  if (p) p.schedule = JSON.parse(JSON.stringify(S.schedule));
 }
 
 /* ============ İsimli Kayıtlar (Öğretim Yılı vb. Sürümler) ============

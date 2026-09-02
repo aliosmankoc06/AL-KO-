@@ -42,6 +42,7 @@
     }
   },
   "dependencies": {
+    "exceljs": "^4.4.0",
     "mammoth": "^1.12.2",
     "pdf-parse": "^1.1.1",
     "word-extractor": "^1.0.4",

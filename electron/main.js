@@ -2,6 +2,7 @@ const { app, BrowserWindow, Menu, dialog, ipcMain } = require("electron");
 const path = require("path");
 const fs = require("fs");
 const XLSX = require("xlsx");
+const ExcelJS = require("exceljs");
 const { parsePlanWorkbook } = require("./xlsx-plan-parser");
 const { parseEnvanterWorkbook } = require("./xlsx-envanter-parser");
 const { parsePerformansWorkbook } = require("./xlsx-performans-parser");
@@ -11,6 +12,23 @@ const mammoth = require("mammoth");
 const WordExtractor = require("word-extractor");
 
 let mainWindow;
+
+/* Portable .exe'nin aynı anda iki kez açılmasını engelliyoruz — iki
+   pencere aynı localStorage'a bağımsız yazarsa, biri diğerinin daha
+   yeni kaydettiği değişiklikleri (ör. bir sınıfın silinmesi) fark
+   etmeden üzerine yazıp "geri getirebilir". İkinci açılışta yeni
+   pencere oluşturmak yerine var olan pencereyi öne getiriyoruz. */
+const tekAcilisKilitAlindi = app.requestSingleInstanceLock();
+if (!tekAcilisKilitAlindi) {
+  app.quit();
+} else {
+  app.on("second-instance", () => {
+    if (mainWindow) {
+      if (mainWindow.isMinimized()) mainWindow.restore();
+      mainWindow.focus();
+    }
+  });
+}
 
 function backupFileFilters() {
   return [{ name: "Yedek Dosyası (JSON)", extensions: ["json"] }];
@@ -288,6 +306,7 @@ ipcMain.handle("export:excel", async (evt, defaultName, sheets) => {
   const wb = XLSX.utils.book_new();
   sheets.forEach((sheet, i) => {
     const ws = XLSX.utils.aoa_to_sheet(sheet.rows);
+    if (sheet.colWidths) ws["!cols"] = sheet.colWidths.map(wch => ({ wch }));
     const name = (sheet.name || ("Sayfa" + (i + 1))).slice(0, 31).replace(/[\\/*?:[\]]/g, " ");
     XLSX.utils.book_append_sheet(wb, ws, name || ("Sayfa" + (i + 1)));
   });
@@ -295,7 +314,79 @@ ipcMain.handle("export:excel", async (evt, defaultName, sheets) => {
   return result.filePath;
 });
 
-function buildWordHtml(innerHtml) {
+// Programlar (öğretmen ders programı) Excel'i — sınıf/ders renklerini ve
+// hücre çerçevelerini gerçekten taşıyabilmek için "xlsx" kütüphanesinin
+// ücretsiz sürümü stil yazamıyor, bu yüzden burada exceljs kullanılıyor.
+ipcMain.handle("export:schedule-excel", async (evt, defaultName, teacherBlocks) => {
+  const result = await dialog.showSaveDialog(mainWindow, {
+    title: "Excel Olarak Kaydet",
+    defaultPath: defaultName,
+    filters: [{ name: "Excel Dosyası", extensions: ["xlsx"] }]
+  });
+  if (result.canceled || !result.filePath) return null;
+
+  const wb = new ExcelJS.Workbook();
+  const ws = wb.addWorksheet("Programlar");
+  const dayHeaders = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma"];
+  const thin = { style: "thin", color: { argb: "FF999999" } };
+  const borderAll = { top: thin, bottom: thin, left: thin, right: thin };
+
+  // Not: exceljs bu sürümde 3+ farklı sütun genişliği grubu verildiğinde
+  // ortadaki grubu sessizce siliyor (kütüphanenin kendi hatası, doğrulandı).
+  // Bu yüzden tek bir açık genişlik (kenar boşluğu sütunu) + sayfa geneli
+  // varsayılan genişlik (Saat + gün sütunları, hepsi eşit) kullanıyoruz.
+  ws.properties.defaultColWidth = 16;
+  ws.getColumn(1).width = 3;
+  const baseFontSize = 9;
+
+  let r = 1;
+  (teacherBlocks || []).forEach((block, bi) => {
+    if (bi > 0) r += 2;
+    r += 1;
+    const titleCell = ws.getRow(r).getCell(2);
+    titleCell.value = block.name;
+    titleCell.font = { bold: true, size: 12 };
+    r += 1;
+
+    const headerRow = ws.getRow(r);
+    headerRow.getCell(2).value = "Saat";
+    dayHeaders.forEach((d, i) => { headerRow.getCell(3 + i).value = d; });
+    for (let c = 2; c <= 7; c++) {
+      const cell = headerRow.getCell(c);
+      cell.font = { bold: true, size: baseFontSize };
+      cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFF4F6FA" } };
+      cell.border = borderAll;
+      cell.alignment = { vertical: "middle", horizontal: "left" };
+    }
+    headerRow.height = 16;
+    r += 1;
+
+    (block.rows || []).forEach(rowData => {
+      const excelRow = ws.getRow(r);
+      const hourCell = excelRow.getCell(2);
+      hourCell.value = rowData.hour;
+      hourCell.font = { size: baseFontSize };
+      hourCell.alignment = { vertical: "middle", horizontal: "center" };
+      hourCell.border = borderAll;
+      (rowData.cells || []).forEach((cellData, i) => {
+        const cell = excelRow.getCell(3 + i);
+        cell.value = cellData.text || "";
+        cell.alignment = { vertical: "middle", horizontal: "left", wrapText: true };
+        cell.border = borderAll;
+        cell.font = { size: baseFontSize, color: cellData.ink ? { argb: "FF" + cellData.ink } : undefined };
+        if (cellData.bg) cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF" + cellData.bg } };
+      });
+      excelRow.height = 24;
+      r += 1;
+    });
+  });
+
+  await wb.xlsx.writeFile(result.filePath);
+  return result.filePath;
+});
+
+function buildWordHtml(innerHtml, landscape) {
+  const pageSize = landscape ? "29.7cm 21cm" : "21cm 29.7cm";
   return `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
 <head>
 <meta charset="utf-8">
@@ -309,7 +400,7 @@ function buildWordHtml(innerHtml) {
 </xml>
 <![endif]-->
 <style>
-  @page { size: 21cm 29.7cm; margin: 2cm 1.8cm; }
+  @page { size: ${pageSize}; margin: 2cm 1.8cm; }
   body { font-family: Calibri, Arial, sans-serif; font-size: 11pt; color:#000; }
   h2 { font-family: Georgia, 'Times New Roman', serif; font-size: 15pt; color:#0E1B33; margin: 0 0 8pt; }
   h3 { font-family: Georgia, 'Times New Roman', serif; font-size: 12.5pt; color:#0E1B33; margin: 0 0 6pt; }
@@ -317,11 +408,15 @@ function buildWordHtml(innerHtml) {
   th, td { border: 1px solid #666; padding: 4pt 6pt; text-align: left; vertical-align: top; }
   th { background: #EEF0F4; font-weight: 700; }
   .card { border: 1px solid #999; padding: 10pt; margin-bottom: 10pt; }
+  .sched-print-page { padding-top: 60pt; padding-bottom: 60pt; }
+  .sched-table { table-layout: fixed; }
+  .sched-table th:first-child, .sched-table td:first-child { width: 40pt; }
   .small { font-size: 9.5pt; color:#333; }
   .print-doc-header { border-bottom: 2pt solid #000; padding-bottom: 8pt; margin-bottom: 14pt; }
   .print-doc-header .okul { font-weight: 700; font-size: 12.5pt; }
   .print-doc-header .alan { font-size: 10.5pt; color:#333; }
   .print-doc-header .tarih { font-size: 10pt; color:#333; }
+  .print-page-break { page-break-before: always; mso-break-type: page-break; }
   .no-print { display: none; }
   .print-only { display: block; }
   .print-only-cell { display: table-cell; }
@@ -335,25 +430,33 @@ ${innerHtml}
 </html>`;
 }
 
-ipcMain.handle("export:word", async (evt, defaultName, innerHtml) => {
+ipcMain.handle("export:word", async (evt, defaultName, innerHtml, landscape) => {
   const result = await dialog.showSaveDialog(mainWindow, {
     title: "Word Olarak Kaydet",
     defaultPath: defaultName,
     filters: [{ name: "Word Belgesi", extensions: ["doc"] }]
   });
   if (result.canceled || !result.filePath) return null;
-  fs.writeFileSync(result.filePath, buildWordHtml(innerHtml), "utf-8");
+  fs.writeFileSync(result.filePath, buildWordHtml(innerHtml, landscape), "utf-8");
   return result.filePath;
 });
 
-ipcMain.handle("export:pdf", async (evt, defaultName) => {
+ipcMain.handle("export:pdf", async (evt, defaultName, landscape) => {
   const result = await dialog.showSaveDialog(mainWindow, {
     title: "PDF Olarak Kaydet",
     defaultPath: defaultName,
     filters: [{ name: "PDF Belgesi", extensions: ["pdf"] }]
   });
   if (result.canceled || !result.filePath) return null;
-  const data = await mainWindow.webContents.printToPDF({ printBackground: true, pageSize: "A4" });
+  // Not: Electron'un printToPDF({landscape:true}) parametresi bu sürümde
+  // güvenilir çalışmıyor (test edildi, portre çıkıyor) — bunun yerine
+  // sayfanın kendi CSS'indeki "@page{size:A4 landscape}" kuralını
+  // (renderer tarafında yazdırmadan hemen önce enjekte edilir) okuması
+  // için preferCSSPageSize kullanıyoruz.
+  const opts = landscape
+    ? { printBackground: true, preferCSSPageSize: true }
+    : { printBackground: true, pageSize: "A4" };
+  const data = await mainWindow.webContents.printToPDF(opts);
   fs.writeFileSync(result.filePath, data);
   return result.filePath;
 });

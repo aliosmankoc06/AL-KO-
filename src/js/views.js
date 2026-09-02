@@ -29,7 +29,6 @@ const DERS_PROGRAMI_TABS = [
   { id: "ogretmen", label: "Öğretmenler", icon: "users" },
   { id: "sinif", label: "Sınıflar ve Ders Atama", icon: "school" },
   { id: "koordinatorluk", label: "Koordinatörlük", icon: "building" },
-  { id: "dagitim", label: "Ders Dağıtım", icon: "shuffle" },
   { id: "programlar", label: "Programlar", icon: "grid" }
 ];
 const STAJ_TABS = [
@@ -52,6 +51,7 @@ let activeTeacherId = S.teachers[0] ? S.teachers[0].id : null;
 let multiSelectMode = false;
 let selectedTeacherCells = new Set();
 let activeOffTeacherId = null;
+let isletmeAtamaGosterilen = new Set();
 let activePlanSistem = "maarif";
 let activePlanEntryId = { yillik: null, gunluk: null };
 
@@ -105,7 +105,12 @@ function renderTabbar() {
     }
     if (m.group !== expandedGroup) return;
     const isActive = m.id === activeModule || (m.id === 'ders-programi' && activeModule === 'ders-programi-secim');
-    parts.push(`<button class="nav-btn ${isActive ? 'active' : ''}" onclick="setModule('${m.id}')">${icon(m.icon)}<span>${m.label}</span></button>`);
+    const hasSubTabs = ['ders-programi', 'staj-yerlestirme', 'toplantilar'].includes(m.id);
+    if (isActive && hasSubTabs) {
+      parts.push(`<div class="nav-btn active" style="cursor:default;">${icon(m.icon)}<span>${m.label}</span></div>`);
+    } else {
+      parts.push(`<button class="nav-btn ${isActive ? 'active' : ''}" onclick="setModule('${m.id}')">${icon(m.icon)}<span>${m.label}</span></button>`);
+    }
     if (isActive) parts.push(subTabButtonsFor(m.id));
   });
   document.getElementById("tabbar").innerHTML = parts.join("");
@@ -165,7 +170,6 @@ function renderMain() {
   const govde = activeTab === "havuz" ? viewHavuz()
     : activeTab === "ogretmen" ? viewOgretmen()
     : activeTab === "sinif" ? viewSinif()
-    : activeTab === "dagitim" ? viewDagitim()
     : activeTab === "koordinatorluk" ? viewKoordinatorluk()
     : activeTab === "programlar" ? viewProgramlar()
     : "";
@@ -269,7 +273,7 @@ function openSavedProgram(id) {
     setAktifSurumId(id);
     save();
     activeModule = "ders-programi";
-    activeTab = "dagitim";
+    activeTab = "programlar";
     renderTabbar();
     renderMain();
     renderSurumWidget();
@@ -832,11 +836,32 @@ function viewPlaceholderModule(title, hint) {
 }
 
 /* ---- Belge Araç Çubuğu (Yazdır / PDF) — tüm belge görünümlerinde ortak ---- */
-function printCurrentView() { window.print(); }
+function setPrintOrientationOverride(on) {
+  let style = document.getElementById("print-orientation-override");
+  if (!style) {
+    style = document.createElement("style");
+    style.id = "print-orientation-override";
+    document.head.appendChild(style);
+  }
+  style.textContent = on ? "@page { size: A4 landscape; margin: 10mm; }" : "";
+  return style;
+}
+function printCurrentView(landscape) {
+  if (!landscape) { window.print(); return; }
+  setPrintOrientationOverride(true);
+  const cleanup = () => { setPrintOrientationOverride(false); window.removeEventListener("afterprint", cleanup); };
+  window.addEventListener("afterprint", cleanup);
+  window.print();
+}
 function guvenliDosyaAdi(dosyaAdi) { return dosyaAdi.replace(/[\\/:*?"<>|]/g, "-"); }
-async function exportCurrentViewAsPdf(dosyaAdi) {
+async function exportCurrentViewAsPdf(dosyaAdi, landscape) {
   if (!window.desktop || !window.desktop.isElectron) { window.print(); return; }
-  const path = await window.desktop.exportPdf(guvenliDosyaAdi(dosyaAdi) + ".pdf");
+  // Electron'un printToPDF({landscape:true}) parametresi güvenilir çalışmıyor;
+  // bunun yerine sayfaya geçici bir "@page{size:A4 landscape}" kuralı enjekte
+  // edip main sürecin preferCSSPageSize ile onu okumasını sağlıyoruz.
+  if (landscape) setPrintOrientationOverride(true);
+  const path = await window.desktop.exportPdf(guvenliDosyaAdi(dosyaAdi) + ".pdf", !!landscape);
+  if (landscape) setPrintOrientationOverride(false);
   if (path) alert("PDF olarak kaydedildi:\n" + path);
 }
 function cellPrintText(cell) {
@@ -846,34 +871,93 @@ function cellPrintText(cell) {
   if (input) return input.value;
   return cell.innerText.trim();
 }
+function tableSheetName(table) {
+  const page = table.closest(".sched-print-page");
+  const title = page ? page.querySelector(".print-only") : null;
+  if (title) {
+    const text = title.innerText.trim().split("\n")[0].trim();
+    if (text) return text;
+  }
+  return null;
+}
 function extractPrintTables() {
   const area = document.querySelector(".print-area");
   if (!area) return [];
-  return Array.from(area.querySelectorAll("table")).map(table =>
-    Array.from(table.rows).map(row =>
+  return Array.from(area.querySelectorAll("table")).map(table => ({
+    name: tableSheetName(table),
+    rows: Array.from(table.rows).map(row =>
       Array.from(row.cells).filter(cell => !cell.classList.contains("no-print")).map(cellPrintText)
     )
-  );
+  }));
 }
-async function exportCurrentViewAsExcel(dosyaAdi) {
+// Programlar'ın Excel çıktısı için, HTML'i düz metne çevirmek yerine
+// (renkler kaybolurdu) doğrudan S üzerinden aynı renk/hücre mantığını
+// (renderEditableTeacherGrid ile aynı) tekrar üretiyoruz.
+function extractProgramlarScheduleForExcel() {
+  const secilenOgretmen = teacherById(activeProgramlarOgretmenId);
+  const list = secilenOgretmen ? [secilenOgretmen] : S.teachers;
+  return list.map(t => {
+    const grid = teacherWeeklySchedule(t.id);
+    const rows = [];
+    for (let h = 0; h < S.hoursPerDay; h++) {
+      const cells = DAYS.map((d, day) => {
+        const cell = grid[day + "_" + h];
+        const blocked = S.teacherBlockedSlots[teacherBlockKey(t.id, day, h)];
+        const off = isTeacherOffAt(t.id, day, h);
+        if (cell) {
+          const course = courseById(cell.courseId);
+          const cls = classById(cell.classId);
+          const isKoord = cell.courseId === KOORD_COURSE_ID;
+          const gc = isKoord ? { bg: "EDE3F5", ink: "5B3A85" } : gradeColor(cls ? cls.grade : 0);
+          const line1 = (isKoord ? "Koordinatörlük" : (course ? course.name : "?")) + (cell.locked ? " (kilitli)" : "");
+          const line2 = isKoord ? (cell.isletme || "İşletme belirlenmedi") : (cls ? cls.name : "");
+          return { text: line1 + (line2 ? "\n" + line2 : ""), bg: gc.bg.replace("#", ""), ink: gc.ink.replace("#", "") };
+        } else if (off) {
+          return { text: "İzinli", bg: "F4F6FA", ink: "555555" };
+        } else if (blocked) {
+          return { text: "Kilitli · Boş", bg: "E9EDF3", ink: "555555" };
+        }
+        return { text: "", bg: null, ink: null };
+      });
+      rows.push({ hour: String(h + 1), cells });
+    }
+    return { name: t.name, rows };
+  });
+}
+async function exportCurrentViewAsExcel(dosyaAdi, stacked) {
   if (!window.desktop || !window.desktop.isElectron) { alert("Excel olarak indirme sadece masaüstü uygulamasında çalışır."); return; }
-  const tables = extractPrintTables().filter(rows => rows.length > 0);
+  if (stacked) {
+    const blocks = extractProgramlarScheduleForExcel();
+    if (blocks.length === 0) { alert("Bu sayfada indirilecek bir tablo bulunamadı."); return; }
+    const path = await window.desktop.exportScheduleExcel(guvenliDosyaAdi(dosyaAdi) + ".xlsx", blocks);
+    if (path) alert("Excel olarak kaydedildi:\n" + path);
+    return;
+  }
+  const tables = extractPrintTables().filter(t => t.rows.length > 0);
   if (tables.length === 0) { alert("Bu sayfada indirilecek bir tablo bulunamadı."); return; }
-  const sheets = tables.map((rows, i) => ({ name: tables.length > 1 ? "Tablo " + (i + 1) : "Sayfa1", rows }));
+  const sheets = tables.map((t, i) => ({ name: t.name || (tables.length > 1 ? "Tablo " + (i + 1) : "Sayfa1"), rows: t.rows }));
   const path = await window.desktop.exportExcel(guvenliDosyaAdi(dosyaAdi) + ".xlsx", sheets);
   if (path) alert("Excel olarak kaydedildi:\n" + path);
 }
-async function exportCurrentViewAsWord(dosyaAdi) {
+async function exportCurrentViewAsWord(dosyaAdi, landscape) {
   if (!window.desktop || !window.desktop.isElectron) { alert("Word olarak indirme sadece masaüstü uygulamasında çalışır."); return; }
   const area = document.querySelector(".print-area");
-  const html = area ? area.innerHTML : "";
+  if (!area) { alert("Bu sayfada indirilecek bir belge içeriği bulunamadı."); return; }
+  // Word'ün HTML görüntüleyicileri (özellikle mobil) ".no-print{display:none}"
+  // kuralını her zaman uygulamayabiliyor — o yüzden ekrana-özel öğeleri
+  // (eski başlık, butonlar, lejant) CSS'e güvenmeden DOM'dan fiilen siliyoruz.
+  const clone = area.cloneNode(true);
+  clone.querySelectorAll(".no-print").forEach(el => el.remove());
+  const html = clone.innerHTML;
   if (!html.trim()) { alert("Bu sayfada indirilecek bir belge içeriği bulunamadı."); return; }
-  const path = await window.desktop.exportWord(guvenliDosyaAdi(dosyaAdi) + ".doc", html);
+  const path = await window.desktop.exportWord(guvenliDosyaAdi(dosyaAdi) + ".doc", html, !!landscape);
   if (path) alert("Word olarak kaydedildi:\n" + path);
 }
 let indirMenuDosyaAdi = "";
-function toggleIndirMenu(dosyaAdi) {
+let indirMenuLandscape = false;
+function toggleIndirMenu(dosyaAdi, landscape) {
   indirMenuDosyaAdi = dosyaAdi;
+  indirMenuLandscape = !!landscape;
   const menu = document.getElementById("indir-menu");
   if (!menu) return;
   const willOpen = menu.style.display !== "block";
@@ -882,20 +966,20 @@ function toggleIndirMenu(dosyaAdi) {
 }
 function runIndirOption(format) {
   document.querySelectorAll(".indir-menu").forEach(m => { m.style.display = "none"; });
-  if (format === "pdf") exportCurrentViewAsPdf(indirMenuDosyaAdi);
-  else if (format === "excel") exportCurrentViewAsExcel(indirMenuDosyaAdi);
-  else if (format === "word") exportCurrentViewAsWord(indirMenuDosyaAdi);
+  if (format === "pdf") exportCurrentViewAsPdf(indirMenuDosyaAdi, indirMenuLandscape);
+  else if (format === "excel") exportCurrentViewAsExcel(indirMenuDosyaAdi, indirMenuLandscape);
+  else if (format === "word") exportCurrentViewAsWord(indirMenuDosyaAdi, indirMenuLandscape);
 }
 document.addEventListener("click", (e) => {
   if (!e.target.closest(".indir-dropdown")) {
     document.querySelectorAll(".indir-menu").forEach(m => { m.style.display = "none"; });
   }
 });
-function belgeAracCubugu(dosyaAdi) {
+function belgeAracCubugu(dosyaAdi, landscape) {
   return `<div class="row no-print" style="margin-top:10px;">
-    <button class="btn primary" onclick="printCurrentView()">Yazdır</button>
+    <button class="btn primary" onclick="printCurrentView(${landscape ? "true" : "false"})">Yazdır</button>
     <div class="indir-dropdown">
-      <button class="btn" onclick="toggleIndirMenu('${jsq(dosyaAdi)}')">İndir ▾</button>
+      <button class="btn" onclick="toggleIndirMenu('${jsq(dosyaAdi)}', ${landscape ? "true" : "false"})">İndir ▾</button>
       <div id="indir-menu" class="indir-menu">
         <div onclick="runIndirOption('pdf')">PDF Olarak Kaydet</div>
         <div onclick="runIndirOption('excel')">Excel Olarak İndir</div>
@@ -5926,8 +6010,8 @@ function sinifDersHavuzuDropdown(clsId, available) {
     <div class="tab-dropdown-item" onclick="addAssignment('${jsq(clsId)}','${jsq(c.id)}'); toggleTabDropdown('sinif-ders-havuzu');">${escHtml(c.name)} <span class="small">(${c.hours} sa)</span></div>`).join("")
     || `<div class="tab-dropdown-item small">Eklenebilecek başka ders yok.</div>`;
   return `<div class="tab-dropdown no-print">
-    <button class="btn primary" onclick="toggleTabDropdown('sinif-ders-havuzu')">Ders Havuzundan Ekle ▾</button>
-    <div id="tabdd-sinif-ders-havuzu" class="tab-dropdown-menu">${items}</div>
+    <button class="btn primary" onclick="toggleTabDropdown('sinif-ders-havuzu')">▴ Ders Havuzundan Ekle</button>
+    <div id="tabdd-sinif-ders-havuzu" class="tab-dropdown-menu" style="top:auto;bottom:calc(100% + 4px);">${items}</div>
   </div>`;
 }
 function viewSinif() {
@@ -5997,17 +6081,16 @@ function viewSinif() {
       <div style="display:flex;gap:16px;margin-bottom:14px;align-items:center;flex-wrap:wrap;">
         <span class="pill info">Toplam: ${totalHours} sa</span>
         <span class="pill ${dagitilmis === totalHours && totalHours > 0 ? 'ok' : 'warn'}">Dağıtılmış: ${dagitilmis} sa</span>
+        ${isIdari ? '' : `
+        <label class="small" style="display:flex;align-items:center;gap:5px;">
+          Sınıf Grup Sayısı:
+          <input type="number" min="1" max="6" value="${cls.maxTeachersPerCourse || 1}" style="width:56px" onchange="applyClassTeacherRule('${cls.id}',this.value)" title="Bu sınıfın tüm derslerine kaç öğretmen birden girebileceği">
+        </label>`}
         <label class="small" style="display:flex;align-items:center;gap:5px;">
           <input type="checkbox" ${cls.excludeFromDistribution ? 'checked' : ''} onchange="toggleClassExclude('${cls.id}')">
           Bu sınıfı programa dahil etme (Programı Yenile bu sınıfa dokunmasın, olduğu gibi kalsın)
         </label>
       </div>
-      ${isIdari ? '' : `
-      <div class="card" style="background:var(--accent-bg);border-color:var(--accent);padding:12px 14px;margin-bottom:16px;">
-        <strong style="color:var(--accent-ink);">Bu sınıfın derslerine kaç öğretmen birden girebilir?</strong>
-        <p class="small">Herkes her derse girebilir; sistem dağıtım sırasında bu sayıya kadar (uygunsa tam sayı, değilse müsait olduğu kadarı) öğretmen atar. Bu sınıfın <b>tüm derslerine</b> uygulanır.</p>
-        <input type="number" min="1" max="6" value="${cls.maxTeachersPerCourse || 1}" style="width:80px" onchange="applyClassTeacherRule('${cls.id}',this.value)">
-      </div>`}
       ${cls.grade === 12 ? `
       <div class="card" style="background:var(--teal-bg);border-color:var(--teal);padding:12px 14px;margin-bottom:16px;">
         <strong style="color:var(--teal-ink);">Bu sınıf okula hangi gün(ler) geliyor?</strong>
@@ -6029,7 +6112,6 @@ function viewSinif() {
         <input type="text" id="new-class-name" placeholder="Sınıf adı (örn. 10-A)" style="width:100%">
       </div>
       <div class="row">
-        <input type="number" id="new-class-grade" placeholder="Sınıf seviyesi (örn. 9)" style="width:100%">
         <input type="text" id="new-class-dal" placeholder="Dal / Bölüm adı" style="width:100%">
       </div>
       <div class="row"><button class="btn primary" onclick="addClass()">Sınıf Ekle</button></div>
@@ -6097,13 +6179,16 @@ function toggleSchoolDay(classId, day) {
   else { cls.schoolDays.push(day); cls.schoolDays.sort(); }
   save(); renderMain();
 }
+function gradeFromClassName(name) {
+  const m = /\d+/.exec(name || "");
+  return m ? parseInt(m[0]) : 0;
+}
 function addClass() {
   const name = document.getElementById("new-class-name").value.trim();
-  const grade = parseInt(document.getElementById("new-class-grade").value) || 0;
   const dal = document.getElementById("new-class-dal").value.trim();
   if (!name) { alert("Sınıf adı girin."); return; }
   const id = uid("cl");
-  S.classes.push({ id, name, grade, dal, assignments: [] });
+  S.classes.push({ id, name, grade: gradeFromClassName(name), dal, assignments: [] });
   activeClassId = id;
   save(); renderMain();
 }
@@ -6123,8 +6208,6 @@ function editClass(id) {
       <div class="modal" style="width:360px;">
         <h3>Sınıfı Düzenle</h3>
         <label class="small">Sınıf Adı</label><input type="text" id="ecl-name" value="${escHtml(cls.name)}" style="width:100%">
-        <label class="small">Sınıf Seviyesi</label>
-        <input type="number" id="ecl-grade" value="${cls.grade}" style="width:100%">
         <label class="small">Dal</label>
         <input type="text" id="ecl-dal" value="${escHtml(cls.dal)}" style="width:100%">
         <div class="row">
@@ -6140,7 +6223,7 @@ function saveClassEdit(id) {
   const name = document.getElementById("ecl-name").value.trim();
   if (!name) { alert("Sınıf adı girin."); return; }
   cls.name = name;
-  cls.grade = parseInt(document.getElementById("ecl-grade").value) || 0;
+  cls.grade = gradeFromClassName(name);
   cls.dal = document.getElementById("ecl-dal").value.trim();
   save(); closeModal(); renderMain();
 }
@@ -6174,29 +6257,6 @@ function setAllEligible(classId, assignmentId, on) {
 }
 
 /* ---- Ders Dağıtım ---- */
-function assignmentStatusRows() {
-  let rows = [];
-  S.classes.forEach(cls => {
-    cls.assignments.forEach(a => {
-      const course = courseById(a.courseId);
-      if (!course) return;
-      const cells = Object.values(S.schedule).filter(c => c.classId === cls.id && c.assignmentId === a.id);
-      const placedHours = cells.length;
-      const totalHours = course.hours;
-      const teamIds = cells.length ? cells[0].teacherIds : [];
-      const teamNames = teamIds.map(id => { const t = teacherById(id); return t ? t.name : "?"; }).join(", ") || "—";
-      const requested = a.teacherCount || 0;
-      const actual = teamIds.length;
-      let statusPill;
-      if (placedHours === 0 && totalHours > 0) statusPill = '<span class="pill warn">Hiç yerleşmedi</span>';
-      else if (placedHours < totalHours) statusPill = '<span class="pill warn">Kısmi</span>';
-      else if (requested > 0 && actual < requested) statusPill = '<span class="pill warn">Eksik ekip (' + actual + '/' + requested + ')</span>';
-      else statusPill = '<span class="pill ok">Tam</span>';
-      rows.push(`<tr><td>${cls.name}</td><td>${course.name}</td><td>${placedHours}/${totalHours}</td><td>${teamNames}</td><td>${statusPill}</td></tr>`);
-    });
-  });
-  return rows.join("");
-}
 
 function viewKoordinatorluk() {
   const teacherOpts = (isl) => `<option value="">— Otomatik (fark etmez) —</option>` + S.teachers.filter(t => t.coordEligible !== false).map(t => `<option value="${t.id}" ${S.isletmeTeacherAssign[isl.id] === t.id ? 'selected' : ''}>${t.name}</option>`).join("");
@@ -6205,58 +6265,42 @@ function viewKoordinatorluk() {
     const items = S.isletmeler.filter(i => i.groups.includes(groupKey));
     if (items.length === 0) return `<p class="small">Henüz işletme eklenmedi.</p>`;
     return items.map(isl => {
-      const shared = isPscCpcShared(isl);
-      return `<div class="row" style="max-width:640px;align-items:center;">
-        <span style="flex:2;">${isl.name}${shared ? ' <span class="pill info">ortak (her iki grupta da var)</span>' : ''}</span>
-        <span class="small" style="flex:1;">${isletmeHoursEstimate(isl)}</span>
+      return `<div class="row" style="max-width:720px;align-items:center;">
+        <span style="flex:2;">${isl.name}</span>
+        <label class="small" style="display:flex;align-items:center;gap:4px;">Koordinatörlük Saati:
+          <input type="number" min="1" placeholder="${KOORD_BLOCK_LEN}" value="${isl.koordSaat !== undefined ? isl.koordSaat : ''}" style="width:50px" onchange="updateIsletmeSaat('${isl.id}',this.value)" title="Bu işletmeye ders programında kaç saat koordinatörlük yazılacağı (boş bırakılırsa varsayılan ${KOORD_BLOCK_LEN} saat kullanılır)">
+        </label>
         <button class="btn" onclick="editIsletme('${isl.id}')">Düzenle</button>
         <button class="btn danger" onclick="removeIsletmeGroup('${isl.id}','${groupKey}')">Kaldır</button>
       </div>`;
     }).join("");
   }
 
-  const teacherAssignRows = S.isletmeler.map(isl => {
+  const gosterilecekIsletmeler = S.isletmeler.filter(isl => isletmeAtamaGosterilen.has(isl.id) || S.isletmeTeacherAssign[isl.id]);
+  const teacherAssignRows = gosterilecekIsletmeler.map(isl => {
     return `<tr>
-      <td>${isl.name}${isPscCpcShared(isl) ? ' <span class="pill info">ortak</span>' : ''}</td>
+      <td>${isl.name}</td>
       <td>${isl.groups.map(g => GROUP_LABELS[g]).join(" + ")}</td>
       <td><select onchange="setIsletmeTeacher('${isl.id}', this.value)" style="width:100%">${teacherOpts(isl)}</select></td>
-    </tr>`;
-  }).join("") || `<tr><td colspan="3" class="small">Önce yukarıya işletme ekleyin.</td></tr>`;
-
-  const summaryRows = S.teachers.map(t => {
-    const dersSaat = teacherTotalHours(t.id) - teacherCoordHours(t.id);
-    const koordSaat = teacherCoordHours(t.id);
-    const genel = dersSaat + koordSaat;
-    return { name: t.name, dersSaat, koordSaat, genel };
-  });
-  const genelToplamlar = summaryRows.map(r => r.genel);
-  const maxGenel = genelToplamlar.length ? Math.max(...genelToplamlar) : 0;
-  const minGenel = genelToplamlar.length ? Math.min(...genelToplamlar) : 0;
-  const fark = maxGenel - minGenel;
-  const summaryHtml = summaryRows.map(r => {
-    const sapma = maxGenel - r.genel;
-    const ok = sapma <= 3;
-    return `<tr>
-      <td>${r.name}</td>
-      <td>${r.dersSaat}</td>
-      <td>${r.koordSaat}</td>
-      <td><b>${r.genel}</b></td>
-      <td><span class="pill ${ok ? 'ok' : 'warn'}">${ok ? 'Dengede' : 'Fark büyük (' + sapma + ' saat)'}</span></td>
+      <td class="no-print"><span onclick="isletmeAtamaKaldir('${isl.id}')" style="cursor:pointer;" title="Kaldır">✕</span></td>
     </tr>`;
   }).join("");
-
-  const isletmePrintRows = S.isletmeler.map(isl =>
-    `<tr><td>${escHtml(isl.name)}</td><td>${isl.groups.map(g => GROUP_LABELS[g]).join(" + ")}</td><td>${isletmeHoursEstimate(isl)}</td></tr>`
-  ).join("") || `<tr><td colspan="3" class="small">Henüz işletme eklenmedi.</td></tr>`;
+  const isletmeSecOptions = S.isletmeler.filter(isl => !gosterilecekIsletmeler.includes(isl));
+  const isletmeSecDropdown = `<div class="tab-dropdown no-print">
+    <button class="btn primary" onclick="toggleTabDropdown('isletme-sec')">İşletme Seç ▾</button>
+    <div id="tabdd-isletme-sec" class="tab-dropdown-menu">${
+      isletmeSecOptions.length
+        ? isletmeSecOptions.map(isl => `<div class="tab-dropdown-item" onclick="isletmeAtamaEkle('${jsq(isl.id)}'); toggleTabDropdown('isletme-sec');">${escHtml(isl.name)}</div>`).join("")
+        : '<div class="tab-dropdown-item small">Tüm işletmeler zaten listede.</div>'
+    }</div>
+  </div>`;
 
   return `
   <div class="card no-print" style="background:var(--teal-bg);border-color:var(--teal);">
-    <h2 style="color:var(--teal-ink);">Koordinatörlük / İşletme Listesi</h2>
-    <p class="small">
-      Buraya sadece o gün grubuna giden <b>işletme adlarını</b> yazın — hangi öğretmenin gideceğini yazmak zorunda değilsiniz, "Programı Yenile" bunu otomatik, en dengeli şekilde dağıtır.
-      Bir işletme adı <b>her iki listeye de</b> yazılırsa (ör. aynı işletmeye hem Pazartesi-Salı-Çarşamba hem Çarşamba-Perşembe-Cuma grubundan öğrenci gidiyorsa), sistem bunu <b>ortak</b> işaretler ve dağıtımda otomatik olarak ya tek bir Çarşamba ziyaretiyle (8 saat, daha az yük) ya da iki ayrı ziyaretle (16 saat) — hangisi genel programı daha dengeli/boşluksuz yapıyorsa o şekilde çözer.
-      <br><span class="small" style="color:var(--ink-soft);">Dayanak: Ortaöğretim Kurumları Yönetmeliği Madde 88 — bir öğretmene aynı gün için 8 saatten fazla ek ders (koordinatörlük) görevi verilmez; bu nedenle koordinatörlük günü o öğretmene ayrıca okul dersi eklenmez.</span>
-    </p>
+    <div class="row" style="justify-content:space-between;align-items:center;">
+      <h2 style="color:var(--teal-ink);margin:0;">Koordinatörlük / İşletme Listesi</h2>
+      ${S.isletmeler.length ? `<button class="btn danger" onclick="tumIsletmeleriSil()">Tüm İşletmeleri Sil</button>` : ''}
+    </div>
     <div class="grid3">
       <div>
         <h2>Pazartesi-Salı-Çarşamba grubu işletmeleri</h2>
@@ -6287,74 +6331,13 @@ function viewKoordinatorluk() {
   </div>
   <div class="card no-print">
     <h2>Öğretmen Ata (opsiyonel)</h2>
-    <p class="small">İstemezseniz boş bırakın — "Programı Yenile" sırasında sistem her işletmeye, o günlerde tam gün müsait olan ve o an en az yüklü öğretmeni otomatik atar. Sadece belirli bir işletmeye mutlaka belirli bir öğretmenin gitmesini istiyorsanız burada seçin.</p>
-    <table><tr><th>İşletme</th><th>Gün Grubu</th><th>Öğretmen</th></tr>${teacherAssignRows}</table>
+    <p class="small">İstemezseniz boş bırakın — "Programı Yenile" sırasında sistem her işletmeye, o günlerde tam gün müsait olan ve o an en az yüklü öğretmeni otomatik atar. Sadece belirli bir işletmeye mutlaka belirli bir öğretmenin gitmesini istiyorsanız buradan işletme seçip öğretmen atayın.</p>
+    ${isletmeSecDropdown}
+    ${teacherAssignRows ? `<table style="margin-top:10px;"><tr><th>İşletme</th><th>Gün Grubu</th><th>Öğretmen</th><th class="no-print"></th></tr>${teacherAssignRows}</table>` : ''}
   </div>
-  <div class="print-area">
-    ${belgeYazdirmaBasligi("Koordinatörlük / İşletme Listesi")}
-    <div class="card">
-      <h2>İşletmeler</h2>
-      <table><tr><th>İşletme</th><th>Gün Grubu</th><th>Tahmini Saat</th></tr>${isletmePrintRows}</table>
-    </div>
-    <div class="card">
-      <h2>Saat Dengesi (Ders + Koordinatörlük)</h2>
-      <p class="small">Bu tablo en son "Programı Yenile" çalıştırıldığındaki sonucu gösterir. En yüksek ile en düşük genel toplam arasındaki fark: <b>${fark} saat</b> ${fark <= 3 ? '(uygun)' : '(hedef: en fazla 3 saat)'}</p>
-      <table><tr><th>Öğretmen</th><th>Ders Saati</th><th>Koordinatörlük Saati</th><th>Genel Toplam</th><th>Durum</th></tr>${summaryHtml}</table>
-    </div>
-  </div>`;
+  `;
 }
 
-function viewDagitim() {
-  const rows = S.classes.filter(c => !c.id.startsWith("isletme-")).map(c => {
-    const total = c.assignments.reduce((s, a) => { const co = courseById(a.courseId); return s + (co ? co.hours : 0); }, 0);
-    const placed = Object.values(S.schedule).filter(x => x.classId === c.id).length;
-    return `<tr>
-      <td>${c.name}</td><td>${total}</td><td>${placed}</td>
-      <td><span class="pill ${placed === total && total > 0 ? 'ok' : 'warn'}">${placed === total && total > 0 ? 'Tamam' : 'Eksik'}</span></td>
-      <td><button class="btn" onclick="runDistributeClass('${c.id}')">Bu Sınıfı Dağıt</button></td>
-    </tr>`;
-  }).join("");
-  const teacherRows = S.teachers.map(t => {
-    const hrs = teacherTotalHours(t.id);
-    const koordH = teacherCoordHours(t.id);
-    const dersH = hrs - koordH;
-    const mode = t.hoursMode || "min";
-    const target = t.hoursTarget;
-    let ok;
-    if (mode === "exact") ok = (hrs === target);
-    else ok = (typeof target !== "number") || (hrs >= target);
-    const modeLabel = mode === "exact" ? "tam " + target + " saat hedefi" : (typeof target === "number" ? "en az " + target + " saat" : "hedef yok");
-    return `<tr><td>${t.name}</td><td>${dersH}</td><td>${koordH}</td><td><b>${hrs}</b></td><td>${modeLabel}</td><td><span class="pill ${ok ? 'ok' : 'warn'}">${ok ? 'Uygun' : 'Hedefte değil'}</span></td></tr>`;
-  }).join("");
-  const allHours = S.teachers.map(t => teacherTotalHours(t.id));
-  const spreadNow = allHours.length ? Math.max(...allHours) - Math.min(...allHours) : 0;
-  return `
-  <div class="card no-print">
-    <h2>Ders Dağıtım</h2>
-    <p class="small">Sistem tek denemeyle yetinmiyor — onlarca farklı sıralama/kombinasyon deneyip <b>en az boşta ders bırakan, en dengeli saat dağıtan</b> sonucu seçiyor. Bu birkaç saniye sürebilir. 12. sınıflar için önce "Sınıflar ve Ders Atama" ekranından okula geldikleri günleri seçmeniz gerekir. Koordinatörlük saatleri de bu dağıtıma dahildir — bkz. <b>Koordinatörlük</b> sekmesi.</p>
-    <div class="row" style="max-width:460px"><button class="btn primary" onclick="refreshProgram()">Programı Yenile (baştan farklı kombinasyonla dağıt)</button>
-    <button class="btn danger" onclick="resetAll()">Tüm Dağıtımı Sıfırla</button></div>
-    <div id="dagitim-sonuc"></div>
-    <table style="margin-top:14px;"><tr><th>Sınıf</th><th>Toplam Saat</th><th>Dağıtılmış</th><th>Durum</th><th></th></tr>${rows}</table>
-  </div>
-  <div class="print-area">
-    ${belgeYazdirmaBasligi("Ders Dağıtım Durumu")}
-    <div class="card">
-      <h2>Her Dersin Dağıtım Durumu (hangi ders kime, kaç öğretmenle atandı)</h2>
-      <table><tr><th>Sınıf</th><th>Ders</th><th>Yerleşen/Toplam Saat</th><th>Atanan Öğretmen(ler)</th><th>Durum</th></tr>${assignmentStatusRows()}</table>
-    </div>
-    <div class="card">
-      <h2>Öğretmen Haftalık Saat Kontrolü (ders + koordinatörlük, adalet hedefi: en fazla 3 saat fark)</h2>
-      <p class="small">En yüksek ile en düşük genel toplam saat arasındaki fark şu an: <b>${spreadNow} saat</b> ${spreadNow <= 3 ? '(uygun)' : '(hedefin üzerinde — "Programı Yenile" ile yeniden dengelenebilir)'}</p>
-      <table><tr><th>Öğretmen</th><th>Ders Saati</th><th>Koordinatörlük Saati</th><th>Genel Toplam</th><th>Hedef</th><th>Durum</th></tr>${teacherRows}</table>
-    </div>
-  </div>
-  <div class="card no-print">
-    <h2>İsimli Bir Kopya Olarak Kaydet</h2>
-    <p class="small">Örneğin dönem sonunda ya da önemli bir aşamada, o anki hâlin isimli bir kopyasını saklayın (ör. "2026-2027 Güz Dönemi"). Çalışma alanınız <b>silinmez</b>, aynı yerden çalışmaya devam edersiniz — ders havuzu, öğretmenler, koordinatörlük hep kalır. Kaydettiğiniz kopyaları Ana Sayfa'da görüp istediğiniz an açabilirsiniz.</p>
-    <button class="btn primary" onclick="saveCurrentVersion()">Bu Anki Hâli Kaydet</button>
-  </div>`;
-}
 function showWorkingOverlay(text) {
   const root = document.getElementById("modal-root");
   root.innerHTML = `
@@ -6372,15 +6355,6 @@ function updateWorkingOverlay(sub) {
 }
 function hideWorkingOverlay() { closeModal(); }
 
-function runDistributeClass(id) {
-  showWorkingOverlay("Sınıf dağıtılıyor…");
-  setTimeout(() => {
-    distributeClassAsync(id,
-      (r) => { hideWorkingOverlay(); renderMain(); showDagitimSonuc(r); },
-      (done, total) => { updateWorkingOverlay(`Deneme ${done} / ${total}`); }
-    );
-  }, 20);
-}
 function refreshProgram() {
   showPreDistributionWarnings(() => {
     showWorkingOverlay("Program hesaplanıyor…");
@@ -6405,19 +6379,6 @@ function resetAll() {
 }
 
 /* ============ KAYDEDİLMİŞ SÜRÜMLER ============ */
-function saveCurrentVersion() {
-  promptModal("Bu anki hâli hangi isimle kaydedeyim? (ör. '2026-2027 Güz Dönemi')\n\nÇalışma alanınız SİLİNMEZ — sadece bu isimle bir kopya saklanır, siz aynı yerden çalışmaya devam edersiniz.", "", (name) => {
-    if (!name || !name.trim()) return;
-    const versions = loadVersions();
-    const yeni = { id: uid("ver"), name: name.trim(), savedAt: new Date().toISOString(), data: JSON.parse(JSON.stringify(S)) };
-    versions.push(yeni);
-    saveVersionsList(versions);
-    setAktifSurumId(yeni.id);
-    alert(`"${name.trim()}" olarak kaydedildi. Çalışmanıza aynı yerden devam edebilirsiniz.`);
-    renderMain();
-    renderSurumWidget();
-  });
-}
 function deleteVersion(id) {
   if (!confirm("Bu kayıtlı sürüm kalıcı olarak silinsin mi?")) return;
   saveVersionsList(loadVersions().filter(x => x.id !== id));
@@ -6519,11 +6480,11 @@ function preDistributionChecks() {
     const fixedTeacherId = S.isletmeTeacherAssign[isl.id];
     if (fixedTeacherId) {
       const allowedDaysUnion = isl.groups.length === 2 ? [0, 1, 2, 3, 4] : GROUP_DAYS[isl.groups[0]];
-      const anyFree = allowedDaysUnion.some(d => isTeacherFullyFreeOnDay(fixedTeacherId, d));
+      const t = teacherById(fixedTeacherId);
+      const anyFree = allowedDaysUnion.some(d => isTeacherDayDersFree(fixedTeacherId, d) && teacherCoordHoursOnDay(fixedTeacherId, d) < KOORD_BLOCK_LEN);
       if (!anyFree) {
-        const t = teacherById(fixedTeacherId);
         warnings.push({
-          text: `${isl.name} işletmesi için atadığınız ${t ? t.name : '?'} öğretmeni, uygun günlerin hiçbirinde şu anda tam gün boş görünmüyor — bu işletme yerleşemeyebilir.`,
+          text: `${isl.name} işletmesi için atadığınız ${t ? t.name : '?'} öğretmeni, uygun günlerin hiçbirinde ders-boş bir gün/kapasite görünmüyor — bu işletme otomatik yerleşemeyebilir, elle atamanız gerekebilir.`,
           buttonLabel: "Çözüm önerisi: sabit atamayı kaldır, otomatik seçime bırak",
           buttonAction: `setIsletmeTeacher('${isl.id}', ''); closeModal();`
         });
@@ -6653,26 +6614,83 @@ function showDistributionIssuesModal(r) {
     </div>`;
 }
 
-function showDagitimSonuc(r) {
-  const el = document.getElementById("dagitim-sonuc");
-  if (!el) return;
-  let html = `<p class="small">Yerleştirilen blok: ${r.placed} · Yerleştirilemeyen blok: ${r.failed}</p>`;
-  if (r.failed > 0 && r.failedList) {
-    const items = r.failedList.map(f => {
-      const s = diagnoseAndSuggest(f);
-      return `<li class="small" style="margin-bottom:8px;">${s.text}${s.buttonAction ? `<div style="margin-top:4px;"><button class="btn primary" onclick="${s.buttonAction}">${s.buttonLabel}</button></div>` : ``}</li>`;
-    }).join("");
-    html += `<div class="card" style="background:var(--warn-bg);border-color:var(--warn);">
-      <strong style="color:var(--warn);">Yerleştirilemeyen dersler:</strong>
-      <ul style="padding-left:18px;">${items}</ul>
-    </div>`;
-  }
-  el.innerHTML = html;
-}
-
 /* ---- Programlar (Çıktılar) ---- */
 let activeProgramlarOgretmenId = "__ALL__";
 function selectProgramlarOgretmen(id) { activeProgramlarOgretmenId = id; renderMain(); }
+
+/* ---- Birden fazla "Program" (ders dağıtım denemesi) ----
+   Öğretmen/sınıf/ders havuzu/koordinatörlük hep ORTAK kalır — sadece
+   S.schedule'ın kendisi, S.schedulePrograms içinde program başına ayrı
+   saklanır. save() her seferinde S.schedule'ı aktif programa senkronize
+   eder (bkz. model.js scheduleProgramSenkronizeEt), yani program
+   değiştirmeden önce elle bir şey kaydetmeye gerek yoktur. */
+function yeniProgramEkle() {
+  const varsayilan = "Program " + (S.schedulePrograms.length + 1);
+  promptModal("Yeni programın adı ne olsun? (Ders atamaları sıfırdan, boş başlar — öğretmenler, sınıflar, ders havuzu ve koordinatörlük ortak kalır.)", varsayilan, (name) => {
+    if (!name || !name.trim()) return;
+    const id = uid("prog");
+    S.schedulePrograms.push({ id, name: name.trim(), schedule: {} });
+    S.activeScheduleProgramId = id;
+    S.schedule = {};
+    save();
+    renderMain();
+  });
+}
+function programaGec(id) {
+  if (id === S.activeScheduleProgramId) { toggleTabDropdown("program-secici"); return; }
+  const p = S.schedulePrograms.find(x => x.id === id);
+  if (!p) return;
+  const aktif = S.schedulePrograms.find(x => x.id === S.activeScheduleProgramId);
+  confirmDestructive(`"${p.name}" programına geçilsin mi? Şu anki çalışmanız zaten "${aktif ? aktif.name : '?'}" programına kaydedilmiş durumda, kaybolmaz.`, () => {
+    S.activeScheduleProgramId = id;
+    S.schedule = JSON.parse(JSON.stringify(p.schedule || {}));
+    save();
+    renderTabbar();
+    renderMain();
+  });
+}
+function programAdiniDuzenle(id) {
+  const p = S.schedulePrograms.find(x => x.id === id);
+  if (!p) return;
+  promptModal("Programın adını değiştir:", p.name, (name) => {
+    if (!name || !name.trim()) return;
+    p.name = name.trim();
+    save();
+    renderMain();
+  });
+}
+function programSil(id) {
+  if (S.schedulePrograms.length <= 1) { alert("En az bir program kalmalı, bu son program silinemez."); return; }
+  const p = S.schedulePrograms.find(x => x.id === id);
+  if (!p) return;
+  if (!confirm(`"${p.name}" programı kalıcı olarak silinsin mi? Bu işlem geri alınamaz.`)) return;
+  S.schedulePrograms = S.schedulePrograms.filter(x => x.id !== id);
+  if (S.activeScheduleProgramId === id) {
+    const yeniAktif = S.schedulePrograms[0];
+    S.activeScheduleProgramId = yeniAktif.id;
+    S.schedule = JSON.parse(JSON.stringify(yeniAktif.schedule || {}));
+  }
+  save();
+  renderMain();
+}
+function programSeciciWidget() {
+  const aktif = S.schedulePrograms.find(x => x.id === S.activeScheduleProgramId);
+  const items = S.schedulePrograms.map(p => `
+    <div class="tab-dropdown-item" style="display:flex;align-items:center;gap:6px;">
+      <span onclick="programaGec('${jsq(p.id)}')" style="flex:1;cursor:pointer;">${p.id === S.activeScheduleProgramId ? "✓ " : ""}${escHtml(p.name)}</span>
+      <span onclick="event.stopPropagation(); programAdiniDuzenle('${jsq(p.id)}');" style="cursor:pointer;" title="Adını düzenle">✎</span>
+      <span onclick="event.stopPropagation(); programSil('${jsq(p.id)}');" style="cursor:pointer;" title="Bu programı sil">✕</span>
+    </div>`).join("");
+  return `<div class="row no-print" style="align-items:center;flex-wrap:wrap;margin-bottom:10px;">
+    <div class="tab-dropdown">
+      <button class="btn" onclick="toggleTabDropdown('program-secici')" title="Kaydedilmiş programlar arasında geçiş yapın">
+        📋 ${aktif ? escHtml(aktif.name) : "Program"} ▾
+      </button>
+      <div id="tabdd-program-secici" class="tab-dropdown-menu">${items}</div>
+    </div>
+    <button class="btn" onclick="yeniProgramEkle()">+ Yeni Program Ekle</button>
+  </div>`;
+}
 function viewProgramlar() {
   if (activeProgramlarOgretmenId !== "__ALL__" && !S.teachers.some(t => t.id === activeProgramlarOgretmenId)) activeProgramlarOgretmenId = "__ALL__";
   const hoursSummary = S.teachers.map(t => {
@@ -6687,22 +6705,43 @@ function viewProgramlar() {
   const secilenOgretmen = teacherById(activeProgramlarOgretmenId);
   const gosterilecekOgretmenler = secilenOgretmen ? [secilenOgretmen] : S.teachers;
   const secenekler = [{ value: "__ALL__", label: "Tümü (" + S.teachers.length + " öğretmen)" }].concat(S.teachers.map(t => ({ value: t.id, label: t.name })));
-  const body = gosterilecekOgretmenler.map(t => renderEditableTeacherGrid(t.id)).join('<hr style="margin:22px 0;border:none;border-top:1px solid var(--line);">');
+  const body = gosterilecekOgretmenler.map((t, i) => `<div class="card sched-print-page${i > 0 ? ' print-page-break' : ''}">${renderEditableTeacherGrid(t.id)}</div>`).join('<hr class="no-print" style="margin:22px 0;border:none;border-top:1px solid var(--line);">');
   const dosyaAdi = secilenOgretmen ? "Öğretmen Programı - " + secilenOgretmen.name : "Öğretmen Programları";
+  const teacherRows = S.teachers.map(t => {
+    const hrs = teacherTotalHours(t.id);
+    const koordH = teacherCoordHours(t.id);
+    const dersH = hrs - koordH;
+    const mode = t.hoursMode || "min";
+    const target = t.hoursTarget;
+    let ok;
+    if (mode === "exact") ok = (hrs === target);
+    else ok = (typeof target !== "number") || (hrs >= target);
+    const modeLabel = mode === "exact" ? "tam " + target + " saat hedefi" : (typeof target === "number" ? "en az " + target + " saat" : "hedef yok");
+    return `<tr><td>${t.name}</td><td>${dersH}</td><td>${koordH}</td><td><b>${hrs}</b></td><td>${modeLabel}</td><td><span class="pill ${ok ? 'ok' : 'warn'}">${ok ? 'Uygun' : 'Hedefte değil'}</span></td></tr>`;
+  }).join("");
+  const allHours = S.teachers.map(t => teacherTotalHours(t.id));
+  const spreadNow = allHours.length ? Math.max(...allHours) - Math.min(...allHours) : 0;
   return `
   <div class="card no-print">
     <h2>Programlar</h2>
-    <p class="small">Boş bir hücreye tıklayın: ders ekleyin ya da o saati boşta kilitleyin. Dolu bir hücreye tıklayın: dersi kilitleyin ya da kaldırın. Bir öğretmenin programında birden fazla hücrede aynı anda işlem yapmak için o öğretmenin başlığındaki <b>Çoklu Seçim</b>'i açın.</p>
+    ${programSeciciWidget()}
+    <p class="small">Sistem tek denemeyle yetinmiyor — onlarca farklı sıralama/kombinasyon deneyip <b>en az boşta ders bırakan, en dengeli saat dağıtan</b> sonucu seçiyor. Bu birkaç saniye sürebilir. 12. sınıflar için önce "Sınıflar ve Ders Atama" ekranından okula geldikleri günleri seçmeniz gerekir. Koordinatörlük saatleri de bu dağıtıma dahildir — bkz. <b>Koordinatörlük</b> sekmesi.</p>
+    <div class="row" style="max-width:460px"><button class="btn primary" onclick="refreshProgram()">Programı Yenile (baştan farklı kombinasyonla dağıt)</button>
+    <button class="btn danger" onclick="resetAll()">Tüm Dağıtımı Sıfırla</button></div>
+    <p class="small" style="margin-top:14px;">Boş bir hücreye tıklayın: ders ekleyin ya da o saati boşta kilitleyin. Dolu bir hücreye tıklayın: dersi kilitleyin ya da kaldırın. Bir öğretmenin programında birden fazla hücrede aynı anda işlem yapmak için o öğretmenin başlığındaki <b>Çoklu Seçim</b>'i açın.</p>
     <div style="margin-bottom:10px;">${hoursSummary}</div>
     <div class="row" style="flex-wrap:wrap;margin-bottom:6px;">
       <span class="small" style="align-self:center;font-weight:600;">Ekranda göster:</span>
       ${sekmeDropdown("programlar-ogretmen", secenekler, activeProgramlarOgretmenId, "selectProgramlarOgretmen('{v}')")}
     </div>
   </div>
-  <div class="print-area">
-    ${belgeYazdirmaBasligi(dosyaAdi)}
-    <div class="card">${body}</div>
-  </div>`;
+  <div class="card no-print">
+    <h2>Öğretmen Haftalık Saat Kontrolü (ders + koordinatörlük, adalet hedefi: en fazla 3 saat fark)</h2>
+    <p class="small">En yüksek ile en düşük genel toplam saat arasındaki fark şu an: <b>${spreadNow} saat</b> ${spreadNow <= 3 ? '(uygun)' : '(hedefin üzerinde — "Programı Yenile" ile yeniden dengelenebilir)'}</p>
+    <table><tr><th>Öğretmen</th><th>Ders Saati</th><th>Koordinatörlük Saati</th><th>Genel Toplam</th><th>Hedef</th><th>Durum</th></tr>${teacherRows}</table>
+  </div>
+  <div class="card no-print">${belgeAracCubugu(dosyaAdi, true)}</div>
+  <div class="print-area">${body}</div>`;
 }
 function toggleMultiSelectFor(teacherId) {
   if (multiSelectMode && activeTeacherId === teacherId) {
@@ -6726,14 +6765,18 @@ function renderEditableTeacherGrid(teacherId) {
     </span>`
   ).join("");
   const gridMultiSelect = multiSelectMode && activeTeacherId === teacherId;
-  let html = `<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+  let html = `<div class="no-print" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
     <h2 style="margin:0;">${t.name} Haftalık Programı</h2>
-    <div class="no-print" style="display:flex;gap:6px;align-items:center;">
+    <div style="display:flex;gap:6px;align-items:center;">
       <button class="btn ${gridMultiSelect ? 'primary' : ''}" style="padding:4px 9px;font-size:11px;" onclick="toggleMultiSelectFor('${teacherId}')">${gridMultiSelect ? '✓ Çoklu Seçim Açık' : 'Çoklu Seçim'}</button>
       ${gridMultiSelect && selectedTeacherCells.size > 0 ? `<button class="btn" style="padding:4px 9px;font-size:11px;" onclick="clearSelection()">Seçimi Temizle (${selectedTeacherCells.size})</button>` : ``}
     </div>
   </div>
-  <div style="margin:8px 0 10px;">${legend}</div>`;
+  <div class="print-only" style="text-align:center;margin-bottom:22px;">
+    <div style="font-size:24px;font-weight:700;letter-spacing:.3px;">${escHtml(t.name.toLocaleUpperCase("tr-TR"))}</div>
+    <div style="font-size:14px;color:#333;margin-top:10px;">Haftalık Ders Programı</div>
+  </div>
+  <div class="no-print" style="margin:8px 0 10px;">${legend}</div>`;
   html += `<table class="sched-table"><tr><th>Saat</th>${DAYS.map(d => `<th>${d}</th>`).join("")}</tr>`;
   for (let h = 0; h < S.hoursPerDay; h++) {
     html += `<tr><td class="small" style="text-align:center;">${h + 1}</td>`;
