@@ -6594,6 +6594,18 @@ function deleteVersion(id) {
   renderMain();
   renderSurumWidget();
 }
+function surumAdiniDuzenle(id) {
+  const versions = loadVersions();
+  const v = versions.find(x => x.id === id);
+  if (!v) return;
+  promptModal("Bu kaydın adını ne olarak değiştireyim?", v.name, (yeniAd) => {
+    if (!yeniAd || !yeniAd.trim()) return;
+    v.name = yeniAd.trim();
+    saveVersionsList(versions);
+    renderMain();
+    renderSurumWidget();
+  });
+}
 
 /* ---- Sol menüdeki "Kaydet" altı sürüm anahtarı ----
    Kullanıcı "Farklı Kaydet" ile çalışmasının o anki hâlini isimli bir
@@ -6636,6 +6648,7 @@ function renderSurumWidget() {
   const items = versions.slice().reverse().map(v => `
     <div class="tab-dropdown-item ${v.id === aktifId ? 'active' : ''}" style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
       <span onclick="surumaGec('${jsq(v.id)}')" style="flex:1;cursor:pointer;">${v.id === aktifId ? "✓ " : ""}${escHtml(v.name)}</span>
+      <span onclick="event.stopPropagation(); surumAdiniDuzenle('${jsq(v.id)}');" style="cursor:pointer;" title="Adını düzenle">✎</span>
       <span onclick="event.stopPropagation(); deleteVersion('${jsq(v.id)}');" style="cursor:pointer;" title="Bu kaydı sil">✕</span>
     </div>`).join("");
   el.innerHTML = `
