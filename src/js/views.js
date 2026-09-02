@@ -1195,6 +1195,55 @@ function importPlanFromExcel() {
     }).catch(e => alert("Yükleme hatası: " + e.message));
   });
 }
+/* İşgünü takvimi (Eylül-Haziran, hangi gün hangi haftanın günü) saf
+   tarih hesabıyla üretilir — öğretim yılı yazıldığı an otomatik
+   çıkar, elle veri girmeye gerek yok. */
+function isguluTakvimiOlustur(ogretimYili) {
+  const m = /(\d{4})/.exec(ogretimYili || "");
+  if (!m) return null;
+  const baslangicYili = Number(m[1]);
+  const aylar = [
+    { ad: "EYLÜL", yil: baslangicYili, ay: 9 }, { ad: "EKİM", yil: baslangicYili, ay: 10 },
+    { ad: "KASIM", yil: baslangicYili, ay: 11 }, { ad: "ARALIK", yil: baslangicYili, ay: 12 },
+    { ad: "OCAK", yil: baslangicYili + 1, ay: 1 }, { ad: "ŞUBAT", yil: baslangicYili + 1, ay: 2 },
+    { ad: "MART", yil: baslangicYili + 1, ay: 3 }, { ad: "NİSAN", yil: baslangicYili + 1, ay: 4 },
+    { ad: "MAYIS", yil: baslangicYili + 1, ay: 5 }, { ad: "HAZİRAN", yil: baslangicYili + 1, ay: 6 }
+  ];
+  const gunler = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"];
+  const grid = gunler.map(() => aylar.map(() => []));
+  aylar.forEach((ayInfo, ayIdx) => {
+    const gunSayisi = new Date(ayInfo.yil, ayInfo.ay, 0).getDate();
+    for (let gun = 1; gun <= gunSayisi; gun++) {
+      const tarih = new Date(ayInfo.yil, ayInfo.ay - 1, gun);
+      const jsGun = tarih.getDay();
+      const gunIdx = jsGun === 0 ? 6 : jsGun - 1;
+      grid[gunIdx][ayIdx].push(gun);
+    }
+  });
+  return { aylar, gunler, grid };
+}
+function renderIsguluTakvimi(ogretimYili) {
+  const takvim = isguluTakvimiOlustur(ogretimYili);
+  if (!takvim) return "";
+  return `
+  <div class="card" style="overflow-x:auto;">
+    <h3 class="print-only" style="text-align:center;">${escHtml(ogretimYili)} EĞİTİM-ÖĞRETİM YILI İŞGÜNÜ TAKVİMİ</h3>
+    <h3 class="no-print">İşgünü Takvimi</h3>
+    <table style="font-size:9.5px;">
+      <thead><tr><th>Günler</th>${takvim.aylar.map(a => `<th>${a.ad} / ${a.yil}</th>`).join("")}</tr></thead>
+      <tbody>${takvim.gunler.map((gun, gunIdx) => `<tr><td style="font-weight:600;white-space:nowrap;">${gun}</td>${takvim.aylar.map((a, ayIdx) => `<td>${takvim.grid[gunIdx][ayIdx].join(", ")}</td>`).join("")}</tr>`).join("")}</tbody>
+    </table>
+  </div>`;
+}
+function renderOnemliGunlerTablosu(onemliGunler) {
+  const og = onemliGunler || { d1: [], d2: [] };
+  const satir = (etiketler, degerler) => etiketler.map((etiket, i) => `<tr><td>${escHtml(etiket)}</td><td>${escHtml(degerler[i] || '-')}</td></tr>`).join("");
+  return `
+  <div class="grid2" style="margin-top:10px;">
+    <table><thead><tr><th colspan="2">1. DÖNEM ÖNEMLİ GÜN VE HAFTALAR</th></tr></thead><tbody>${satir(ONEMLI_GUNLER_D1_ETIKETLERI, og.d1 || [])}</tbody></table>
+    <table><thead><tr><th colspan="2">2. DÖNEM ÖNEMLİ GÜN VE HAFTALAR</th></tr></thead><tbody>${satir(ONEMLI_GUNLER_D2_ETIKETLERI, og.d2 || [])}</tbody></table>
+  </div>`;
+}
 function renderYillikPlanTable(p) {
   const rows = p.haftalar.map((h, i) => `
     <tr>
@@ -1215,14 +1264,20 @@ function renderYillikPlanTable(p) {
     <div class="row small" style="flex-wrap:wrap;gap:14px;">
       <span><b>1. Dönem 1. Sınav:</b> ${escHtml(st.d1s1 || "-")}</span>
       <span><b>1. Dönem 2. Sınav:</b> ${escHtml(st.d1s2 || "-")}</span>
+      <span><b>1. Dönem Performans Teslim:</b> ${escHtml(st.d1pt || "-")}</span>
       <span><b>2. Dönem 1. Sınav:</b> ${escHtml(st.d2s1 || "-")}</span>
       <span><b>2. Dönem 2. Sınav:</b> ${escHtml(st.d2s2 || "-")}</span>
+      <span><b>2. Dönem Performans Teslim:</b> ${escHtml(st.d2pt || "-")}</span>
     </div>
   </div>
-  <div class="print-only" style="margin-bottom:10px;">
-    <b>1.D 1.Sınav:</b> ${escHtml(st.d1s1 || "-")} · <b>1.D 2.Sınav:</b> ${escHtml(st.d1s2 || "-")} · <b>2.D 1.Sınav:</b> ${escHtml(st.d2s1 || "-")} · <b>2.D 2.Sınav:</b> ${escHtml(st.d2s2 || "-")}
-  </div>` : "";
+  <table class="print-only" style="margin-bottom:10px;">
+    <tr><td><b>1.Dönem 1.Sınav Tarihi</b></td><td>${escHtml(st.d1s1 || "-")}</td><td><b>2.Dönem 1.Sınav Tarihi</b></td><td>${escHtml(st.d2s1 || "-")}</td></tr>
+    <tr><td><b>1.Dönem 2.Sınav Tarihi</b></td><td>${escHtml(st.d1s2 || "-")}</td><td><b>2.Dönem 2.Sınav Tarihi</b></td><td>${escHtml(st.d2s2 || "-")}</td></tr>
+    <tr><td><b>1.Dönem Performans Teslim Tarih</b></td><td>${escHtml(st.d1pt || "-")}</td><td><b>2.Dönem Performans Teslim Tarih</b></td><td>${escHtml(st.d2pt || "-")}</td></tr>
+  </table>
+  ${renderOnemliGunlerTablosu(S.akademikTakvim && S.akademikTakvim.onemliGunler)}` : "";
   const ogretimYili = S.akademikTakvim ? S.akademikTakvim.ogretimYili : "";
+  const isguluTakvimiHtml = renderIsguluTakvimi(ogretimYili);
   return `
   <div class="card no-print">
     <div class="row small" style="flex-wrap:wrap;gap:14px;align-items:center;">
@@ -1238,6 +1293,7 @@ function renderYillikPlanTable(p) {
     <b>Eğitim-Öğretim Yılı:</b> ${escHtml(ogretimYili || "-")} · <b>Ders:</b> ${escHtml(p.ders)} · <b>Sınıf:</b> ${escHtml(p.sinif)} · <b>Ders Saati:</b> ${escHtml(p.dersSaati || "-")} · <b>Alan/Dal:</b> ${escHtml(p.alanDal || "-")}
   </div>
   ${sinavHtml}
+  ${isguluTakvimiHtml}
   <div class="card" style="overflow-x:auto;">
     <table style="width:100%;"><thead><tr><th style="width:90px;">Tarih</th><th>Kazanımlar</th><th>Konular</th><th>Öğrenme-Öğretme Yöntem ve Teknikleri</th><th>Kullanılan Eğitim Teknolojileri, Araç ve Gereçler</th><th>Değerlendirme</th><th class="no-print"></th></tr></thead>
     <tbody>${rows}</tbody></table>
@@ -1433,8 +1489,10 @@ function renderDbfDetay(r) {
     <div style="margin-top:14px;">
       <div style="font-weight:600;">${escHtml(m.modulAdi)}${m.modulSuresi ? " (" + escHtml(m.modulSuresi) + ")" : ""}</div>
       ${m.modulAmaci ? `<p class="small" style="margin:4px 0;">${escHtml(m.modulAmaci)}</p>` : ""}
+      ${(m.konular && m.konular.length) ? `<div class="small" style="margin-top:4px;"><b>Konular:</b><ul style="margin:4px 0 0 18px;">${m.konular.map(k => `<li>${escHtml(k)}</li>`).join("")}</ul></div>` : ""}
       ${(m.kazanimlar && m.kazanimlar.length) ? `<div class="small" style="margin-top:4px;"><b>Kazanımlar:</b><ul style="margin:4px 0 0 18px;">${m.kazanimlar.map(k => `<li>${escHtml(k)}</li>`).join("")}</ul></div>` : ""}
       ${(m.aciklamalar && m.aciklamalar.length) ? `<div class="small" style="margin-top:4px;"><b>Açıklamalar:</b><ul style="margin:4px 0 0 18px;">${m.aciklamalar.map(a => `<li>${escHtml(a)}</li>`).join("")}</ul></div>` : ""}
+      ${(m.icerikMaddeleri && m.icerikMaddeleri.length) ? `<div class="small" style="margin-top:4px;"><b>Konular ve Kazanımlar:</b><ul style="margin:4px 0 0 18px;">${m.icerikMaddeleri.map(k => `<li>${escHtml(k)}</li>`).join("")}</ul></div>` : ""}
     </div>`).join("") : "";
   return `
   <div style="margin-bottom:10px;"><b>Dersin Adı:</b> ${escHtml(r.dersAdi)}</div>
@@ -1445,8 +1503,15 @@ function renderDbfDetay(r) {
   ${r.dersAmaci ? `<p style="margin-bottom:10px;"><b>Dersin Amacı:</b> ${escHtml(r.dersAmaci)}</p>` : ""}
   <div style="font-weight:600;margin-top:10px;">Dersin Kazanımları</div>
   ${kazanimlarHtml}
+  ${r.ortamDonanim ? `<div style="font-weight:600;margin-top:14px;">Eğitim-Öğretim Ortam ve Donanımı</div><p style="white-space:pre-wrap;margin:6px 0 0;">${nlToBr(r.ortamDonanim)}</p>` : ""}
+  ${r.olcmeDegerlendirme ? `<div style="font-weight:600;margin-top:14px;">Ölçme ve Değerlendirme</div><p style="margin:6px 0 0;">${escHtml(r.olcmeDegerlendirme)}</p>` : ""}
   ${tabloHtml ? `<div style="font-weight:600;margin-top:14px;">Modül-Kazanım-Süre Tablosu</div>${tabloHtml}` : ""}
   ${modullerHtml ? `<div style="font-weight:600;margin-top:16px;">Modüller</div>${modullerHtml}` : ""}
+  ${r.kazanimSayisiSureTablosuHam ? `<div style="font-weight:600;margin-top:16px;">Kazanım Sayısı ve Süre Tablosu / Öğrenme Birimi Konuları ve Kazanım Açıklamaları</div>
+    <div class="small no-print" style="margin:4px 0 8px;color:var(--muted,#777);">Bu tablo kaynak belgeden (PDF) ayrıştırılamayan sütun yapısı nedeniyle kaynaktaki metin biçimiyle gösteriliyor.</div>
+    <div style="white-space:pre-wrap;font-family:inherit;font-size:12.5px;line-height:1.5;">${nlToBr(r.kazanimSayisiSureTablosuHam)}</div>` : ""}
+  ${r.uygulamaFaaliyetleri ? `<div style="font-weight:600;margin-top:16px;">Uygulama Faaliyetleri/Temrinler</div><div style="white-space:pre-wrap;margin:6px 0 0;">${nlToBr(r.uygulamaFaaliyetleri)}</div>` : ""}
+  ${r.dersUygulamaAciklamalari ? `<div style="font-weight:600;margin-top:16px;">Dersin Uygulanmasına İlişkin Açıklamalar</div><div style="white-space:pre-wrap;margin:6px 0 0;">${nlToBr(r.dersUygulamaAciklamalari)}</div>` : ""}
   <p class="small no-print" style="margin-top:16px;">Kaynak: ${escHtml(r.kaynakDosya || "")}</p>`;
 }
 function viewDersBilgiFormu() {
@@ -1692,56 +1757,53 @@ function deleteKoordSatir(id) {
   S.normKadro.koordinatorlukSatirlari = S.normKadro.koordinatorlukSatirlari.filter(r => r.id !== id);
   save(); renderMain();
 }
+function normKadroBolumBasligi(baslik) {
+  return `<tr><td colspan="8" style="font-weight:700;background:var(--panel-2);">${escHtml(baslik)}</td></tr>`;
+}
+function normKadroToplamSatiri(etiket, saat) {
+  return `<tr style="font-weight:700;"><td colspan="6">${escHtml(etiket)}</td><td>${saat}</td><td></td></tr>`;
+}
 function viewNormKadro() {
   const relevantClasses = S.classes.filter(c => c.id !== "cl-idari" && c.assignments.length > 0 && !c.id.startsWith("isletme-"));
   let siraNo = 0;
   let ampToplam = 0;
 
-  const sinifBlocks = relevantClasses.map(cls => {
+  const ampSatirlari = relevantClasses.map(cls => {
     const ogrenciSayisi = S.normKadro.ogrenciSayilari[cls.id];
     const grup = normKadroGrupSayisi(cls.grade, ogrenciSayisi);
-    const rows = cls.assignments.map(a => {
+    const ogrenciHucresi = `<td class="no-print"><input type="number" min="0" value="${ogrenciSayisi !== undefined ? ogrenciSayisi : ''}" style="width:56px" onchange="setNormKadroOgrenciSayisi('${cls.id}',this.value)"> <button class="btn" style="padding:2px 6px;font-size:10px;" onclick="normKadroOgrenciSayisiniListedenDoldur('${cls.id}','${jsq(cls.name)}')" title="Öğrenci Listesi modülündeki güncel sayıyla doldur">↺</button></td><td class="print-only-cell">${ogrenciSayisi !== undefined ? ogrenciSayisi : '—'}</td>`;
+    const dersRows = cls.assignments.map(a => {
       const course = courseById(a.courseId);
       if (!course) return "";
       siraNo++;
       const toplam = grup === null ? null : course.hours * grup;
       if (toplam !== null) ampToplam += toplam;
       return `<tr>
-        <td>${siraNo}</td><td>${escHtml(cls.name)}</td><td>${escHtml(course.name)}</td>
-        <td>${course.hours}</td><td>${grup === null ? '<span class="pill warn">öğrenci sayısı girin</span>' : grup}</td>
-        <td><b>${toplam === null ? '—' : toplam}</b></td>
+        <td>${siraNo}</td><td>${escHtml(cls.name)}</td>${ogrenciHucresi}<td>${escHtml(course.name)}</td>
+        <td>${course.hours}</td><td>${grup === null ? '<span class="pill warn">öğr. sayısı girin</span>' : grup}</td>
+        <td><b>${toplam === null ? '—' : toplam}</b></td><td></td>
       </tr>`;
     }).join("");
-    return `
-    <div class="card">
-      <div class="row no-print" style="align-items:center;margin-top:0;">
-        <h3 style="margin:0;">${escHtml(cls.name)} Sınıfı</h3>
-        <label class="small" style="margin-left:10px;">Öğrenci Sayısı:</label>
-        <input type="number" min="0" value="${ogrenciSayisi !== undefined ? ogrenciSayisi : ''}" style="width:70px" onchange="setNormKadroOgrenciSayisi('${cls.id}',this.value)">
-        <button class="btn" style="padding:4px 8px;font-size:11px;" onclick="normKadroOgrenciSayisiniListedenDoldur('${cls.id}','${jsq(cls.name)}')" title="Öğrenci Listesi modülündeki güncel sayıyla doldur">Listeden Doldur</button>
-        <span class="small">(Grup Sayısı: ${grup === null ? '—' : grup}, norm formülüne göre otomatik)</span>
-      </div>
-      <p class="print-only" style="font-weight:700;margin:10px 0 4px;">${escHtml(cls.name)} Sınıfı — Öğrenci Sayısı: ${ogrenciSayisi !== undefined ? ogrenciSayisi : '—'}</p>
-      <table><thead><tr><th>No</th><th>Sınıf</th><th>Ders Adı</th><th>Haftalık Saat</th><th>Grup Sayısı</th><th>Toplam Ders Saati</th></tr></thead>
-      <tbody>${rows}</tbody></table>
-    </div>`;
-  }).join("") || `<div class="card"><p class="small">Ders Programı → Sınıflar ve Ders Atama'dan sınıflara ders atadıkça burada otomatik listelenecek.</p></div>`;
+    return normKadroBolumBasligi(cls.name + " Sınıfı") + dersRows;
+  }).join("") || `<tr><td colspan="8" class="small">Ders Programı → Sınıflar ve Ders Atama'dan sınıflara ders atadıkça burada otomatik listelenecek.</td></tr>`;
 
   let koordToplam = 0;
   const koordRows = S.normKadro.koordinatorlukSatirlari.map(r => {
+    siraNo++;
     const grup = normKadroGrupSayisi(sinifGrade(r.sinif) || 12, r.ogrenciSayisi);
     const toplam = grup === null ? null : (r.haftalikSaat || 0) * grup;
     if (toplam !== null) koordToplam += toplam;
     return `<tr>
-      <td class="no-print"><input type="text" value="${escHtml(r.sinif)}" placeholder="örn. 12-A" style="width:70px" onchange="updateKoordSatir('${r.id}','sinif',this.value)"></td>
+      <td>${siraNo}</td>
+      <td class="no-print"><input type="text" value="${escHtml(r.sinif)}" placeholder="örn. 12-A" style="width:60px" onchange="updateKoordSatir('${r.id}','sinif',this.value)"></td>
       <td class="print-only-cell">${escHtml(r.sinif)}</td>
-      <td class="no-print"><input type="number" min="0" value="${r.ogrenciSayisi}" style="width:60px" onchange="updateKoordSatir('${r.id}','ogrenciSayisi',this.value)"></td>
+      <td class="no-print"><input type="number" min="0" value="${r.ogrenciSayisi}" style="width:56px" onchange="updateKoordSatir('${r.id}','ogrenciSayisi',this.value)"></td>
       <td class="print-only-cell">${r.ogrenciSayisi}</td>
       <td class="no-print"><input type="text" value="${escHtml(r.dal)}" placeholder="örn. Koordinatörlük – Makine Bakım Onarım Dalı" style="width:100%" onchange="updateKoordSatir('${r.id}','dal',this.value)"></td>
       <td class="print-only-cell">${escHtml(r.dal)}</td>
-      <td class="no-print"><input type="number" min="0" value="${r.haftalikSaat}" style="width:60px" onchange="updateKoordSatir('${r.id}','haftalikSaat',this.value)"></td>
+      <td class="no-print"><input type="number" min="0" value="${r.haftalikSaat}" style="width:56px" onchange="updateKoordSatir('${r.id}','haftalikSaat',this.value)"></td>
       <td class="print-only-cell">${r.haftalikSaat}</td>
-      <td>${grup === null ? '<span class="pill warn">öğr. sayısı girin</span>' : grup} <span class="small">(otomatik)</span></td>
+      <td>${grup === null ? '<span class="pill warn">öğr. sayısı girin</span>' : grup}</td>
       <td><b>${toplam === null ? '—' : toplam}</b></td>
       <td class="no-print"><button class="btn danger" onclick="deleteKoordSatir('${r.id}')">Sil</button></td>
     </tr>`;
@@ -1752,11 +1814,12 @@ function viewNormKadro() {
   const seflikRows = (idari ? idari.assignments : []).map(a => {
     const course = courseById(a.courseId);
     if (!course) return "";
+    siraNo++;
     const teacherNames = (a.eligibleTeacherIds || []).map(id => { const t = S.teachers.find(x => x.id === id); return t ? t.name : ""; }).filter(Boolean).join(", ");
     const grup = a.teacherCount || 1;
     const toplam = course.hours * grup;
     seflikToplam += toplam;
-    return `<tr><td>${escHtml(course.name)}</td><td>${escHtml(teacherNames || "—")}</td><td>${course.hours}</td><td><b>${toplam}</b></td></tr>`;
+    return `<tr><td>${siraNo}</td><td>—</td><td>—</td><td>${escHtml(course.name)}</td><td>${course.hours}</td><td>${grup}</td><td><b>${toplam}</b></td><td>${escHtml(teacherNames || "—")}</td></tr>`;
   }).join("");
 
   const genelToplam = ampToplam + koordToplam + seflikToplam;
@@ -1770,29 +1833,27 @@ function viewNormKadro() {
   </div>
   <div class="print-area">
     ${belgeYazdirmaBasligi("Norm Kadro Hesabı" + (S.akademikTakvim ? " · " + S.akademikTakvim.ogretimYili : ""))}
-    <h2 style="margin-top:0;">AMP Mesleki Alan Dersleri</h2>
-    ${sinifBlocks}
-    <div class="card" style="text-align:right;">
-      <b>AMP Mesleki Alan Dersleri Toplamı: ${ampToplam} saat</b>
-    </div>
-    <div class="card">
-      <h2>Koordinatörlük Dersleri</h2>
-      <p class="small no-print">12. sınıfların işletmede mesleki eğitim (staj) koordinatörlüğü buraya elle eklenir — dal adı, sınıf, öğrenci sayısı, haftalık saat (genelde 24), grup sayısı.</p>
-      <table><thead><tr><th>Sınıf</th><th>Öğrenci Sayısı</th><th>Dal</th><th>Haftalık Saat</th><th>Grup Sayısı</th><th>Toplam</th><th class="no-print"></th></tr></thead>
-      <tbody>${koordRows || `<tr><td colspan="7" class="small">Henüz satır eklenmedi.</td></tr>`}</tbody></table>
-      <div class="row no-print"><button class="btn" onclick="addKoordSatir()">Satır Ekle</button></div>
-      <p class="small" style="text-align:right;"><b>Koordinatörlük Toplamı: ${koordToplam} saat</b></p>
-    </div>
-    <div class="card">
-      <h2>Şeflik Ders Yükleri</h2>
-      <table><thead><tr><th>Görev</th><th>Öğretmen</th><th>Haftalık Saat</th><th>Toplam</th></tr></thead>
-      <tbody>${seflikRows || `<tr><td colspan="4" class="small">Ders Programı → Sınıflar ve Ders Atama → İdari Görevler'den ekleyin.</td></tr>`}</tbody></table>
-      <p class="small" style="text-align:right;"><b>Şeflik Ders Yükleri Toplamı: ${seflikToplam} saat</b></p>
+    <div class="card" style="overflow-x:auto;">
+      <table>
+        <thead><tr><th>No</th><th>Sınıf</th><th>Öğrenci Sayısı</th><th>Ders Adı</th><th>Haftalık Saat</th><th>Grup Sayısı</th><th>Toplam Ders Saati</th><th>Açıklama</th></tr></thead>
+        <tbody>
+          ${normKadroBolumBasligi("AMP MESLEKİ ALAN DERSLERİ")}
+          ${ampSatirlari}
+          ${normKadroToplamSatiri("AMP Mesleki Alan Dersleri Toplamı", ampToplam)}
+          ${normKadroBolumBasligi("KOORDİNATÖRLÜK DERSLERİ")}
+          ${koordRows || `<tr><td colspan="8" class="small">Henüz satır eklenmedi.</td></tr>`}
+          ${normKadroToplamSatiri("Koordinatörlük Toplamı", koordToplam)}
+          ${normKadroBolumBasligi("ŞEFLİK DERS YÜKLERİ")}
+          ${seflikRows || `<tr><td colspan="8" class="small">Ders Programı → Sınıflar ve Ders Atama → İdari Görevler'den ekleyin.</td></tr>`}
+          ${normKadroToplamSatiri("Şeflik Ders Yükleri Toplamı", seflikToplam)}
+          <tr style="font-weight:700;font-size:13px;"><td colspan="6">GENEL TOPLAM DERS YÜKÜ</td><td>${genelToplam}</td><td></td></tr>
+        </tbody>
+      </table>
+      <div class="row no-print" style="margin-top:10px;"><button class="btn" onclick="addKoordSatir()">Koordinatörlük Satırı Ekle</button></div>
     </div>
     <div class="card" style="text-align:center;">
-      <h2 style="margin:0;">GENEL TOPLAM DERS YÜKÜ: ${genelToplam} SAAT</h2>
-      <div class="no-print" style="margin-top:10px;"><label class="small">NORM KADRO: <input type="text" value="${escHtml(S.normKadro.normKadroSayisi)}" style="width:60px;text-align:center;" onchange="setNormKadroSayisi(this.value)"></label></div>
-      ${S.normKadro.normKadroSayisi ? `<p class="print-only" style="font-weight:700;margin-top:8px;">NORM KADRO: ${escHtml(S.normKadro.normKadroSayisi)}</p>` : ""}
+      <div class="no-print"><label class="small">NORM KADRO: <input type="text" value="${escHtml(S.normKadro.normKadroSayisi)}" style="width:60px;text-align:center;" onchange="setNormKadroSayisi(this.value)"></label></div>
+      ${S.normKadro.normKadroSayisi ? `<p class="print-only" style="font-weight:700;">NORM KADRO: ${escHtml(S.normKadro.normKadroSayisi)}</p>` : ""}
       <p class="small print-only" style="margin-top:16px;">Makine ve Tasarım Teknolojisi Alan Şefi<br><b>${alanSefi ? escHtml(alanSefi.name) : ''}</b></p>
     </div>
   </div>`;
@@ -5376,10 +5437,15 @@ function haftalariOlustur(baslangicStr, sayi) {
   }
   return haftalar;
 }
+const ONEMLI_GUNLER_D1_ETIKETLERI = ["1.Yarıyıl Başlangıcı", "Cumhuriyet Bayramı", "Atatürk'ü Anma Günü ve Atatürk Haftası", "Ara Tatil", "Yılbaşı Tatili", "Yarıyıl Tatili"];
+const ONEMLI_GUNLER_D2_ETIKETLERI = ["2.Yarıyıl Başlangıcı", "Ara Tatil", "23 Nisan Ulusal Egemenlik ve Çocuk Bayramı", "Atatürk'ü Anma Gençlik ve Spor Bayramı", "Ramazan Bayramı", "Eğitim-Öğretim yılının sonu"];
 function ensureAkademikTakvim() {
-  if (!S.akademikTakvim) S.akademikTakvim = { ogretimYili: "", haftalar: [], sinavTarihleri: { d1s1: "", d1s2: "", d2s1: "", d2s2: "" } };
-  if (!S.akademikTakvim.sinavTarihleri) S.akademikTakvim.sinavTarihleri = { d1s1: "", d1s2: "", d2s1: "", d2s2: "" };
+  if (!S.akademikTakvim) S.akademikTakvim = { ogretimYili: "", haftalar: [], sinavTarihleri: { d1s1: "", d1s2: "", d2s1: "", d2s2: "", d1pt: "", d2pt: "" }, onemliGunler: { d1: ["", "", "", "", "", ""], d2: ["", "", "", "", "", ""] } };
+  if (!S.akademikTakvim.sinavTarihleri) S.akademikTakvim.sinavTarihleri = { d1s1: "", d1s2: "", d2s1: "", d2s2: "", d1pt: "", d2pt: "" };
   if (!Array.isArray(S.akademikTakvim.haftalar)) S.akademikTakvim.haftalar = [];
+  if (!S.akademikTakvim.onemliGunler) S.akademikTakvim.onemliGunler = { d1: ["", "", "", "", "", ""], d2: ["", "", "", "", "", ""] };
+  if (!Array.isArray(S.akademikTakvim.onemliGunler.d1)) S.akademikTakvim.onemliGunler.d1 = ["", "", "", "", "", ""];
+  if (!Array.isArray(S.akademikTakvim.onemliGunler.d2)) S.akademikTakvim.onemliGunler.d2 = ["", "", "", "", "", ""];
   return S.akademikTakvim;
 }
 function updateTakvimYili(value) {
@@ -5388,6 +5454,11 @@ function updateTakvimYili(value) {
 }
 function updateSinavTarihi(key, value) {
   ensureAkademikTakvim().sinavTarihleri[key] = value.trim();
+  save();
+}
+function updateOnemliGun(donem, idx, value) {
+  const t = ensureAkademikTakvim();
+  t.onemliGunler[donem][idx] = value.trim();
   save();
 }
 function updateTakvimHafta(idx, field, value) {
@@ -5438,7 +5509,8 @@ function uygulaTakvimOlustur() {
 }
 function renderAkademikTakvimKarti() {
   const t = S.akademikTakvim;
-  const st = (t && t.sinavTarihleri) || { d1s1: "", d1s2: "", d2s1: "", d2s2: "" };
+  const st = (t && t.sinavTarihleri) || { d1s1: "", d1s2: "", d2s1: "", d2s2: "", d1pt: "", d2pt: "" };
+  const onemliGunler = (t && t.onemliGunler) || { d1: [], d2: [] };
   const haftaRows = ((t && t.haftalar) || []).map((h, i) => `
     <tr>
       <td><input type="text" value="${escHtml(String(h.no || ""))}" style="width:44px" onchange="updateTakvimHafta(${i},'no',this.value)"></td>
@@ -5458,8 +5530,29 @@ function renderAkademikTakvimKarti() {
       </div>
       <div><label class="small">1. Dönem 1. Sınav</label><input type="text" placeholder="gg.aa.yyyy" value="${escHtml(st.d1s1)}" style="width:120px" onchange="updateSinavTarihi('d1s1',this.value)"></div>
       <div><label class="small">1. Dönem 2. Sınav</label><input type="text" placeholder="gg.aa.yyyy" value="${escHtml(st.d1s2)}" style="width:120px" onchange="updateSinavTarihi('d1s2',this.value)"></div>
+      <div><label class="small">1. Dönem Performans Teslim</label><input type="text" placeholder="gg.aa.yyyy" value="${escHtml(st.d1pt || '')}" style="width:120px" onchange="updateSinavTarihi('d1pt',this.value)"></div>
       <div><label class="small">2. Dönem 1. Sınav</label><input type="text" placeholder="gg.aa.yyyy" value="${escHtml(st.d2s1)}" style="width:120px" onchange="updateSinavTarihi('d2s1',this.value)"></div>
       <div><label class="small">2. Dönem 2. Sınav</label><input type="text" placeholder="gg.aa.yyyy" value="${escHtml(st.d2s2)}" style="width:120px" onchange="updateSinavTarihi('d2s2',this.value)"></div>
+      <div><label class="small">2. Dönem Performans Teslim</label><input type="text" placeholder="gg.aa.yyyy" value="${escHtml(st.d2pt || '')}" style="width:120px" onchange="updateSinavTarihi('d2pt',this.value)"></div>
+    </div>
+    <h3 style="margin-top:16px;">Önemli Gün ve Haftalar</h3>
+    <div class="grid2">
+      <div>
+        <div class="small" style="font-weight:600;margin-bottom:4px;">1. Dönem Önemli Gün ve Haftalar</div>
+        ${ONEMLI_GUNLER_D1_ETIKETLERI.map((etiket, i) => `
+        <div class="row" style="align-items:center;gap:8px;margin-top:2px;">
+          <label class="small" style="flex:1;">${escHtml(etiket)}</label>
+          <input type="text" placeholder="gg.aa.yyyy" value="${escHtml((onemliGunler.d1 || [])[i] || '')}" style="width:150px" onchange="updateOnemliGun('d1',${i},this.value)">
+        </div>`).join("")}
+      </div>
+      <div>
+        <div class="small" style="font-weight:600;margin-bottom:4px;">2. Dönem Önemli Gün ve Haftalar</div>
+        ${ONEMLI_GUNLER_D2_ETIKETLERI.map((etiket, i) => `
+        <div class="row" style="align-items:center;gap:8px;margin-top:2px;">
+          <label class="small" style="flex:1;">${escHtml(etiket)}</label>
+          <input type="text" placeholder="gg.aa.yyyy" value="${escHtml((onemliGunler.d2 || [])[i] || '')}" style="width:150px" onchange="updateOnemliGun('d2',${i},this.value)">
+        </div>`).join("")}
+      </div>
     </div>
     <div class="row" style="margin-top:10px;">
       <button class="btn primary" onclick="olusturTakvimHaftalari()">Haftaları Otomatik Oluştur</button>

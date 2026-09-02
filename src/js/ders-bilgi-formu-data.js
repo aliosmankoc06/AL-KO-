@@ -15,6 +15,21 @@ const DERS_BILGI_FORMLARI = [
     "dal": "Makine ve Tasarım Teknolojisi",
     "sinif": "10.SINIF",
     "dersAdi": "BAKIM ONARIM MESLEK RESMİ",
+    "dersSinifi": "10. Sınıf",
+    "dersSuresi": "Haftalık 4 Ders Saati",
+    "dersAmaci": "Bu derste öğrenciye; iş sağlığı ve güvenliği tedbirlerini alarak standart makine elemanları, hareket ve güç iletme elemanları, sökülemeyen birleştirmeler, montaj ve komple resimlerin çizimi ile ilgili bilgi ve becerilerin kazandırılması amaçlanmaktadır",
+    "kazanimlar": [
+      "İş sağlığı ve güvenliği tedbirlerini alıp teknik resim kurallarına göre Vida, cıvata ve somun resmi çizer.",
+      "Emniyetli bağlama elemanlarını çizer.",
+      "Birleştirme resimleri çizer.",
+      "Makine elemanları resmi çizer.",
+      "Komple resimler çizer."
+    ],
+    "ortamDonanim": "Ortam: Meslek Resim Salonu\nDonanım: Etkileşimli tahta/projeksiyon, bilgisayar, yazıcı/tarayıcı, resim \nmasası, örnek model parçalar, çizim araç gereçleri, çizim kâğıtları, ölçme \nve kontrol araç gereçleri, bilgisayar donanımı.",
+    "olcmeDegerlendirme": "Bu derste; öğrenci performansı belirlemeye yönelik çalışmalar değerlendirilirken gözlem formu, derecelendirme ölçeği ve dereceli puanlama anahtarı gibi ölçme araçlarından uygun olanlar seçilerek kullanılabilir. Bunun yanında öz değerlendirme ve akran değerlendirme formları kullanılarak öğrencilerin, öğretimin süreç boyutuna katılmaları sağlanabilir.",
+    "uygulamaFaaliyetleri": "Vida, Cıvata ve \r\nSomun Resmi \r\nÇizimi\r\n1. Standart çizelgelerden yararlanarak vida dişi resmi çizer.\r\n2. Standart çizelgelerden yararlanarak cıvata resimlerini çizer.\r\n3. Standart çizelgelerden yararlanarak somun resimlerini çizer.\r\n4. Vidalı birleştirme resimleri çizer.\r\nEmniyetli Bağlama \r\nElemanları Çizimi\r\n1. Standart çizelgelerden yararlanarak rondela resmi çizer.\r\n2. Standart ölçülerini dikkate alarak emniyet sacı resmi çizer\r\n3. Ayar bileziği resmi çizer.\r\n4. Gupilya resmi çizer.\r\n5. Emniyet segmanı resmi çizer.\r\n6. Mil tespit plakası resmi çizer.\r\nBirleştirme \r\nResimleri Çizimi\r\n1. Standart çizelgelerden yararlanarak perno resmi çizer\r\n2. Standart çizelgelerden yararlanarak pim resmi çizer.\r\n3. Standart çizelgelerden yararlanarak kama resmi çizer\r\n4. Yay boyunu hesaplayarak yay resmi çizer\r\n5. Perçin ölçülerini belirleyerek perçinli birleştirme resimleri çizer\r\n6. Kaynaklı birleştirme çeşitlerini belirleyerek kaynaklı birleştirme resimleri çizer.\r\nMakine Elemanları \r\nResmi Çizimi\r\n1. Ölçülerini dikkate alarak kasnak resimleri çizer.\r\n2. Ölçülerini dikkate alarak kayma dirençli yatak resimleri çizer.\r\n3. Standart ölçülerini dikkate alarak yuvarlanma dirençli yatak resimleri çizer.\r\nKomple Resim \r\nÇizimi\r\n1. İşlem sırasına göre komple (montaj) resimler çizer.\r\n2. Komple resimlerinden grup montaj resimlerini çizer.\r\n3. Grup montaj resimlerinden organ montaj resimlerinin çizer.",
+    "dersUygulamaAciklamalari": "• Öğrencilerin araç ve gereçleri iş sağlığı ve güvenliği kurallarına uygun kullanmalarına yönelik açıklamalar \r\nyapılmalıdır. \r\n• Zümre öğretmenler kurulu temrinlerden okulun fiziki şartlarına, atölye ve öğrenci sayılarına ve seviyelerine göre \r\nuygun olanları seçerek uygulayacaktır. Temrinler mutlaka tamamlanacaktır.\r\n• Bu derste öğrencilere yaptığı çalışmalara sınıf arkadaşlarına sunmasına fırsat verilerek iletişim becerilerinin \r\ngelişmesi sağlanmalıdır.\r\n• Anlatımdan ve örnek çalışmalardan sonra, dersin öğrenme kazanımlarının öğrencide pekiştirilmesi amacıyla birden \r\nfazla uygulama faaliyeti yapılmalıdır. \r\n• Bu derste, verilen görevi yapma …………………..değer, tutum ve davranışları ön plana çıkaran etkinliklere yer \r\nverilmelidir.\r\n•\r\n• Anlatımdan ve örnek çalışmalardan sonra, dersin öğrenme kazanımlarının öğrencide pekiştirilmesi amacıyla birden \r\nfazla uygulama faaliyeti yapılmalıdır. \r\n• Bu derste, verilen görevi yapma …………………..değer, tutum ve davranışları ön plana çıkaran etkinliklere yer \r\nverilmelidir. (Bu açıklama değerler eğitimi için matbudur. Kazanıma uygun değer ya da değerlere yer verilmelidir.) \r\n• Ders ile ilgili program uygulayıcısı öğretmenlere uyarı niteliğinde önem arz eden ve yukarıdaki açıklamalar dışında \r\nbulunan hususlara burada yer verilebilir.",
+    "kazanimSayisiSureTablosuHam": "ÖĞRENME \r\nBİRİMİ\r\nKAZANIM \r\nSAYISI DERS SAATİ ORAN (%)\r\nVida, cıvata ve \r\nsomun resmi \r\nÇizimi\r\n4 32 %22,22\r\nEmniyetli \r\nbağlama \r\nelemanları \r\nÇizimi\r\n6 24 %16,66\r\nBirleştirme \r\nresimleri Çizimi 6 32 %22,22\r\nMakine \r\nelemanları \r\nresmi Çizimi\r\n3 32 %22,23\r\nKomple resim \r\nÇizimi 3 24 %16,67\r\nTOPLAM 22 144 100\nÖĞRENME BİRİMİ KONULAR ÖĞRENME BİRİMİ KAZANIMLARI ve KAZANIM \r\nAÇIKLAMALARI\r\nVida, Cıvata ve \r\nSomun Resmi \r\nÇizimi\r\n1. Vida dişleri çizimleri\r\n2. Cıvata resmi çizimleri\r\n3. Somun resmi çizimleri\r\n4. Vidalı birleştirme çizimleri\r\n1. Standart çizelgelerden yararlanarak vida \r\nölçülerini bulur ve vida dişi resmi çizer.\r\n• Vidalarla ilgili araştırma yapması istenir.\r\n• Öğrenciye vida ile cıvata arasındaki fark açıklanır.\r\n• Diş dibi ve diş üstü çapı kavramları üzerinde durulur.\r\n• Çizgi kalınlıklarına dikkat etmeleri sağlanır.\r\n• Standart tablolardan ölçü alma işlemi açıklanır.\r\n• Öğrencinin çizdiği her örnek bir port folyo dosyasına \r\nkaydedilir ve bir örneğini öğretmen alır\r\n2. Standart çizelgelerden yararlanarak cıvata \r\nölçülerini bularak resimlerini çizer.\r\n• Cıvatalarla ilgili araştırma yapması istenir.\r\n• Cıvata başı ve cıvata boyu kavramları açıklanır.\r\n• Cıvata hesaplamalarına göre çizim yapılır.\r\n• Çizim sırasında işlem sırasına dikkat etmeleri \r\nsağlanır.\r\n• Tablolardan standart cıvata ölçülerini tespit etmesi \r\nsağlanır.\r\n• Anahtar ağzı kavramı açıklanır.\r\n• Cıvatanın altıgenini çizerden daire içine çokgen \r\nçizme yöntemini kullanılır.\r\n• Çizimler ve çizimler üzerindeki düzenlemeler önce \r\nçizilerek gösterilir sonra öğrencilerin yapması \r\nsağlanır. \r\n• Öğrencinin çizdiği her örnek bir port folyo dosyasına \r\nkaydedilir ve bir örneğini öğretmen alır. \r\n3. Standart çizelgelerden yararlanarak somun \r\nölçülerini bularak resimlerini çizer.\r\n• Somunlarla ilgili araştırma yapması istenir.\r\n• Tablolardan standart somun ölçülerini doğru tespit \r\netmesi sağlanır.\r\n• Somun elemanlarını çizmeye başlarken \r\nhesaplamalara göre çizim yapmaları sağlanır.\r\n• Somunun altıgenini çizerden daire içine çokgen \r\nçizme yöntemini kullanılır.\r\n• Çizimler ve çizimler üzerindeki düzenlemeler önce \r\nçizilerek gösterilir sonra öğrencilerin yapması \r\nsağlanır. \r\n• Öğrencinin çizdiği her örnek bir port folyo dosyasına \r\nkaydedilir ve bir örneğini öğretmen alır. \r\n4. Vidalı birleştirme resimleri çizer.\r\n• Vidalı birleştirmelerle ilgili araştırma yapması istenir.\r\n• Cıvatalı birleştirme çizimlerinde çizimden önce \r\nbirleştirme örnekleri görsel olarak anlatılır.\r\n• Çizim sırasında kolaylık sağlaması için parçaların \r\nimalatı sırasındaki işlem basamakları açıklanır. \r\n• Birleştirilecek parçalara önce delik delindiği, sonra \r\ncıvatanın takıldığı , sonra da rondela ve somunun \r\ntakıldığını anlatılır.\r\n• Tablolardan standart cıvata ölçülerini doğru tespit \r\netmesi sağlanır. \n• Çizimler ve çizimler üzerindeki düzenlemeler önce \r\nçizilerek gösterilir sonra öğrencilerin yapması \r\nsağlanır. \r\n• Vidalı birleştirmelerin ön ve yan görünüşlerinin kesit \r\nolarak çizilmesi sağlanır.\r\n• Öğrencinin çizdiği her örnek bir port folyo dosyasına \r\nkaydedilir ve bir örneğini öğretmen alır. \r\n• Öğrencilerin kendi seçtikleri bir birleştirme tipini \r\nkullanarak uygulama yapmasına fırsat verilir.\r\nEmniyetli Bağlama \r\nElemanları Çizimi\r\n1. Rondela çizimi\r\n2. Emniyet sacı resmi çizimi\r\n3. Ayar bileziği resmi çizimi\r\n4. Gupilya resmi çizimi\r\n5. Emniyet segmanı resmi \r\nçizimi\r\n6. Mil tespit plakası resmi \r\nçizimi\r\n1. Standart çizelgelerden rondela ölçülerini belirleyerek \r\nrondela resmi çizer.\r\n• Rondelaların üretimi ile ilgili araştırma yapması \r\nistenir.\r\n• Tablolardan standart rondela ölçülerini doğru tespit \r\netmesi sağlanır.\r\n• Rondelalarla ilgili araştırma yapması istenir.\r\n• Çizimler ve çizimler üzerindeki düzenlemeler önce \r\nçizilerek gösterilir sonra öğrencilerin yapması \r\nsağlanır. \r\n• Rondelaların ön görünüşünün kesit olarak çizilmesi \r\nsağlanır.\r\n• Öğrencinin çizdiği her örnek bir port folyo dosyasına \r\nkaydedilir ve bir örneğini öğretmen alır.\r\n2. Standart ölçülerini dikkate alarak Emniyet sacı \r\nresmi çizer\r\n• Emniyet sacının birleştirmede önemi ile ilgili \r\naraştırma yapması istenir.\r\n• Emniyet sacı birleştirme çizimlerinde çizimden önce \r\nbirleştirme örnekleri görsel olarak anlatılır..\r\n• Çizim sırasında kolaylık sağlaması için parçaların \r\nimalatı sırasındaki işlem basamakları açıklanır. \r\n• Öğrencinin çizdiği her örnek bir port folyo dosyasına \r\nkaydedilir.\r\n3. Ayar bileziği resmi çizer\r\n• Ayar bileziğinin birleştirmede önemi ile ilgili \r\naraştırma yapması istenir.\r\n• Ayar bileziği birleştirme çizimlerinde çizimden önce \r\nbirleştirme örnekleri görsel olarak anlatılır..\r\n• Çizim sırasında kolaylık sağlaması için parçaların \r\nimalatı sırasındaki işlem basamakları açıklanır.\r\n4. Gupilya resmi çizer\r\n• Gupilyalarla ilgili araştırma yapması istenir.\r\n• Tablolardan gupilya ölçülerini doğru tespit etmesi \r\nsağlanır. \r\n• Gupilya çapı, kullanılacağı perno veya cıvatanın \r\ndelik çapına göre seçilmesi üzerinde durulur.\r\n• Çizimler ve çizimler üzerindeki düzenlemeler önce \r\nçizilerek gösterilir sonra öğrencilerin yapması istenir. \r\n• Öğrencinin çizdiği her örnek bir port folyo dosyasına \r\nkaydedilir ve bir örneğini öğretmen alır\n5. Emniyet segmanı resmi çizer\r\n• Emniyet segmanı ile ilgili araştırma yapması istenir.\r\n• Emniyet segmanı çizimlerinde çizimden önce \r\nbirleştirme örnekleri görsel olarak anlatılır..\r\n• Çizim sırasında kolaylık sağlaması için parçaların \r\nimalatı sırasındaki işlem basamakları açıklanır. \r\n6. Mil tespit plakası resmi çizer\r\n• Mil tespit plakası ile ilgili araştırma yapması istenir.\r\n• Mil tespit plakası çizimlerinde çizimden önce \r\nbirleştirme örnekleri görsel olarak anlatılır..\r\n• Çizim sırasında kolaylık sağlaması için parçaların \r\nimalatı sırasındaki işlem basamakları açıklanır. \r\nBirleştirme \r\nResimleri Çizimi\r\n1. Perno resmi çizimi\r\n2. Pim resmi çizimi\r\n3. Kama resmi çizimi\r\n4. Yay resmi çizimi\r\n5. Perçin resmi çizimleri\r\n6. Kaynaklı birleştirme \r\nresmi çizimlerl\r\n1. Standart çizelgelerden yararlanarak perno \r\nresmi çizer\r\n• Pernolarla ilgili araştırma yapması istenir.\r\n• Tablolardan standart perno ölçülerini doğru tespit \r\netmesi sağlanır.\r\n• Pernolarla ilgili araştırma yapması istenir.\r\n• Çizimler ve çizimler üzerindeki düzenlemeler önce \r\nçizilerek gösterilir sonra öğrencilerin yapması \r\nsağlanır. \r\n• Öğrencinin çizdiği her örnek bir port folyo dosyasına \r\nkaydedilir ve bir örneğini öğretmen alır\r\n2. Standart çizelgelerden pim resmi çizer.\r\n• Tablolardan standart pim ölçülerini doğru tespit \r\netmesi sağlanır.\r\n• Pimlerle ilgili araştırma yapması istenir. \r\n• Çizimler ve çizimler üzerindeki düzenlemeler önce \r\nçizilerek gösterilir sonra öğrencilerin yapması \r\nsağlanır. \r\n• Öğrencinin çizdiği her örnek bir port folyo dosyasına \r\nkaydedilir ve bir örneğini öğretmen alır\r\n3. Standart çizelgelerden yararlanarak kama resmi \r\nçizer\r\n• Kamalarla ilgili araştırma yapması istenir.\r\n• Tablolardan standart kama ölçülerini doğru tespit \r\netmesi sağlanır.\r\n• Kamalı birleştirme resimlerinde bırakılacak boşluğa \r\ndikkat etmesi istenir. \r\n• Çizimler ve çizimler üzerindeki düzenlemeler önce \r\nçizilerek gösterilir sonra öğrencilerin yapması \r\nsağlanır. \r\n• Kamalı birleştirmenin ön görünüşünün kesit olarak \r\nçizilmesi sağlanır.\r\n• Öğrencinin çizdiği her örnek bir port folyo dosyasına \r\nkaydedilir ve bir örneğini öğretmen alır\r\n4. Yay boyunu hesaplayarak yay resmi çizer\r\n• Yaylarla ilgili araştırma yapması istenir.\r\n• Tablolardan yay ölçülerini doğru tespit etmesi \r\nsağlanır.\r\n• Birleştirme resimlerinde yaylar kesit görünüş olarak \r\nçizilir.\r\n• Çizimler ve çizimler üzerindeki düzenlemeler önce \r\nçizilerek gösterilir sonra öğrencilerin yapması \nsağlanır. \r\n• Öğrencinin çizdiği her örnek bir port folyo dosyasına \r\nkaydedilir ve bir örneğini öğretmen alır.\r\n5. Perçin ölçülerini belirleyerek perçinli birleştirme \r\nresimleri çizer.\r\n• Perçinli birleştirmeler ile ilgili araştırma yapması \r\nistenir.\r\n• Perçinler hazır alındığı için yapım resminin \r\nçizilmediği, ölçülerinin tablolardan alındığı anlatılır.\r\n• Perçinli birleştirmelerde ön görünüşlerin kesit olarak \r\nçizilmesi sağlanır. Üst görünüşlerde ise perçinlerin \r\nkesit olarak çizilmesi sağlanır.\r\n• Çizimler ve çizimler üzerindeki düzenlemeler önce \r\nçizilerek gösterilir sonra öğrencilerin yapması \r\nsağlanır.\r\n6. Kaynaklı birleştirme çeşitlerini belirleyerek \r\nkaynaklı birleştirme resimleri çizer.\r\n• Kaynaklı birleştirmeler ile ilgili araştırma yapması \r\nistenir.\r\n• Bir resim üzerinde farklı kaynak tipi gösteriminden \r\nkaçınılır.\r\n• Kaynak sembolleri gösterilirken sembollerle beraber \r\nkılavuz çizgi ve referans çizgilerin kullanılması \r\nsağlanır.\r\n• Çizimler ve çizimler üzerindeki düzenlemeler önce \r\nçizilerek gösterilir sonra öğrencilerin yapması \r\nsağlanır.\r\nMakine Elemanları \r\nResmi Çizimi\r\n1. Kasnak çizimi\r\n2. Kayma dirençli yatak \r\nçizimi\r\n3. Yuvarlanma dirençli \r\nyatak resmi çizimi\r\n1. Ölçülerini dikkate alarak kasnak resimleri çizer.\r\n• Kasnaklar hakkında araştırma yapması istenir.\r\n• Kasnak mekanizmalarının en az iki kasnak ve onlara \r\nuygun kayıştan meydana geldiği izah edilir.\r\n• Kasnakların hesaplar yardımıyla çizilmesi sağlanır.\r\n• Çizim sırasındaki ilk işlem kasnak cinsinin seçimi ve \r\nkasnak çapının hesaplanması olmalıdır.\r\n• Kasnağın kol durumunu ifade etmek için kollar \r\ndöndürülmüş kesit olarak çizilir ve ölçülendirilir\r\n• Kasnağın ön görünüşü kesit olarak çizilmesi \r\ngerektiği açıklanır..\r\n• Çizimler ve çizimler üzerindeki düzenlemeler önce \r\nçizilerek gösterilir sonra öğrencilerin yapması \r\nsağlanır.\r\n• Öğrencinin çizdiği her örnek bir port folyo dosyasına \r\nkaydedilir ve bir örneğini öğretmen alır.\r\n.\r\n2. Ölçülerini dikkate alarak kayma dirençli yatak \r\nyapım resimleri çizer.\r\n• Kayma dirençli yataklar hakkında bilgi toplaması \r\nistenir.\r\n• Muylu kavramı örneklerle açıklanır.\r\n• Tablolardan kayma dirençli yatak ölçülerini doğru \r\ntespit etmesi sağlanır.\r\n• Kayma dirençli yataklar resimlerde tek görünüşle \r\nifade edilmesi gerektiği anlatılır.\r\n• Çizimler ve çizimler üzerindeki düzenlemeler önce \nçizilerek gösterilir sonra öğrencilerin çizmesi \r\nsağlanır.\r\n• Öğrencinin çizdiği her örnek bir port folyo dosyasına \r\nkaydedilir ve bir örneğini öğretmen alır.\r\n3. Standart ölçülerini dikkate alarak yuvarlanma \r\ndirençli yatak yapım resimleri çizer.\r\n• Yuvarlanma dirençli yataklar hakkında bilgi \r\ntoplaması istenir.\r\n• Tablolardan yuvarlanma dirençli yatak ölçülerini \r\ndoğru tespit etmesi sağlanır.\r\n• Yuvarlanmalı dirençli yatak resimleri montaj \r\nresimlerinde kesit görünüş olarak çizilmesi sağlanır.\r\n• Çizimler ve çizimler üzerindeki düzenlemeler önce \r\nçizilerek gösterilir sonra öğrencilerin çizmesi \r\nsağlanır.\r\n• Öğrencinin çizdiği her örnek bir port folyo dosyasına \r\nkaydedilir ve bir örneğini öğretmen alır.\r\nKomple Resimler\r\n1. Parçaların birleştirme\r\nresmi çizimi\r\n2. Grup montaj \r\nresimleri çizimi\r\n3. Komple resimler \r\nçizimi\r\n1. İşlem sırasına göre komple montaj resimler çizer.\r\n• Resimlerde komple resmin yapımı için gerekli tüm \r\nbilgiler eksiksiz olarak yazılmalıdır.\r\n• Komple resimlere ölçü verilmediği gibi \r\ntoleranslarında verilmediği açıklanır.\r\n• Montaj resimleri önce çizilerek gösterilir sonra \r\nöğrencilerin çizmesi sağlanır\r\n2. Komple montaj resimlerinden grup montaj \r\nresimlerini çizer.\r\n• Grup montajlarının tek başına çalışan bölümler \r\nolduğu açıklanır.\r\n• Komple resim incelenerek grup montaj resmi \r\nçizilmesi sağlanır.\r\n• Montaj resimlerinden grup resimlerinin çizilmesi önce \r\ngösterilir sonra öğrencilerin çizmesi sağlanır.\r\n3. Grup montaj resimlerinden organ montaj \r\nresimlerini çizer.\r\n• Organ montaj resimleri grup montaj resimlerinin ayrı \r\nayrı çizilmiş parçaları olduğu açıklanır.\r\n• Grup montaj resmi incelenerek organ resmi çizilmesi \r\nsağlanır.\r\n• Organ montaj resimleri önce çizilerek gösterilir sonra \r\nöğrencilerin çizmesi sağlanır",
     "metinIcerik": "DERS BİLGİ FORMU\r\nDERSİN ADI BAKIM ONARIM MESLEK RESMİ\r\nDERSİN SINIFI 10. Sınıf \r\nDERSİN SÜRESİ Haftalık 4 Ders Saati\r\nDERSİN AMACI\r\nBu derste öğrenciye; iş sağlığı ve güvenliği tedbirlerini alarak \r\nstandart makine elemanları, hareket ve güç iletme elemanları, \r\nsökülemeyen birleştirmeler, montaj ve komple resimlerin çizimi ile \r\nilgili bilgi ve becerilerin kazandırılması amaçlanmaktadır\r\nDERSİN ÖĞRENME \r\nKAZANIMLARI\r\n1. İş sağlığı ve güvenliği tedbirlerini alıp teknik resim kurallarına göre \r\nVida, cıvata ve somun resmi çizer.\r\n2. Emniyetli bağlama elemanlarını çizer.\r\n3. Birleştirme resimleri çizer.\r\n4. Makine elemanları resmi çizer.\r\n5. Komple resimler çizer.\r\nEĞİTİM-ÖĞRETİM \r\nORTAM VE \r\nDONANIMI\r\nOrtam: Meslek Resim Salonu\r\nDonanım: Etkileşimli tahta/projeksiyon, bilgisayar, yazıcı/tarayıcı, resim \r\nmasası, örnek model parçalar, çizim araç gereçleri, çizim kâğıtları, ölçme \r\nve kontrol araç gereçleri, bilgisayar donanımı.\r\nÖLÇME VE \r\nDEĞERLENDİRME\r\nBu derste; öğrenci performansı belirlemeye yönelik çalışmalar \r\ndeğerlendirilirken gözlem formu, derecelendirme ölçeği ve dereceli \r\npuanlama anahtarı gibi ölçme araçlarından uygun olanlar seçilerek \r\nkullanılabilir. Bunun yanında öz değerlendirme ve akran değerlendirme \r\nformları kullanılarak öğrencilerin, öğretimin süreç boyutuna katılmaları \r\nsağlanabilir.\r\nKAZANIM SAYISI VE \r\nSÜRE TABLOSU\r\nÖĞRENME \r\nBİRİMİ\r\nKAZANIM \r\nSAYISI DERS SAATİ ORAN (%)\r\nVida, cıvata ve \r\nsomun resmi \r\nÇizimi\r\n4 32 %22,22\r\nEmniyetli \r\nbağlama \r\nelemanları \r\nÇizimi\r\n6 24 %16,66\r\nBirleştirme \r\nresimleri Çizimi 6 32 %22,22\r\nMakine \r\nelemanları \r\nresmi Çizimi\r\n3 32 %22,23\r\nKomple resim \r\nÇizimi 3 24 %16,67\r\nTOPLAM 22 144 100\nÖĞRENME BİRİMİ KONULAR ÖĞRENME BİRİMİ KAZANIMLARI ve KAZANIM \r\nAÇIKLAMALARI\r\nVida, Cıvata ve \r\nSomun Resmi \r\nÇizimi\r\n1. Vida dişleri çizimleri\r\n2. Cıvata resmi çizimleri\r\n3. Somun resmi çizimleri\r\n4. Vidalı birleştirme çizimleri\r\n1. Standart çizelgelerden yararlanarak vida \r\nölçülerini bulur ve vida dişi resmi çizer.\r\n• Vidalarla ilgili araştırma yapması istenir.\r\n• Öğrenciye vida ile cıvata arasındaki fark açıklanır.\r\n• Diş dibi ve diş üstü çapı kavramları üzerinde durulur.\r\n• Çizgi kalınlıklarına dikkat etmeleri sağlanır.\r\n• Standart tablolardan ölçü alma işlemi açıklanır.\r\n• Öğrencinin çizdiği her örnek bir port folyo dosyasına \r\nkaydedilir ve bir örneğini öğretmen alır\r\n2. Standart çizelgelerden yararlanarak cıvata \r\nölçülerini bularak resimlerini çizer.\r\n• Cıvatalarla ilgili araştırma yapması istenir.\r\n• Cıvata başı ve cıvata boyu kavramları açıklanır.\r\n• Cıvata hesaplamalarına göre çizim yapılır.\r\n• Çizim sırasında işlem sırasına dikkat etmeleri \r\nsağlanır.\r\n• Tablolardan standart cıvata ölçülerini tespit etmesi \r\nsağlanır.\r\n• Anahtar ağzı kavramı açıklanır.\r\n• Cıvatanın altıgenini çizerden daire içine çokgen \r\nçizme yöntemini kullanılır.\r\n• Çizimler ve çizimler üzerindeki düzenlemeler önce \r\nçizilerek gösterilir sonra öğrencilerin yapması \r\nsağlanır. \r\n• Öğrencinin çizdiği her örnek bir port folyo dosyasına \r\nkaydedilir ve bir örneğini öğretmen alır. \r\n3. Standart çizelgelerden yararlanarak somun \r\nölçülerini bularak resimlerini çizer.\r\n• Somunlarla ilgili araştırma yapması istenir.\r\n• Tablolardan standart somun ölçülerini doğru tespit \r\netmesi sağlanır.\r\n• Somun elemanlarını çizmeye başlarken \r\nhesaplamalara göre çizim yapmaları sağlanır.\r\n• Somunun altıgenini çizerden daire içine çokgen \r\nçizme yöntemini kullanılır.\r\n• Çizimler ve çizimler üzerindeki düzenlemeler önce \r\nçizilerek gösterilir sonra öğrencilerin yapması \r\nsağlanır. \r\n• Öğrencinin çizdiği her örnek bir port folyo dosyasına \r\nkaydedilir ve bir örneğini öğretmen alır. \r\n4. Vidalı birleştirme resimleri çizer.\r\n• Vidalı birleştirmelerle ilgili araştırma yapması istenir.\r\n• Cıvatalı birleştirme çizimlerinde çizimden önce \r\nbirleştirme örnekleri görsel olarak anlatılır.\r\n• Çizim sırasında kolaylık sağlaması için parçaların \r\nimalatı sırasındaki işlem basamakları açıklanır. \r\n• Birleştirilecek parçalara önce delik delindiği, sonra \r\ncıvatanın takıldığı , sonra da rondela ve somunun \r\ntakıldığını anlatılır.\r\n• Tablolardan standart cıvata ölçülerini doğru tespit \r\netmesi sağlanır. \n• Çizimler ve çizimler üzerindeki düzenlemeler önce \r\nçizilerek gösterilir sonra öğrencilerin yapması \r\nsağlanır. \r\n• Vidalı birleştirmelerin ön ve yan görünüşlerinin kesit \r\nolarak çizilmesi sağlanır.\r\n• Öğrencinin çizdiği her örnek bir port folyo dosyasına \r\nkaydedilir ve bir örneğini öğretmen alır. \r\n• Öğrencilerin kendi seçtikleri bir birleştirme tipini \r\nkullanarak uygulama yapmasına fırsat verilir.\r\nEmniyetli Bağlama \r\nElemanları Çizimi\r\n1. Rondela çizimi\r\n2. Emniyet sacı resmi çizimi\r\n3. Ayar bileziği resmi çizimi\r\n4. Gupilya resmi çizimi\r\n5. Emniyet segmanı resmi \r\nçizimi\r\n6. Mil tespit plakası resmi \r\nçizimi\r\n1. Standart çizelgelerden rondela ölçülerini belirleyerek \r\nrondela resmi çizer.\r\n• Rondelaların üretimi ile ilgili araştırma yapması \r\nistenir.\r\n• Tablolardan standart rondela ölçülerini doğru tespit \r\netmesi sağlanır.\r\n• Rondelalarla ilgili araştırma yapması istenir.\r\n• Çizimler ve çizimler üzerindeki düzenlemeler önce \r\nçizilerek gösterilir sonra öğrencilerin yapması \r\nsağlanır. \r\n• Rondelaların ön görünüşünün kesit olarak çizilmesi \r\nsağlanır.\r\n• Öğrencinin çizdiği her örnek bir port folyo dosyasına \r\nkaydedilir ve bir örneğini öğretmen alır.\r\n2. Standart ölçülerini dikkate alarak Emniyet sacı \r\nresmi çizer\r\n• Emniyet sacının birleştirmede önemi ile ilgili \r\naraştırma yapması istenir.\r\n• Emniyet sacı birleştirme çizimlerinde çizimden önce \r\nbirleştirme örnekleri görsel olarak anlatılır..\r\n• Çizim sırasında kolaylık sağlaması için parçaların \r\nimalatı sırasındaki işlem basamakları açıklanır. \r\n• Öğrencinin çizdiği her örnek bir port folyo dosyasına \r\nkaydedilir.\r\n3. Ayar bileziği resmi çizer\r\n• Ayar bileziğinin birleştirmede önemi ile ilgili \r\naraştırma yapması istenir.\r\n• Ayar bileziği birleştirme çizimlerinde çizimden önce \r\nbirleştirme örnekleri görsel olarak anlatılır..\r\n• Çizim sırasında kolaylık sağlaması için parçaların \r\nimalatı sırasındaki işlem basamakları açıklanır.\r\n4. Gupilya resmi çizer\r\n• Gupilyalarla ilgili araştırma yapması istenir.\r\n• Tablolardan gupilya ölçülerini doğru tespit etmesi \r\nsağlanır. \r\n• Gupilya çapı, kullanılacağı perno veya cıvatanın \r\ndelik çapına göre seçilmesi üzerinde durulur.\r\n• Çizimler ve çizimler üzerindeki düzenlemeler önce \r\nçizilerek gösterilir sonra öğrencilerin yapması istenir. \r\n• Öğrencinin çizdiği her örnek bir port folyo dosyasına \r\nkaydedilir ve bir örneğini öğretmen alır\n5. Emniyet segmanı resmi çizer\r\n• Emniyet segmanı ile ilgili araştırma yapması istenir.\r\n• Emniyet segmanı çizimlerinde çizimden önce \r\nbirleştirme örnekleri görsel olarak anlatılır..\r\n• Çizim sırasında kolaylık sağlaması için parçaların \r\nimalatı sırasındaki işlem basamakları açıklanır. \r\n6. Mil tespit plakası resmi çizer\r\n• Mil tespit plakası ile ilgili araştırma yapması istenir.\r\n• Mil tespit plakası çizimlerinde çizimden önce \r\nbirleştirme örnekleri görsel olarak anlatılır..\r\n• Çizim sırasında kolaylık sağlaması için parçaların \r\nimalatı sırasındaki işlem basamakları açıklanır. \r\nBirleştirme \r\nResimleri Çizimi\r\n1. Perno resmi çizimi\r\n2. Pim resmi çizimi\r\n3. Kama resmi çizimi\r\n4. Yay resmi çizimi\r\n5. Perçin resmi çizimleri\r\n6. Kaynaklı birleştirme \r\nresmi çizimlerl\r\n1. Standart çizelgelerden yararlanarak perno \r\nresmi çizer\r\n• Pernolarla ilgili araştırma yapması istenir.\r\n• Tablolardan standart perno ölçülerini doğru tespit \r\netmesi sağlanır.\r\n• Pernolarla ilgili araştırma yapması istenir.\r\n• Çizimler ve çizimler üzerindeki düzenlemeler önce \r\nçizilerek gösterilir sonra öğrencilerin yapması \r\nsağlanır. \r\n• Öğrencinin çizdiği her örnek bir port folyo dosyasına \r\nkaydedilir ve bir örneğini öğretmen alır\r\n2. Standart çizelgelerden pim resmi çizer.\r\n• Tablolardan standart pim ölçülerini doğru tespit \r\netmesi sağlanır.\r\n• Pimlerle ilgili araştırma yapması istenir. \r\n• Çizimler ve çizimler üzerindeki düzenlemeler önce \r\nçizilerek gösterilir sonra öğrencilerin yapması \r\nsağlanır. \r\n• Öğrencinin çizdiği her örnek bir port folyo dosyasına \r\nkaydedilir ve bir örneğini öğretmen alır\r\n3. Standart çizelgelerden yararlanarak kama resmi \r\nçizer\r\n• Kamalarla ilgili araştırma yapması istenir.\r\n• Tablolardan standart kama ölçülerini doğru tespit \r\netmesi sağlanır.\r\n• Kamalı birleştirme resimlerinde bırakılacak boşluğa \r\ndikkat etmesi istenir. \r\n• Çizimler ve çizimler üzerindeki düzenlemeler önce \r\nçizilerek gösterilir sonra öğrencilerin yapması \r\nsağlanır. \r\n• Kamalı birleştirmenin ön görünüşünün kesit olarak \r\nçizilmesi sağlanır.\r\n• Öğrencinin çizdiği her örnek bir port folyo dosyasına \r\nkaydedilir ve bir örneğini öğretmen alır\r\n4. Yay boyunu hesaplayarak yay resmi çizer\r\n• Yaylarla ilgili araştırma yapması istenir.\r\n• Tablolardan yay ölçülerini doğru tespit etmesi \r\nsağlanır.\r\n• Birleştirme resimlerinde yaylar kesit görünüş olarak \r\nçizilir.\r\n• Çizimler ve çizimler üzerindeki düzenlemeler önce \r\nçizilerek gösterilir sonra öğrencilerin yapması \nsağlanır. \r\n• Öğrencinin çizdiği her örnek bir port folyo dosyasına \r\nkaydedilir ve bir örneğini öğretmen alır.\r\n5. Perçin ölçülerini belirleyerek perçinli birleştirme \r\nresimleri çizer.\r\n• Perçinli birleştirmeler ile ilgili araştırma yapması \r\nistenir.\r\n• Perçinler hazır alındığı için yapım resminin \r\nçizilmediği, ölçülerinin tablolardan alındığı anlatılır.\r\n• Perçinli birleştirmelerde ön görünüşlerin kesit olarak \r\nçizilmesi sağlanır. Üst görünüşlerde ise perçinlerin \r\nkesit olarak çizilmesi sağlanır.\r\n• Çizimler ve çizimler üzerindeki düzenlemeler önce \r\nçizilerek gösterilir sonra öğrencilerin yapması \r\nsağlanır.\r\n6. Kaynaklı birleştirme çeşitlerini belirleyerek \r\nkaynaklı birleştirme resimleri çizer.\r\n• Kaynaklı birleştirmeler ile ilgili araştırma yapması \r\nistenir.\r\n• Bir resim üzerinde farklı kaynak tipi gösteriminden \r\nkaçınılır.\r\n• Kaynak sembolleri gösterilirken sembollerle beraber \r\nkılavuz çizgi ve referans çizgilerin kullanılması \r\nsağlanır.\r\n• Çizimler ve çizimler üzerindeki düzenlemeler önce \r\nçizilerek gösterilir sonra öğrencilerin yapması \r\nsağlanır.\r\nMakine Elemanları \r\nResmi Çizimi\r\n1. Kasnak çizimi\r\n2. Kayma dirençli yatak \r\nçizimi\r\n3. Yuvarlanma dirençli \r\nyatak resmi çizimi\r\n1. Ölçülerini dikkate alarak kasnak resimleri çizer.\r\n• Kasnaklar hakkında araştırma yapması istenir.\r\n• Kasnak mekanizmalarının en az iki kasnak ve onlara \r\nuygun kayıştan meydana geldiği izah edilir.\r\n• Kasnakların hesaplar yardımıyla çizilmesi sağlanır.\r\n• Çizim sırasındaki ilk işlem kasnak cinsinin seçimi ve \r\nkasnak çapının hesaplanması olmalıdır.\r\n• Kasnağın kol durumunu ifade etmek için kollar \r\ndöndürülmüş kesit olarak çizilir ve ölçülendirilir\r\n• Kasnağın ön görünüşü kesit olarak çizilmesi \r\ngerektiği açıklanır..\r\n• Çizimler ve çizimler üzerindeki düzenlemeler önce \r\nçizilerek gösterilir sonra öğrencilerin yapması \r\nsağlanır.\r\n• Öğrencinin çizdiği her örnek bir port folyo dosyasına \r\nkaydedilir ve bir örneğini öğretmen alır.\r\n.\r\n2. Ölçülerini dikkate alarak kayma dirençli yatak \r\nyapım resimleri çizer.\r\n• Kayma dirençli yataklar hakkında bilgi toplaması \r\nistenir.\r\n• Muylu kavramı örneklerle açıklanır.\r\n• Tablolardan kayma dirençli yatak ölçülerini doğru \r\ntespit etmesi sağlanır.\r\n• Kayma dirençli yataklar resimlerde tek görünüşle \r\nifade edilmesi gerektiği anlatılır.\r\n• Çizimler ve çizimler üzerindeki düzenlemeler önce \nçizilerek gösterilir sonra öğrencilerin çizmesi \r\nsağlanır.\r\n• Öğrencinin çizdiği her örnek bir port folyo dosyasına \r\nkaydedilir ve bir örneğini öğretmen alır.\r\n3. Standart ölçülerini dikkate alarak yuvarlanma \r\ndirençli yatak yapım resimleri çizer.\r\n• Yuvarlanma dirençli yataklar hakkında bilgi \r\ntoplaması istenir.\r\n• Tablolardan yuvarlanma dirençli yatak ölçülerini \r\ndoğru tespit etmesi sağlanır.\r\n• Yuvarlanmalı dirençli yatak resimleri montaj \r\nresimlerinde kesit görünüş olarak çizilmesi sağlanır.\r\n• Çizimler ve çizimler üzerindeki düzenlemeler önce \r\nçizilerek gösterilir sonra öğrencilerin çizmesi \r\nsağlanır.\r\n• Öğrencinin çizdiği her örnek bir port folyo dosyasına \r\nkaydedilir ve bir örneğini öğretmen alır.\r\nKomple Resimler\r\n1. Parçaların birleştirme\r\nresmi çizimi\r\n2. Grup montaj \r\nresimleri çizimi\r\n3. Komple resimler \r\nçizimi\r\n1. İşlem sırasına göre komple montaj resimler çizer.\r\n• Resimlerde komple resmin yapımı için gerekli tüm \r\nbilgiler eksiksiz olarak yazılmalıdır.\r\n• Komple resimlere ölçü verilmediği gibi \r\ntoleranslarında verilmediği açıklanır.\r\n• Montaj resimleri önce çizilerek gösterilir sonra \r\nöğrencilerin çizmesi sağlanır\r\n2. Komple montaj resimlerinden grup montaj \r\nresimlerini çizer.\r\n• Grup montajlarının tek başına çalışan bölümler \r\nolduğu açıklanır.\r\n• Komple resim incelenerek grup montaj resmi \r\nçizilmesi sağlanır.\r\n• Montaj resimlerinden grup resimlerinin çizilmesi önce \r\ngösterilir sonra öğrencilerin çizmesi sağlanır.\r\n3. Grup montaj resimlerinden organ montaj \r\nresimlerini çizer.\r\n• Organ montaj resimleri grup montaj resimlerinin ayrı \r\nayrı çizilmiş parçaları olduğu açıklanır.\r\n• Grup montaj resmi incelenerek organ resmi çizilmesi \r\nsağlanır.\r\n• Organ montaj resimleri önce çizilerek gösterilir sonra \r\nöğrencilerin çizmesi sağlanır\nUYGULAMA FAALİYETLERİ/TEMRİNLER\r\nVida, Cıvata ve \r\nSomun Resmi \r\nÇizimi\r\n1. Standart çizelgelerden yararlanarak vida dişi resmi çizer.\r\n2. Standart çizelgelerden yararlanarak cıvata resimlerini çizer.\r\n3. Standart çizelgelerden yararlanarak somun resimlerini çizer.\r\n4. Vidalı birleştirme resimleri çizer.\r\nEmniyetli Bağlama \r\nElemanları Çizimi\r\n1. Standart çizelgelerden yararlanarak rondela resmi çizer.\r\n2. Standart ölçülerini dikkate alarak emniyet sacı resmi çizer\r\n3. Ayar bileziği resmi çizer.\r\n4. Gupilya resmi çizer.\r\n5. Emniyet segmanı resmi çizer.\r\n6. Mil tespit plakası resmi çizer.\r\nBirleştirme \r\nResimleri Çizimi\r\n1. Standart çizelgelerden yararlanarak perno resmi çizer\r\n2. Standart çizelgelerden yararlanarak pim resmi çizer.\r\n3. Standart çizelgelerden yararlanarak kama resmi çizer\r\n4. Yay boyunu hesaplayarak yay resmi çizer\r\n5. Perçin ölçülerini belirleyerek perçinli birleştirme resimleri çizer\r\n6. Kaynaklı birleştirme çeşitlerini belirleyerek kaynaklı birleştirme resimleri çizer.\r\nMakine Elemanları \r\nResmi Çizimi\r\n1. Ölçülerini dikkate alarak kasnak resimleri çizer.\r\n2. Ölçülerini dikkate alarak kayma dirençli yatak resimleri çizer.\r\n3. Standart ölçülerini dikkate alarak yuvarlanma dirençli yatak resimleri çizer.\r\nKomple Resim \r\nÇizimi\r\n1. İşlem sırasına göre komple (montaj) resimler çizer.\r\n2. Komple resimlerinden grup montaj resimlerini çizer.\r\n3. Grup montaj resimlerinden organ montaj resimlerinin çizer.\r\nDERSİN UYGULANMASINA İLİŞKİN AÇIKLAMALAR\r\n• Öğrencilerin araç ve gereçleri iş sağlığı ve güvenliği kurallarına uygun kullanmalarına yönelik açıklamalar \r\nyapılmalıdır. \r\n• Zümre öğretmenler kurulu temrinlerden okulun fiziki şartlarına, atölye ve öğrenci sayılarına ve seviyelerine göre \r\nuygun olanları seçerek uygulayacaktır. Temrinler mutlaka tamamlanacaktır.\r\n• Bu derste öğrencilere yaptığı çalışmalara sınıf arkadaşlarına sunmasına fırsat verilerek iletişim becerilerinin \r\ngelişmesi sağlanmalıdır.\r\n• Anlatımdan ve örnek çalışmalardan sonra, dersin öğrenme kazanımlarının öğrencide pekiştirilmesi amacıyla birden \r\nfazla uygulama faaliyeti yapılmalıdır. \r\n• Bu derste, verilen görevi yapma …………………..değer, tutum ve davranışları ön plana çıkaran etkinliklere yer \r\nverilmelidir.\r\n•\r\n• Anlatımdan ve örnek çalışmalardan sonra, dersin öğrenme kazanımlarının öğrencide pekiştirilmesi amacıyla birden \r\nfazla uygulama faaliyeti yapılmalıdır. \r\n• Bu derste, verilen görevi yapma …………………..değer, tutum ve davranışları ön plana çıkaran etkinliklere yer \r\nverilmelidir. (Bu açıklama değerler eğitimi için matbudur. Kazanıma uygun değer ya da değerlere yer verilmelidir.) \r\n• Ders ile ilgili program uygulayıcısı öğretmenlere uyarı niteliğinde önem arz eden ve yukarıdaki açıklamalar dışında \r\nbulunan hususlara burada yer verilebilir.",
     "kaynakDosya": "2026-2027-YILLIK-PLAN/DERS BİLGİ FORMLARI/AMP  DERS BİLGİ FORMU/MAKİNE VE TAS. TEK/10.SINIF/5-Makine_Bakım_Onarım/10.SINIF/Bakım Onarım Meslek Resmi_DBF.pdf"
   },
@@ -23,6 +38,24 @@ const DERS_BILGI_FORMLARI = [
     "dal": "Makine ve Tasarım Teknolojisi",
     "sinif": "10.SINIF",
     "dersAdi": "MALZEME BİLGİSİ",
+    "dersSinifi": "10. Sınıf",
+    "dersSuresi": "Haftalık 2 Ders Saati",
+    "dersAmaci": "Bu derste öğrenciye; iş sağlığı ve güvenliği tedbirlerini alarak TS ,EN ve ISO Standartları’na göre malzeme seçimi, demir ve çelik üretimi, çeliklere uygulana ısıl işlemler, korozyon, malzeme muayene yöntemleri ve toz metalürjisi ile ilgili bilgilerin kazandırılması amaçlanmaktadır.",
+    "kazanimlar": [
+      "Malzemeleri sınıflandırarak, tasarımda malzeme seçimi alaşımlar ve allatropi-Faz dönüşümleri ile ilgili bilgileri açıklar.",
+      "Demir filizleri, yüksek fırında ham demir üretimi ve dökme demirler ile ilgili bilgileri açıklar.",
+      "Çelik üretim yöntemleri, çeliklerin sınıflandırılması çelikte katkı elemanlarının etkisi ve çelik standartları ile ilgili bilgileri açıklar.",
+      "Isıl işleminin amaçları, tavlama çeşitleri, sertleştirme ve yüzey sertleştirme ile ilgili bilgileri açıklar.",
+      "Korozyon çeşitleri ve korozyondan korunma ile ilgili bilgileri açıklar.",
+      "Demir olmayan metaller, plastikler ve kompozitler ile ilgili bilgileri açıklar.",
+      "Malzeme muayene yöntemleri ile ilgili bilgileri açıklar.",
+      "Toz metalürjisinde toz üretim yöntemleri toz şekillendirme ve sinterleme ile ilgili bilgileri açıklar."
+    ],
+    "ortamDonanim": "Ortam: İmalat işlemleri atelyesi,\nDonanım: Etkileşimli tahta/projeksiyon, Matkap tezgahı, torna tezgahı, freze \ntezgahı, torna ve freze kesici ve kesici tutucuları, düzlem yüzey taşlama \ntezgahı, silindirik taşlama tezgahı,Elektrik ark kaynak makinesi, oksi-gaz \nkaynak makinesi. Tezgâh katalogları, vida katalogları,",
+    "olcmeDegerlendirme": "Bu derste; öğrenci performansı belirlemeye yönelik çalışmalar değerlendirilirken gözlem formu, derecelendirme ölçeği ve dereceli puanlama anahtarı gibi ölçme araçlarından uygun olanlar seçilerek kullanılabilir. Bunun yanında öz değerlendirme ve akran değerlendirme formları kullanılarak öğrencilerin, öğretimin süreç boyutuna katılmaları sağlanabilir.",
+    "uygulamaFaaliyetleri": "Uygulama faaliyeti/temrinler; ders kazanımına uygun olarak okulun fiziki kapasitesi ve donatımı, öğrenci sayısı göz \r\nönünde bulundurularak en fazla uygulama faaliyeti/temrini yaptıracak şekilde meslek alan zümre öğretmenler kurulu \r\ntarafından seçilir. Meslek alan zümre öğretmenleri tarafından aşağıda yer alan temrinlerden farklı temrinlerin \r\nuygulanmasına karar verilebilir.",
+    "dersUygulamaAciklamalari": "1. Öğrencilerin iş sağlığı ve güvenliği kurallarına yönelik somut açıklamalar yapılmalıdır. \r\n2. Anahtar yetkinliklerin kazandırılması yönünde açıklamalar yazılmalıdır. Ders kazanımları anahtar yetkinliklerle \r\nilişkilendirmeye uygunsa bu konuda uyarı yazılmalıdır. Örnek: Bu derste öğrencilere yaptığı çalışmalara sınıf \r\narkadaşlarına sunmasına fırsat verilerek iletişim becerilerinin gelişmesi sağlanmalıdır.\r\n3.\r\n4. Anlatımdan ve örnek çalışmalardan sonra, dersin öğrenme kazanımlarının öğrencide pekiştirilmesi amacıyla \r\nbirden fazla uygulama faaliyeti yapılmalıdır. \r\n5. Bu derste, verilen görevi yapma …………………..değer, tutum ve davranışları ön plana çıkaran etkinliklere \r\nyer verilmelidir. (Bu açıklama değerler eğitimi için matbudur. Kazanıma uygun değer ya da değerlere yer \r\nverilmelidir.) \r\n6. Ders ile ilgili program uygulayıcısı öğretmenlere uyarı niteliğinde önem arz eden ve yukarıdaki açıklamalar \r\ndışında bulunan hususlara burada yer verilebilir.",
+    "kazanimSayisiSureTablosuHam": "ÖĞRENME BİRİMİ KAZANIM \r\nSAYISI DERS SAATİ ORAN (%)\r\nMalzeme Bilimi 4 12 16\r\nDemir Üretimi 2 6 8\r\nÇelik Üretimi 3 8 12\r\nÇeliklerin Isıl İşlemleri 4 12 16\r\nKorozyon 2 6 8\nDemir Dışı Malzemeler 3 8 10\r\nMalzeme Muayene \r\nYöntemleri 4 12 16\r\nToz Metalürjisi 3 8 12\r\nTOPLAM 25 76 100\nÖĞRENME BİRİMİ KONULAR ÖĞRENME BİRİMİ KAZANIMLARI ve KAZANIM \r\nAÇIKLAMALARI\r\nMalzeme Bilimi\r\n1. Malzemenin Tanımı ve \r\nSınıflandırılması\r\n2. Malzemeleri Seçme\r\n3. Alaşımlar\r\n4. Faz Dönüşümleri\r\n1. Malzemenin tanımı ve sınıflandırmasını yapar.\r\n• Malzemenin tanımı ve önemi açıklanır.\r\n• Malzemelerin genel özellikleri açıklanır.\r\n• Malzemeler sınıflandırılır.\r\n• Metaller hakkında bilgi verilir.\r\n• Metal olmayan malzemeler hakkında bilgi verilir.\r\n• İletken ve yarı iletken malzemeler açıklanır.\r\n• Modern malzemelerden bahsedilir.\r\n2. İşe uygun malzeme seçimi yapar.\r\n• Atomun yapısı açıklanır.\r\n• Atomlar arası bağ açıklanır.\r\n• Malzemelerin moleküler yapısı ve kristal yapısı\r\naçıklanır.\r\n3. Alaşımları ve alaşım yapmayı açıklar.\r\n• Çeliği tanımlanır.\r\n• Alaşımı tanımlanır.\r\n• Demir alaşımları sınıflandırılır.\r\n• Demir dışı metaller ve alaşımlarını açıklanır.\r\n4. Allatropi-faz dönüşümlerini açıklayarak denge\r\ndiyagramlarını çizer.\r\n• Allotropi tanımlanır.\r\n• Allotropik alaşımların özellikleri açılanır.\r\n• Demirin allotropisi açıklanır.\nDemir Üretimi 1. Ham Demirler\r\n2. Dökme Demirler\r\n1. Ham demir üretimini açıklar.\r\n• Demirin tanımı yapılır.\r\n• Demir filizleri açıklanır.\r\n• Demirin elde edilmesi açıklanır.\r\n2. Dökme demir üretimini açıklar.\r\n• Dökme demir tanımlanır.\r\n• Dökme demir çeşitleri sınıflandırılır.\r\n• Dökme demir üretim işlemleri açıklanır.\r\nÇelik Üretimi\r\n1. Çelik Üretim \r\nYöntemleri\r\n2. Çeliklerin \r\nSınıflandırılması\r\n3. Çelik Katkı Elemanları \r\nve Öelik Standartları\r\n1. Çelik üretim yöntemlerini açıklar.\r\n• Çeliğin tanımı yapılır.\r\n• Çelik üretim yöntemleri sınıflandırılır.\r\n• Çeliklerin haddelenmesi açıklanır.\r\n2. Çeliklerin sınıflandırmasını yapar.\r\n• Çeliklerin sınıflandırılması yapılır.\r\n3. Çelikte katkı elemanlarının etkilerini ve çelik standartlarını \r\naçıklar.\r\n• Katık elemanlarının çeliklere sağladığı faydalar\r\naçıklanır.\r\n• TSE standartları sınıflandırılır.\r\n• ISO standartları sınıflandırılır.\r\nÇeliklerin Isıl \r\nİşlemleri\r\n1. Isıl İşlem\r\n2. Yüzey Sertleştirme\r\n3. Sertlik ölçme\r\nyöntemleri\r\n1.Isıl işlemin amaçlarını açıklar.\r\n• Isıl işlem tanımlanır.\r\n• Çeliğe uygulanan Isıl işlemin amacı açıklanır.\r\n• Çeliklere uygulanan ısıl işlemler açıklanır.\n• Çeliklerin tavlanması açıklanır.\r\n• Tavlama çeşitleri açıklanır.\r\n• Çeliğin sertleştirilmesi açıklanır.\r\n• Çeliğin sertleştirilmesinin nedeni açıklanır.\r\n2.Yüzey sertleştirme yöntemlerini açıklar.\r\n• Yüzey sertleştirme işleminin amacı açıklanır.\r\n• Yüzey sertleştirme yöntemleri açıklanır.\r\n• Sementasyon yöntemi açıklanır.\r\n• Alevle yüzey sertleştirme yöntemi açıklanır.\r\n• Nitrürasyon yöntemi açıklanır.\r\n• Daldırma yöntemi ile yüzey sertleştirme\r\nyöntemi açıklanır.\r\n• Elektron bombardımanı ile yüzey sertleştirme\r\nyöntemi açıklanır.\r\n3.Sertlik ölçme yöntemlerini açıklar.\r\n• Dinamik sertlik ölçme yöntemleri açıklanır.\r\n• Rockwel, Brinel, Vickers ve Mikro sertlik ölçme\r\nyöntemleri açıklanır\r\n• Statik sertlik ölçme yöntemleri açıklanır.\r\n• Shore sertlik ölçme yöntemleri açıklanır.\r\n• Sertlik ölçümü yapılırken dikkat edilecek\r\nhususlar açıklanır.\nKorozyon 1. Korozyon Çeşitleri\r\n2. Korozyondan Korunma\r\n1. Korozyon çeşitlerini açıklar.\r\n• Korozyon tanımlanır.\r\n• Korozyon çeşitleri açıklanır.\r\n2. Korozyondan korunma yöntemlerini açıklar.\r\n• Korozyona etki eden faktörler açıklanır.\r\n• Korozyondan korunma yöntemleri açıklanır\r\nDemir Dışı \r\nMalzemeler\r\n1. Demir Olmayan Metaller\r\n2. Plastikler\r\n3. Kompozit Malzemeler\r\n1. Demir olmayan metalleri açıklar.\r\n• Demir olmayan metal çeşitleri açıklanır.\r\n• Ağır metaller ve özellikleri açıklanır.\r\n• Hafif metaller ve özellikleri açıklanır.\r\n2. Plastik malzemeleri açıklar.\r\n• Plastik malzemeyi tanımlar.\r\n• Plastik malzemelerin genel özellikleri açıklanır.\r\n• Plastik çeşitlerini açıklar.\r\n• Doğal plastikler açıklanır.\r\n• Yapay plastikler açıklanır.\r\n3. Kompozit malzemeleri açıklar.\r\n• Kompozit malzeme tanımlanır.\r\n• Kompozit malzemeler ve temel özellikleri açıklanır.\r\n• Kompozit malzemeler sınıflandırılır.\r\n• Kompozit malzemelerin uygulama alanları\r\naçıklanır.\nMalzeme Muayene \r\nYöntemleri\r\n1. Tahrip ederek yapılan\r\nMuayene Yöntemleri\r\n2. Tahribatsız Muayene\r\nYöntemleri\r\n3. Teknolojik Muayene\r\nYöntemleri\r\n1. Tahrip ederek yapılan malzeme muayene\r\nyöntemlerini açıklar.\r\n• Malzeme muayenenin amacı ve önemi açıklanır.\r\n• Tahrip ederek yapılan muayene yöntemleri\r\nsınıflandırılır.\r\n• Malzeme muayene safhaları açıklanır.\r\n• Kıvılcım deneyi ile muayene yöntemi açıklanır.\r\n• Çekme deneyi ile muayene yöntemi açıklanır.\r\n• Basma deneyi ile muayene yöntemi açıklanır.\r\n• Bükme deneyi ile muayene yöntemi açıklanır.\r\n• Burulma deneyi ile muayene yöntemi açıklanır.\r\n• Kesme deneyi ile muayene yöntemi açıklanır\r\n• Kopma deneyi ile muayene yöntemi açıklanır.\r\n2. Tahrip etmeden yapılan malzeme muayene\r\nyöntemlerini açıklar.\r\n• Gözle muayene yöntemi açıklanır.\r\n• Mikroskopla muayene yöntemi açıklanır.\r\n• Penadran sıvı ile kontrol yöntemi açıklanır.\r\n• Basınçlı kontrol yöntemi açıklanır.\r\n3. Malzemelere uygulanan teknolojik deneyleri\r\naçıklar.\r\n• Ultrasonik muayene yöntemleri açıklanır.\r\n• Röntgen ışınları ile kontrol yöntemleri açıklanır.\r\n• Manyetik kontrol yöntemleri açıklanır.\nToz Metalürjisi\r\nToz Üretim Yöntemleri\r\n2. Toz Şekillendirme \r\nYöntemleri\r\n3. Sinterleme Kavramı\r\n1. Toz üretim yöntemlerini açıklar.\r\n• Toz metalürjisinin tanımı yapılır.\r\n• Toz metalürjisinin üretim aşamaları açıklanır.\r\n• Toz metalürjisinin fayda ve zararları açıklanır.\r\n• Toz metalürjisinin kullanım alanları açıklanır.\r\n• Toz metalürjisinde kullanılan kavramlar açıklanır.\r\n2. Toz şekillendirme yöntemlerini açıklar.\r\n• Toz hazırlama yöntemleri açıklanır.\r\n• Yağlayıcı ve bağlatıcılar açıklanır.\r\n• Toz şekillendirme yöntemleri açıklanır.\r\n• Presleme yöntemi açıklanır.\r\n• Haddeleme yöntemi açıklanır.\r\n• İzostatik presleme yöntemi açıklanır.\r\n• Extrüzyon yöntemi açıklanır.\r\n• Toz enjeksiyon kalıplama tekniği açıklanır.\r\n3. Sinterleme kavramını açıklar.\r\n• Sinterleme kavramı açıklanır.\r\n• Sinterleme işleminin aşamaları anlatılır.\r\n• Katı faz sinterlemesi açıklanır.\r\n• Sıvı faz sinterlemesi açıklanır.\r\n• Sinterlemenin uygulama alanları anlatılır.",
     "metinIcerik": "DERS BİLGİ FORMU\r\nDERSİN ADI MALZEME BİLGİSİ\r\nDERSİN SINIFI 10. Sınıf \r\nDERSİN SÜRESİ Haftalık 2 Ders Saati\r\nDERSİN AMACI\r\nBu derste öğrenciye; iş sağlığı ve güvenliği tedbirlerini alarak TS ,EN ve ISO \r\nStandartları’na göre malzeme seçimi, demir ve çelik üretimi, çeliklere \r\nuygulana ısıl işlemler, korozyon, malzeme muayene yöntemleri ve toz \r\nmetalürjisi ile ilgili bilgilerin kazandırılması amaçlanmaktadır.\r\nDERSİN ÖĞRENME \r\nKAZANIMLARI\r\n1. Malzemeleri sınıflandırarak, tasarımda malzeme seçimi alaşımlar ve \r\nallatropi-Faz dönüşümleri ile ilgili bilgileri açıklar.\r\n2. Demir filizleri, yüksek fırında ham demir üretimi ve dökme demirler \r\nile ilgili bilgileri açıklar.\r\n3. Çelik üretim yöntemleri, çeliklerin sınıflandırılması çelikte katkı \r\nelemanlarının etkisi ve çelik standartları ile ilgili bilgileri açıklar.\r\n4. Isıl işleminin amaçları, tavlama çeşitleri, sertleştirme ve yüzey \r\nsertleştirme ile ilgili bilgileri açıklar.\r\n5. Korozyon çeşitleri ve korozyondan korunma ile ilgili bilgileri açıklar.\r\n6. Demir olmayan metaller, plastikler ve kompozitler ile ilgili bilgileri \r\naçıklar.\r\n7. Malzeme muayene yöntemleri ile ilgili bilgileri açıklar.\r\n8. Toz metalürjisinde toz üretim yöntemleri toz şekillendirme ve \r\nsinterleme ile ilgili bilgileri açıklar.\r\nEĞİTİM-ÖĞRETİM \r\nORTAM VE DONANIMI\r\nOrtam: İmalat işlemleri atelyesi,\r\nDonanım: Etkileşimli tahta/projeksiyon, Matkap tezgahı, torna tezgahı, freze \r\ntezgahı, torna ve freze kesici ve kesici tutucuları, düzlem yüzey taşlama \r\ntezgahı, silindirik taşlama tezgahı,Elektrik ark kaynak makinesi, oksi-gaz \r\nkaynak makinesi. Tezgâh katalogları, vida katalogları,\r\nÖLÇME VE \r\nDEĞERLENDİRME\r\nBu derste; öğrenci performansı belirlemeye yönelik çalışmalar \r\ndeğerlendirilirken gözlem formu, derecelendirme ölçeği ve dereceli puanlama \r\nanahtarı gibi ölçme araçlarından uygun olanlar seçilerek kullanılabilir. Bunun \r\nyanında öz değerlendirme ve akran değerlendirme formları kullanılarak \r\nöğrencilerin, öğretimin süreç boyutuna katılmaları sağlanabilir.\r\nKAZANIM SAYISI VE \r\nSÜRE TABLOSU\r\nÖĞRENME BİRİMİ KAZANIM \r\nSAYISI DERS SAATİ ORAN (%)\r\nMalzeme Bilimi 4 12 16\r\nDemir Üretimi 2 6 8\r\nÇelik Üretimi 3 8 12\r\nÇeliklerin Isıl İşlemleri 4 12 16\r\nKorozyon 2 6 8\nDemir Dışı Malzemeler 3 8 10\r\nMalzeme Muayene \r\nYöntemleri 4 12 16\r\nToz Metalürjisi 3 8 12\r\nTOPLAM 25 76 100\nÖĞRENME BİRİMİ KONULAR ÖĞRENME BİRİMİ KAZANIMLARI ve KAZANIM \r\nAÇIKLAMALARI\r\nMalzeme Bilimi\r\n1. Malzemenin Tanımı ve \r\nSınıflandırılması\r\n2. Malzemeleri Seçme\r\n3. Alaşımlar\r\n4. Faz Dönüşümleri\r\n1. Malzemenin tanımı ve sınıflandırmasını yapar.\r\n• Malzemenin tanımı ve önemi açıklanır.\r\n• Malzemelerin genel özellikleri açıklanır.\r\n• Malzemeler sınıflandırılır.\r\n• Metaller hakkında bilgi verilir.\r\n• Metal olmayan malzemeler hakkında bilgi verilir.\r\n• İletken ve yarı iletken malzemeler açıklanır.\r\n• Modern malzemelerden bahsedilir.\r\n2. İşe uygun malzeme seçimi yapar.\r\n• Atomun yapısı açıklanır.\r\n• Atomlar arası bağ açıklanır.\r\n• Malzemelerin moleküler yapısı ve kristal yapısı\r\naçıklanır.\r\n3. Alaşımları ve alaşım yapmayı açıklar.\r\n• Çeliği tanımlanır.\r\n• Alaşımı tanımlanır.\r\n• Demir alaşımları sınıflandırılır.\r\n• Demir dışı metaller ve alaşımlarını açıklanır.\r\n4. Allatropi-faz dönüşümlerini açıklayarak denge\r\ndiyagramlarını çizer.\r\n• Allotropi tanımlanır.\r\n• Allotropik alaşımların özellikleri açılanır.\r\n• Demirin allotropisi açıklanır.\nDemir Üretimi 1. Ham Demirler\r\n2. Dökme Demirler\r\n1. Ham demir üretimini açıklar.\r\n• Demirin tanımı yapılır.\r\n• Demir filizleri açıklanır.\r\n• Demirin elde edilmesi açıklanır.\r\n2. Dökme demir üretimini açıklar.\r\n• Dökme demir tanımlanır.\r\n• Dökme demir çeşitleri sınıflandırılır.\r\n• Dökme demir üretim işlemleri açıklanır.\r\nÇelik Üretimi\r\n1. Çelik Üretim \r\nYöntemleri\r\n2. Çeliklerin \r\nSınıflandırılması\r\n3. Çelik Katkı Elemanları \r\nve Öelik Standartları\r\n1. Çelik üretim yöntemlerini açıklar.\r\n• Çeliğin tanımı yapılır.\r\n• Çelik üretim yöntemleri sınıflandırılır.\r\n• Çeliklerin haddelenmesi açıklanır.\r\n2. Çeliklerin sınıflandırmasını yapar.\r\n• Çeliklerin sınıflandırılması yapılır.\r\n3. Çelikte katkı elemanlarının etkilerini ve çelik standartlarını \r\naçıklar.\r\n• Katık elemanlarının çeliklere sağladığı faydalar\r\naçıklanır.\r\n• TSE standartları sınıflandırılır.\r\n• ISO standartları sınıflandırılır.\r\nÇeliklerin Isıl \r\nİşlemleri\r\n1. Isıl İşlem\r\n2. Yüzey Sertleştirme\r\n3. Sertlik ölçme\r\nyöntemleri\r\n1.Isıl işlemin amaçlarını açıklar.\r\n• Isıl işlem tanımlanır.\r\n• Çeliğe uygulanan Isıl işlemin amacı açıklanır.\r\n• Çeliklere uygulanan ısıl işlemler açıklanır.\n• Çeliklerin tavlanması açıklanır.\r\n• Tavlama çeşitleri açıklanır.\r\n• Çeliğin sertleştirilmesi açıklanır.\r\n• Çeliğin sertleştirilmesinin nedeni açıklanır.\r\n2.Yüzey sertleştirme yöntemlerini açıklar.\r\n• Yüzey sertleştirme işleminin amacı açıklanır.\r\n• Yüzey sertleştirme yöntemleri açıklanır.\r\n• Sementasyon yöntemi açıklanır.\r\n• Alevle yüzey sertleştirme yöntemi açıklanır.\r\n• Nitrürasyon yöntemi açıklanır.\r\n• Daldırma yöntemi ile yüzey sertleştirme\r\nyöntemi açıklanır.\r\n• Elektron bombardımanı ile yüzey sertleştirme\r\nyöntemi açıklanır.\r\n3.Sertlik ölçme yöntemlerini açıklar.\r\n• Dinamik sertlik ölçme yöntemleri açıklanır.\r\n• Rockwel, Brinel, Vickers ve Mikro sertlik ölçme\r\nyöntemleri açıklanır\r\n• Statik sertlik ölçme yöntemleri açıklanır.\r\n• Shore sertlik ölçme yöntemleri açıklanır.\r\n• Sertlik ölçümü yapılırken dikkat edilecek\r\nhususlar açıklanır.\nKorozyon 1. Korozyon Çeşitleri\r\n2. Korozyondan Korunma\r\n1. Korozyon çeşitlerini açıklar.\r\n• Korozyon tanımlanır.\r\n• Korozyon çeşitleri açıklanır.\r\n2. Korozyondan korunma yöntemlerini açıklar.\r\n• Korozyona etki eden faktörler açıklanır.\r\n• Korozyondan korunma yöntemleri açıklanır\r\nDemir Dışı \r\nMalzemeler\r\n1. Demir Olmayan Metaller\r\n2. Plastikler\r\n3. Kompozit Malzemeler\r\n1. Demir olmayan metalleri açıklar.\r\n• Demir olmayan metal çeşitleri açıklanır.\r\n• Ağır metaller ve özellikleri açıklanır.\r\n• Hafif metaller ve özellikleri açıklanır.\r\n2. Plastik malzemeleri açıklar.\r\n• Plastik malzemeyi tanımlar.\r\n• Plastik malzemelerin genel özellikleri açıklanır.\r\n• Plastik çeşitlerini açıklar.\r\n• Doğal plastikler açıklanır.\r\n• Yapay plastikler açıklanır.\r\n3. Kompozit malzemeleri açıklar.\r\n• Kompozit malzeme tanımlanır.\r\n• Kompozit malzemeler ve temel özellikleri açıklanır.\r\n• Kompozit malzemeler sınıflandırılır.\r\n• Kompozit malzemelerin uygulama alanları\r\naçıklanır.\nMalzeme Muayene \r\nYöntemleri\r\n1. Tahrip ederek yapılan\r\nMuayene Yöntemleri\r\n2. Tahribatsız Muayene\r\nYöntemleri\r\n3. Teknolojik Muayene\r\nYöntemleri\r\n1. Tahrip ederek yapılan malzeme muayene\r\nyöntemlerini açıklar.\r\n• Malzeme muayenenin amacı ve önemi açıklanır.\r\n• Tahrip ederek yapılan muayene yöntemleri\r\nsınıflandırılır.\r\n• Malzeme muayene safhaları açıklanır.\r\n• Kıvılcım deneyi ile muayene yöntemi açıklanır.\r\n• Çekme deneyi ile muayene yöntemi açıklanır.\r\n• Basma deneyi ile muayene yöntemi açıklanır.\r\n• Bükme deneyi ile muayene yöntemi açıklanır.\r\n• Burulma deneyi ile muayene yöntemi açıklanır.\r\n• Kesme deneyi ile muayene yöntemi açıklanır\r\n• Kopma deneyi ile muayene yöntemi açıklanır.\r\n2. Tahrip etmeden yapılan malzeme muayene\r\nyöntemlerini açıklar.\r\n• Gözle muayene yöntemi açıklanır.\r\n• Mikroskopla muayene yöntemi açıklanır.\r\n• Penadran sıvı ile kontrol yöntemi açıklanır.\r\n• Basınçlı kontrol yöntemi açıklanır.\r\n3. Malzemelere uygulanan teknolojik deneyleri\r\naçıklar.\r\n• Ultrasonik muayene yöntemleri açıklanır.\r\n• Röntgen ışınları ile kontrol yöntemleri açıklanır.\r\n• Manyetik kontrol yöntemleri açıklanır.\nToz Metalürjisi\r\nToz Üretim Yöntemleri\r\n2. Toz Şekillendirme \r\nYöntemleri\r\n3. Sinterleme Kavramı\r\n1. Toz üretim yöntemlerini açıklar.\r\n• Toz metalürjisinin tanımı yapılır.\r\n• Toz metalürjisinin üretim aşamaları açıklanır.\r\n• Toz metalürjisinin fayda ve zararları açıklanır.\r\n• Toz metalürjisinin kullanım alanları açıklanır.\r\n• Toz metalürjisinde kullanılan kavramlar açıklanır.\r\n2. Toz şekillendirme yöntemlerini açıklar.\r\n• Toz hazırlama yöntemleri açıklanır.\r\n• Yağlayıcı ve bağlatıcılar açıklanır.\r\n• Toz şekillendirme yöntemleri açıklanır.\r\n• Presleme yöntemi açıklanır.\r\n• Haddeleme yöntemi açıklanır.\r\n• İzostatik presleme yöntemi açıklanır.\r\n• Extrüzyon yöntemi açıklanır.\r\n• Toz enjeksiyon kalıplama tekniği açıklanır.\r\n3. Sinterleme kavramını açıklar.\r\n• Sinterleme kavramı açıklanır.\r\n• Sinterleme işleminin aşamaları anlatılır.\r\n• Katı faz sinterlemesi açıklanır.\r\n• Sıvı faz sinterlemesi açıklanır.\r\n• Sinterlemenin uygulama alanları anlatılır.\r\nUYGULAMA FAALİYETLERİ/TEMRİNLER\r\nUygulama faaliyeti/temrinler; ders kazanımına uygun olarak okulun fiziki kapasitesi ve donatımı, öğrenci sayısı göz \r\nönünde bulundurularak en fazla uygulama faaliyeti/temrini yaptıracak şekilde meslek alan zümre öğretmenler kurulu \r\ntarafından seçilir. Meslek alan zümre öğretmenleri tarafından aşağıda yer alan temrinlerden farklı temrinlerin \r\nuygulanmasına karar verilebilir.\nDERSİN UYGULANMASINA İLİŞKİN AÇIKLAMALAR\r\n1. Öğrencilerin iş sağlığı ve güvenliği kurallarına yönelik somut açıklamalar yapılmalıdır. \r\n2. Anahtar yetkinliklerin kazandırılması yönünde açıklamalar yazılmalıdır. Ders kazanımları anahtar yetkinliklerle \r\nilişkilendirmeye uygunsa bu konuda uyarı yazılmalıdır. Örnek: Bu derste öğrencilere yaptığı çalışmalara sınıf \r\narkadaşlarına sunmasına fırsat verilerek iletişim becerilerinin gelişmesi sağlanmalıdır.\r\n3.\r\n4. Anlatımdan ve örnek çalışmalardan sonra, dersin öğrenme kazanımlarının öğrencide pekiştirilmesi amacıyla \r\nbirden fazla uygulama faaliyeti yapılmalıdır. \r\n5. Bu derste, verilen görevi yapma …………………..değer, tutum ve davranışları ön plana çıkaran etkinliklere \r\nyer verilmelidir. (Bu açıklama değerler eğitimi için matbudur. Kazanıma uygun değer ya da değerlere yer \r\nverilmelidir.) \r\n6. Ders ile ilgili program uygulayıcısı öğretmenlere uyarı niteliğinde önem arz eden ve yukarıdaki açıklamalar \r\ndışında bulunan hususlara burada yer verilebilir.",
     "kaynakDosya": "2026-2027-YILLIK-PLAN/DERS BİLGİ FORMLARI/AMP  DERS BİLGİ FORMU/MAKİNE VE TAS. TEK/10.SINIF/5-Makine_Bakım_Onarım/10.SINIF/Malzeme_Bilgisi_DBF.pdf"
   },
@@ -31,6 +64,24 @@ const DERS_BILGI_FORMLARI = [
     "dal": "Makine ve Tasarım Teknolojisi",
     "sinif": "10.SINIF",
     "dersAdi": "ÖLÇME VE KONTROL",
+    "dersSinifi": "10. Sınıf",
+    "dersSuresi": "Haftalık 2 Ders Saati",
+    "dersAmaci": "Bu derste öğrenciye; iş sağlığı ve güvenliği tedbirlerini alarak ölçme ve kontrol yapma, TS, EN, ISO ve DIN Standartları’na göre ölçme ve kontrol aletlerini kullanma ile ilgili bilgi ve becerilerin kazandırılması amaçlanmaktadır.",
+    "kazanimlar": [
+      "Kumpasla ölçüm yapar.",
+      "Mikrometre ile ölçüm yapar.",
+      "Açı ölçümü yapar.",
+      "Yüzey pürüzlülüğünü ölçer.",
+      "Dişli çarkları ölçer.",
+      "Mastarlar ve optik camlarla yüzey kontrolü yapar.",
+      "Şekil tolerans kontrolü yapar.",
+      "Boyut tolerans kontrolü yapar."
+    ],
+    "ortamDonanim": "Ortam: İmalat işlemleri atelyesi,\nDonanım: Etkileşimli tahta/projeksiyon, Matkap tezgahı, torna tezgahı, freze \ntezgahı, torna ve freze kesici ve kesici tutucuları, düzlem yüzey taşlama \ntezgahı, silindirik taşlama tezgahı, Elektrik ark kaynak makinesi, oksi-gaz \nkaynak makinesi. Tezgâh katalogları, vida katalogları,",
+    "olcmeDegerlendirme": "Bu derste; öğrenci performansı belirlemeye yönelik çalışmalar değerlendirilirken gözlem formu, derecelendirme ölçeği ve dereceli puanlama anahtarı gibi ölçme araçlarından uygun olanlar seçilerek kullanılabilir. Bunun yanında öz değerlendirme ve akran değerlendirme formları kullanılarak öğrencilerin, öğretimin süreç boyutuna katılmaları sağlanabilir.",
+    "uygulamaFaaliyetleri": "Uygulama faaliyeti/temrinler; ders kazanımına uygun olarak okulun fiziki kapasitesi ve donatımı, öğrenci sayısı göz \r\nönünde bulundurularak en fazla uygulama faaliyeti/temrini yaptıracak şekilde meslek alan zümre öğretmenler kurulu \r\ntarafından seçilir. Meslek alan zümre öğretmenleri tarafından aşağıda yer alan temrinlerden farklı temrinlerin \r\nuygulanmasına karar verilebilir.",
+    "dersUygulamaAciklamalari": "1. Öğrencilerin iş sağlığı ve güvenliği kurallarına yönelik somut açıklamalar yapılmalıdır. \r\n2. Anahtar yetkinliklerin kazandırılması yönünde açıklamalar yazılmalıdır. Ders kazanımları anahtar yetkinliklerle \r\nilişkilendirmeye uygunsa bu konuda uyarı yazılmalıdır. Örnek: Bu derste öğrencilere yaptığı çalışmalara sınıf \r\narkadaşlarına sunmasına fırsat verilerek iletişim becerilerinin gelişmesi sağlanmalıdır.\r\n3.\r\n4. Anlatımdan ve örnek çalışmalardan sonra, dersin öğrenme kazanımlarının öğrencide pekiştirilmesi amacıyla \r\nbirden fazla uygulama faaliyeti yapılmalıdır. \r\n5. Bu derste, verilen görevi yapma …………………..değer, tutum ve davranışları ön plana çıkaran etkinliklere \r\nyer verilmelidir. (Bu açıklama değerler eğitimi için matbudur. Kazanıma uygun değer ya da değerlere yer \r\nverilmelidir.) \r\n6. Ders ile ilgili program uygulayıcısı öğretmenlere uyarı niteliğinde önem arz eden ve yukarıdaki açıklamalar \r\ndışında bulunan hususlara burada yer verilebilir.",
+    "kazanimSayisiSureTablosuHam": "ÖĞRENME BİRİMİ KAZANIM \r\nSAYISI DERS SAATİ ORAN (%)\r\nKumpasla Ölçüm \r\nYapma 5\r\nMikrometre Ölçüm \r\nYapma 6\r\nAçı Ölçme 4\r\nYüzey Pürüzlülüğü \r\nÖlçme 2\r\nVidaları Ölçme 4\r\nDişli Çarkları Ölçme 3\nMastarlar ve Optik \r\nCamlarla Yüzey \r\nKontrolü Yapma\r\n4\r\nŞekil Tolerans \r\nKontrolü Yapma\r\n3\r\nBoyut Tolerans \r\nKontrolü Yapma\r\n3\r\nTOPLAM 34 100\nÖĞRENME BİRİMİ KONULAR ÖĞRENME BİRİMİ KAZANIMLARI ve KAZANIM \r\nAÇIKLAMALARI\r\nKumpasla Ölçüm \r\nYapma\r\n1. Kumpaslar ve Çeşitleri\r\n2. Kupmasla Ölçüm \r\nYapma\r\n1. Ölçülecek profile ve ölçü büyüklüğüne göre \r\nkumpas seçer.\r\n2. Kumpas çene hassasiyetini kontrol eder.\r\n3. Kumpası parça geometrisine göre \r\nkonumlandırır.\r\n4. Tespit vidası yardımıyla hareketli çeneyi \r\ntespit eder.\r\n5. Kumpastan değer okur.\r\nMikrometre Ölçüm \r\nYapma\r\n1. Mikrometreler ve \r\nÇeşitleri\r\n2. Mikrometre İle Ölçüm \r\nYapma\r\n1. Ölçülecek profile ve ölçü büyüklüğüne göre \r\nmikrometre seçer.\r\n2. Mikrometre örslerinin temizlik kontrolünü \r\nyapar.\r\n3. Kontrol mastarlarıyla ölçü hassasiyeti \r\nkontrolünü yapar.\r\n4. Mikrometreyi parça geometrisine göre \r\nkonumlandırır.\r\n5. Tespit mandalı yardımıyla hareketli mili tespit \r\neder.\r\n6. Mikrometreden değer okur.\r\nAçı Ölçme 1. Açı Ölçme \r\n1. Verniyerli açıölçerlerle ölçüm yapar.\r\n2. Sinüs çubuğu ve ölçü mastarıyla ölçüm \r\nyapar.\n3. Silindirik makaralar ve bilyeler yardımıyla \r\nkoniklik açısı ölçer.\r\n4. Optik açı ölçüm cihazıyla açı ölçer.\r\nYüzey Pürüzlülüğü \r\nÖlçme\r\n1. Yüzey Profilometresi\r\n2. Yüzey Pürüzlülük \r\nMastarları\r\n1. Yüzey profilometresi ile yüzey pürüzlülüğünü \r\nölçer.\r\n2. Yüzey pürüzlülük mastarlarıyla ölçüm yapar.\r\nVidaları Ölçme\r\n1. Vida Türlerinin \r\nBelirlenmesi\r\n2. Vida diş üstü ve Diş Dibi \r\nÇapı Ölçme\r\n1. Kumpas ile vidanın metrik veya withworth \r\nvida cinslerinden hangisi olduğunu belirler.\r\n2. Kumpas veya mikrometre ile diş üstü çapını \r\nölçer.\r\n3. Mikrometreyle diş dibi çapını ölçer.\r\n4. Vida tarağıyla vida adımını ölçer.\r\nDişli Çarkları \r\nÖlçme\r\n1. Demir Olmayan Metaller\r\n2. Plastikler\r\n3. Kompozit Malzemeler\r\n1. Demir olmayan metalleri açıklar.\r\n2. Plastik malzemeleri açıklar.\r\n3. Kompozit malzemeleri açıklar.\nDişli Çarkları \r\nÖlçme 1. Dişlilerde Modül Tahmini\r\n2. Dişli çark ölçümleri\r\n1. Diş büyüklüğüne göre modül tahmin eder.\r\n2. Yapılan tahmine göre modül kumpasının \r\nağzını ayarlar.\r\n3. Modül kumpasını diş üzerine yerleştirip ölçüm \r\nyapar.\r\nMastarlar ve Optik \r\nCamlarla Yüzey \r\nKontrolü Yapma\r\n1. Mastar Türleri ve Mastar \r\nSeçimi\r\n2. Mastarlarla Ölçüm \r\nYapma\r\n1. Ölçülecek profile göre mastarı seçer.\r\n2. Mastarları birleştirir.\r\n3. Mastarları iş parçasına yerleştirir.\r\n4. Mastarlar ile kontrol işlemleri yapar.\r\nŞekil Tolerans \r\nKontrolü Yapma 1. Şekil Konum Kontrol \r\nAracı Seçimi\r\n2. Şekil Konum Kontrolü\r\n1. İmalat resmine bakılarak uygun şekil kontrol \r\naracı seçer.\r\n2. Kontrolü yapılacak iş parçasını hazırlar.\r\n3. Kontrol işlemi yapar ve sonucu kaydeder.\r\nBoyut Tolerans \r\nKontrolü Yapma 1. Boyut Tolerans Kontrol \r\nAracı Seçimi\r\n2. Boyut Tolerans Kontrolü\r\n1. İmalat resmine bakarak uygun mastar seçer.\r\n2. Kontrolü yapılacak iş parçasını hazırlar.\r\n3. Kontrol işlemi yapar ve sonucu kaydeder.",
     "metinIcerik": "DERS BİLGİ FORMU\r\nDERSİN ADI ÖLÇME VE KONTROL\r\nDERSİN SINIFI 10. Sınıf \r\nDERSİN SÜRESİ Haftalık 2 Ders Saati\r\nDERSİN AMACI\r\nBu derste öğrenciye; iş sağlığı ve güvenliği tedbirlerini alarak ölçme \r\nve kontrol yapma, TS, EN, ISO ve DIN Standartları’na göre ölçme ve \r\nkontrol aletlerini kullanma ile ilgili bilgi ve becerilerin kazandırılması \r\namaçlanmaktadır.\r\nDERSİN ÖĞRENME \r\nKAZANIMLARI\r\n1. Kumpasla ölçüm yapar.\r\n2. Mikrometre ile ölçüm yapar.\r\n3. Açı ölçümü yapar.\r\n4. Yüzey pürüzlülüğünü ölçer.\r\n5. Dişli çarkları ölçer.\r\n6. Mastarlar ve optik camlarla yüzey kontrolü yapar.\r\n7. Şekil tolerans kontrolü yapar.\r\n8. Boyut tolerans kontrolü yapar.\r\nEĞİTİM-ÖĞRETİM \r\nORTAM VE DONANIMI\r\nOrtam: İmalat işlemleri atelyesi,\r\nDonanım: Etkileşimli tahta/projeksiyon, Matkap tezgahı, torna tezgahı, freze \r\ntezgahı, torna ve freze kesici ve kesici tutucuları, düzlem yüzey taşlama \r\ntezgahı, silindirik taşlama tezgahı, Elektrik ark kaynak makinesi, oksi-gaz \r\nkaynak makinesi. Tezgâh katalogları, vida katalogları,\r\nÖLÇME VE \r\nDEĞERLENDİRME\r\nBu derste; öğrenci performansı belirlemeye yönelik çalışmalar \r\ndeğerlendirilirken gözlem formu, derecelendirme ölçeği ve dereceli puanlama \r\nanahtarı gibi ölçme araçlarından uygun olanlar seçilerek kullanılabilir. Bunun \r\nyanında öz değerlendirme ve akran değerlendirme formları kullanılarak \r\nöğrencilerin, öğretimin süreç boyutuna katılmaları sağlanabilir.\r\nKAZANIM SAYISI VE \r\nSÜRE TABLOSU\r\nÖĞRENME BİRİMİ KAZANIM \r\nSAYISI DERS SAATİ ORAN (%)\r\nKumpasla Ölçüm \r\nYapma 5\r\nMikrometre Ölçüm \r\nYapma 6\r\nAçı Ölçme 4\r\nYüzey Pürüzlülüğü \r\nÖlçme 2\r\nVidaları Ölçme 4\r\nDişli Çarkları Ölçme 3\nMastarlar ve Optik \r\nCamlarla Yüzey \r\nKontrolü Yapma\r\n4\r\nŞekil Tolerans \r\nKontrolü Yapma\r\n3\r\nBoyut Tolerans \r\nKontrolü Yapma\r\n3\r\nTOPLAM 34 100\nÖĞRENME BİRİMİ KONULAR ÖĞRENME BİRİMİ KAZANIMLARI ve KAZANIM \r\nAÇIKLAMALARI\r\nKumpasla Ölçüm \r\nYapma\r\n1. Kumpaslar ve Çeşitleri\r\n2. Kupmasla Ölçüm \r\nYapma\r\n1. Ölçülecek profile ve ölçü büyüklüğüne göre \r\nkumpas seçer.\r\n2. Kumpas çene hassasiyetini kontrol eder.\r\n3. Kumpası parça geometrisine göre \r\nkonumlandırır.\r\n4. Tespit vidası yardımıyla hareketli çeneyi \r\ntespit eder.\r\n5. Kumpastan değer okur.\r\nMikrometre Ölçüm \r\nYapma\r\n1. Mikrometreler ve \r\nÇeşitleri\r\n2. Mikrometre İle Ölçüm \r\nYapma\r\n1. Ölçülecek profile ve ölçü büyüklüğüne göre \r\nmikrometre seçer.\r\n2. Mikrometre örslerinin temizlik kontrolünü \r\nyapar.\r\n3. Kontrol mastarlarıyla ölçü hassasiyeti \r\nkontrolünü yapar.\r\n4. Mikrometreyi parça geometrisine göre \r\nkonumlandırır.\r\n5. Tespit mandalı yardımıyla hareketli mili tespit \r\neder.\r\n6. Mikrometreden değer okur.\r\nAçı Ölçme 1. Açı Ölçme \r\n1. Verniyerli açıölçerlerle ölçüm yapar.\r\n2. Sinüs çubuğu ve ölçü mastarıyla ölçüm \r\nyapar.\n3. Silindirik makaralar ve bilyeler yardımıyla \r\nkoniklik açısı ölçer.\r\n4. Optik açı ölçüm cihazıyla açı ölçer.\r\nYüzey Pürüzlülüğü \r\nÖlçme\r\n1. Yüzey Profilometresi\r\n2. Yüzey Pürüzlülük \r\nMastarları\r\n1. Yüzey profilometresi ile yüzey pürüzlülüğünü \r\nölçer.\r\n2. Yüzey pürüzlülük mastarlarıyla ölçüm yapar.\r\nVidaları Ölçme\r\n1. Vida Türlerinin \r\nBelirlenmesi\r\n2. Vida diş üstü ve Diş Dibi \r\nÇapı Ölçme\r\n1. Kumpas ile vidanın metrik veya withworth \r\nvida cinslerinden hangisi olduğunu belirler.\r\n2. Kumpas veya mikrometre ile diş üstü çapını \r\nölçer.\r\n3. Mikrometreyle diş dibi çapını ölçer.\r\n4. Vida tarağıyla vida adımını ölçer.\r\nDişli Çarkları \r\nÖlçme\r\n1. Demir Olmayan Metaller\r\n2. Plastikler\r\n3. Kompozit Malzemeler\r\n1. Demir olmayan metalleri açıklar.\r\n2. Plastik malzemeleri açıklar.\r\n3. Kompozit malzemeleri açıklar.\nDişli Çarkları \r\nÖlçme 1. Dişlilerde Modül Tahmini\r\n2. Dişli çark ölçümleri\r\n1. Diş büyüklüğüne göre modül tahmin eder.\r\n2. Yapılan tahmine göre modül kumpasının \r\nağzını ayarlar.\r\n3. Modül kumpasını diş üzerine yerleştirip ölçüm \r\nyapar.\r\nMastarlar ve Optik \r\nCamlarla Yüzey \r\nKontrolü Yapma\r\n1. Mastar Türleri ve Mastar \r\nSeçimi\r\n2. Mastarlarla Ölçüm \r\nYapma\r\n1. Ölçülecek profile göre mastarı seçer.\r\n2. Mastarları birleştirir.\r\n3. Mastarları iş parçasına yerleştirir.\r\n4. Mastarlar ile kontrol işlemleri yapar.\r\nŞekil Tolerans \r\nKontrolü Yapma 1. Şekil Konum Kontrol \r\nAracı Seçimi\r\n2. Şekil Konum Kontrolü\r\n1. İmalat resmine bakılarak uygun şekil kontrol \r\naracı seçer.\r\n2. Kontrolü yapılacak iş parçasını hazırlar.\r\n3. Kontrol işlemi yapar ve sonucu kaydeder.\r\nBoyut Tolerans \r\nKontrolü Yapma 1. Boyut Tolerans Kontrol \r\nAracı Seçimi\r\n2. Boyut Tolerans Kontrolü\r\n1. İmalat resmine bakarak uygun mastar seçer.\r\n2. Kontrolü yapılacak iş parçasını hazırlar.\r\n3. Kontrol işlemi yapar ve sonucu kaydeder.\nUYGULAMA FAALİYETLERİ/TEMRİNLER\r\nUygulama faaliyeti/temrinler; ders kazanımına uygun olarak okulun fiziki kapasitesi ve donatımı, öğrenci sayısı göz \r\nönünde bulundurularak en fazla uygulama faaliyeti/temrini yaptıracak şekilde meslek alan zümre öğretmenler kurulu \r\ntarafından seçilir. Meslek alan zümre öğretmenleri tarafından aşağıda yer alan temrinlerden farklı temrinlerin \r\nuygulanmasına karar verilebilir.\r\nDERSİN UYGULANMASINA İLİŞKİN AÇIKLAMALAR\r\n1. Öğrencilerin iş sağlığı ve güvenliği kurallarına yönelik somut açıklamalar yapılmalıdır. \r\n2. Anahtar yetkinliklerin kazandırılması yönünde açıklamalar yazılmalıdır. Ders kazanımları anahtar yetkinliklerle \r\nilişkilendirmeye uygunsa bu konuda uyarı yazılmalıdır. Örnek: Bu derste öğrencilere yaptığı çalışmalara sınıf \r\narkadaşlarına sunmasına fırsat verilerek iletişim becerilerinin gelişmesi sağlanmalıdır.\r\n3.\r\n4. Anlatımdan ve örnek çalışmalardan sonra, dersin öğrenme kazanımlarının öğrencide pekiştirilmesi amacıyla \r\nbirden fazla uygulama faaliyeti yapılmalıdır. \r\n5. Bu derste, verilen görevi yapma …………………..değer, tutum ve davranışları ön plana çıkaran etkinliklere \r\nyer verilmelidir. (Bu açıklama değerler eğitimi için matbudur. Kazanıma uygun değer ya da değerlere yer \r\nverilmelidir.) \r\n6. Ders ile ilgili program uygulayıcısı öğretmenlere uyarı niteliğinde önem arz eden ve yukarıdaki açıklamalar \r\ndışında bulunan hususlara burada yer verilebilir.",
     "kaynakDosya": "2026-2027-YILLIK-PLAN/DERS BİLGİ FORMLARI/AMP  DERS BİLGİ FORMU/MAKİNE VE TAS. TEK/10.SINIF/5-Makine_Bakım_Onarım/10.SINIF/Ölçme_ve_Kontrol_DBF.pdf"
   },
@@ -39,6 +90,23 @@ const DERS_BILGI_FORMLARI = [
     "dal": "Makine ve Tasarım Teknolojisi",
     "sinif": "10.SINIF",
     "dersAdi": "İMALAT YÖNTEMLERİ",
+    "dersSinifi": "10. Sınıf",
+    "dersSuresi": "Haftalık 6 Ders Saati",
+    "dersAmaci": "Bu derste öğrenciye; iş sağlığı ve güvenliği tedbirlerini alarak imalat işlemlerinde kullanılan takım tezgâhları ve el aletleriyle makine parçalarının imalatını yapma ile ilgili bilgi ve becerilerin kazandırılması amaçlanmaktadır.",
+    "kazanimlar": [
+      "Tornada delik delme, büyütme işlemleri yapar.",
+      "İş sağlığı ve güvenliği tedbirlerini alarak tornada torna tezgâhlarında farklı profillerde vida açma işlemlerini yapar.",
+      "Frezede delik delme ve kama kanalı açma işlemlerini yapar.",
+      "Frezede Dişli Açma İşlemleri Yapar.",
+      "Temel Taşlama İşlemleri Yapar.",
+      "Elektrik Arkı İle Dikiş Çeker.",
+      "Oksi Gaz İle Dikiş Çeker."
+    ],
+    "ortamDonanim": "Ortam: İmalat işlemleri atelyesi,\nDonanım: Etkileşimli tahta/projeksiyon, Matkap tezgahı, torna tezgahı, \nfreze tezgahı, torna ve freze kesici ve kesici tutucuları, düzlem yüzey \ntaşlama tezgahı, silindirik taşlama tezgahı,Elektrik ark kaynak makinesi, \noksi-gaz kaynak makinesi. Tezgâh katalogları, vida katalogları,",
+    "olcmeDegerlendirme": "Bu derste; öğrenci performansı belirlemeye yönelik çalışmalar değerlendirilirken gözlem formu, derecelendirme ölçeği ve dereceli puanlama anahtarı gibi ölçme araçlarından uygun olanlar seçilerek kullanılabilir. Bunun yanında öz değerlendirme ve akran değerlendirme formları kullanılarak öğrencilerin, öğretimin süreç boyutuna katılmaları sağlanabilir.",
+    "uygulamaFaaliyetleri": "Uygulama faaliyeti/temrinler; ders kazanımına uygun olarak okulun fiziki kapasitesi ve donatımı, öğrenci sayısı göz \r\nönünde bulundurularak en fazla uygulama faaliyeti/temrini yaptıracak şekilde meslek alan zümre öğretmenler kurulu \r\ntarafından seçilir. Meslek alan zümre öğretmenleri tarafından aşağıda yer alan temrinlerden farklı temrinlerin \r\nuygulanmasına karar verilebilir.\r\nTorna \r\ntezgâhlarında delik \r\ndelme ve büyütme\r\n1. Tornada delik delmek ve büyültmek \r\n2. Ölçme ve kontrol yapmak\r\nTorna \r\ntezgâhlarında vida \r\naçma\r\n1. Üçgen vida açmak\r\n2. Kare vida açmak \r\n3. Trapez vida açmak\r\nFrezede delik \r\ndelme ve kama \r\nkanalı açma\r\n1. Freze tezgâhında delik delmek ve büyütmek \r\n2. Freze tezgâhında kama kanalı açmak \r\nFrezede dişli açma 1. Düz Dişli Açmak \r\n2. Kremayer Dişli Açmak \r\nTemel Taşlama \r\nişlemleri\r\n1. Zımpara Taşlarını Dengelemek ve Tezgâha Bağlamak\r\n2. Düzlem yüzey Taşlamak \r\n3. Silindirik Taşlamak \r\nElektrik Arkı İle \r\nDikiş Çekme\r\n1. Kaynak makinesi bağlantısı yapmak\r\n2. Elektrik ark kaynağı ile ark yapmak\r\n3. Yatayda düz dikiş çekmek\r\nOksi Gaz İle Dikiş \r\nÇekme\r\n1. Oksijen ve asetilen tüplerini açıp kapatma ve manometre (Regülâtör) ayarı yapmak\r\n2. Alev oluşturma ve alev ayarı yapmak\r\n3. Yatayda telsiz dikiş çekmek\r\n4. Yatayda telli dikiş çekmek",
+    "dersUygulamaAciklamalari": "• Öğrencilerin iş sağlığı ve güvenliği kurallarına yönelik somut açıklamalar yapılmalıdır. \r\n• Anahtar yetkinliklerin kazandırılması yönünde açıklamalar yazılmalıdır. Ders kazanımları anahtar yetkinliklerle \r\nilişkilendirmeye uygunsa bu konuda uyarı yazılmalıdır. Örnek: Bu derste öğrencilere yaptığı çalışmalara sınıf \r\narkadaşlarına sunmasına fırsat verilerek iletişim becerilerinin gelişmesi sağlanmalıdır.\r\n•\r\n• Anlatımdan ve örnek çalışmalardan sonra, dersin öğrenme kazanımlarının öğrencide pekiştirilmesi amacıyla birden \r\nfazla uygulama faaliyeti yapılmalıdır. \r\n• Bu derste, verilen görevi yapma …………………..değer, tutum ve davranışları ön plana çıkaran etkinliklere yer \r\nverilmelidir. (Bu açıklama değerler eğitimi için matbudur. Kazanıma uygun değer ya da değerlere yer verilmelidir.) \r\n• Ders ile ilgili program uygulayıcısı öğretmenlere uyarı niteliğinde önem arz eden ve yukarıdaki açıklamalar dışında \r\nbulunan hususlara burada yer verilebilir.",
+    "kazanimSayisiSureTablosuHam": "ÖĞRENME BİRİMİ KAZANIM \r\nSAYISI DERS SAATİ ORAN (%)\r\nTorna \r\ntezgâhlarında delik \r\ndelme ve büyültme \r\n2 32 % 14,82\r\nTorna Tezgâhında \r\nvida açma 3 46 %21,29\r\nFrezede delik \r\ndelme ve kama \r\nkanalı açma \r\n2 24 % 11.11\r\nFrezede dişli açma 2 24 % 11.11\r\nTemel Taşlama \r\nişlemleri 3 34 % 15,74\r\nElektrik Arkı İle \r\nDikiş Çekme 3 26 % 12,03\r\nOksi Gaz İle Dikiş \r\nÇekme 4 30 % 13,90\r\nTOPLAM 19 216 100\nÖĞRENME BİRİMİ KONULAR ÖĞRENME BİRİMİ KAZANIMLARI ve KAZANIM \r\nAÇIKLAMALARI\r\nTorna \r\ntezgâhlarında delik\r\ndelme ve büyütme \r\n1. Tornada delik delmek \r\nve büyültme\r\n2. Ölçme ve kontrol yapma\r\n1. Tornada iş sağlığı ve güvenliği tedbirlerini alarak \r\ntorna tezgâhında delik delme ve büyütme işlemleri \r\nyapar.\r\n• Torna tezgâhında delik büyütme işlemini delik \r\nkalemi kullanılması sağlanır \r\n• Öğrencilere temrin parçasına delik büyütme \r\nişlemlerin yapılması sağlanır.\r\n2. Torna tezgâhında ölçme ve kontrol yapma\r\n• Torna tezgahında kullanılan ölçme ve kontrol \r\naletlerin hakkında araştırma yapması istenir.\r\n• Kumpas çeşitleri ve kullanılmasındaki hassas \r\nnoktalar açıklanır, torna tezgâhında kumpas \r\nkullandırılarak uygulama yapmasına fırsat verilir.\r\n• Mikrometreler ve kullanılma alanları ile ilgili \r\naçıklama yapılarak torna tezgâhında ürettikleri \r\nparçaların ölçülmesinde mikrometre kullandırılarak \r\nuygulama yapmasına fırsat verilir.\r\n• Komparatörler ve kullanılma alanları ile ilgili \r\naçıklama yapılarak torna tezgahında ürettikleri \r\nparçaların kontrolünde komparatör kullandırılarak \r\nuygulama yapmasına fırsat verilir.\r\nTorna \r\ntezgâhlarında vida \r\naçma\r\n1. Üçgen vida açma\r\n2. Kare vida açma \r\n3. Trapez vida açma\r\n1. Tornada iş sağlığı ve güvenliği tedbirlerini alarak \r\nüçgen vida ve somunu açma işlemleri yapar.\r\n• Üçgen vida torna tezgâhında açılması sağlanır.\r\n• Yapılan vida ve somun iki parça beraber \r\nçalıştırılmalı\r\n2. Torna tezgâhında kare vida açar.\r\n• Kare vida açılması sağlanır.\r\n3. İmalat resmine uygun trapez vida açma işlemlerini \r\nyapar.\r\n• İşlem sırasına uygun trapez vida açması sağlanır.\r\nFrezede delik \r\ndelme ve kama \r\nkanalı açma\r\n1. Freze tezgâhında delik \r\ndelmek ve büyütme\r\n2. Freze tezgâhında \r\nkama kanalı açma\r\n3. Freze tezgâhlarının \r\nbakım işlemleri\r\n1. Freze tezgâhında delik delme ve delik büyütme \r\nişlemleri yapar.\r\n• Freze tezgâhında delik delme ve büyültme \r\nişlemleri iş güvenliği tedbirlerini alarak uygulama \r\nyapmasına fırsat verilir.\r\n2. Freze tezgâhında imalatı yapılacak olan iş parçasının \r\nüzerine kama kanalı açma işlemlerini yapar.\r\n• Kama kanalının kullanım amacını açıklar.\r\n• Kama kanalı açmada kullanılan kesicileri sınıflandırır.\r\n• Kama kanalı açmada işlem sırasını açıklar.\n• Kesicileri tezgâha bağlar.\r\n• İş parçasını uygun bağlama aparatları ile tezgâha \r\nbağlar.\r\n• Miller üzerine kama kanalını açar\r\n• Düzlemsel parçalar üzerine kama kanalı açar\r\n• Düzlemsel parçalar üzerine T kanalı açar.\r\n• Deliklere kama kanalı açar.\r\n• Kama ölçülerine göre kama kanalını kontrol eder.\r\n3. Freze tezgâhlarının bakım işlemlerini yapar.\r\nFrezede dişli açma 1. Düz Dişli Açma\r\n2. Kremayer Dişli Açma\r\n1. Freze tezgâhında işlem sırasına dikkat ederek \r\nhesaplarına göre düz dişliyi açar.\r\n• Düz dişli hesabının yapılması sağlanır\r\n• Düz dişli temrinin yapılması sağlanır.\r\n• Açılan düz dişlinin kontrolünü yapar.\r\n2. Freze tezgâhında yapılan hesaba göre kremayer dişli \r\naçar.\r\n• Kremayer dişli hesabının yapılması sağlanır\r\n• Kremayer dişli temrinin yapılması sağlanır.\r\n• Açılan kremayer dişlinin kontrolünü yapar.\r\nTemel Taşlama \r\nişlemleri\r\n1. Zımpara Taşlarını \r\nDengelemek ve \r\nTezgâha Bağlama\r\n2. Düzlem yüzey Taşlama \r\n3. Silindirik Taşlama \r\n1. Zımpara Taşlarını Dengeleyerek Tezgâha Bağlar\r\n• Taş dengeleme sehbasını kullanma ve balans ayarı \r\nyaptırılarak uygulama yaptırılmasına fırsat verilir.\r\n2. Düzlem yüzey taşlama işlemleri yapar.\r\n• Yüzey pürüzlülüğü ve yüzey işleme işaretleri \r\nhakkında hakkında bilgi toplaması istenir\r\n3. Silindirik Taşlama işlemleri yapar.\r\n• Delik ve Mil geçme sistemleri hakkında bilgi \r\ntoplaması istenir.\r\nElektrik Arkı İle \r\nDikiş Çekme\r\n1. Kaynak makinesi \r\nbağlantısı \r\n2. Elektrik ark kaynağı ile \r\nark yapımı\r\n3. Yatayda düz dikiş \r\nçekme\r\n1. Kaynak makinesini güç kaynağına bağlar.\r\n• Elektrik ark kaynağının tarihçesi ve kullanılan kaynak \r\nyöntemlerini hakkında bilgi edinmesi istenir.\r\n• Elektrik ark kaynağında kullanılan temel ve yardımcı \r\nelemanlar açıklanır\r\n• Elektrik ark kaynak makinelerinin özellikleri belirtilir.\r\n2. Elektrik ark kaynağı ile ark yapar.\r\n• Elektrik ark kaynağında kaynak arkı oluşturma \r\niçin temel ve yardımcı elemanlar hazırlanır.\r\n• Elektrik ark kaynağında ark oluşturulacak parça \r\nyüzeyini temizlemesi istenir.\r\n• Elektrot çapına uygun amper ayarı seçiminin \r\nönemi açıklanır.\r\n3. Yatayda düz dikiş çeker.\r\n• Elektrik ark kaynağı ile yatayda düz dikiş çekme \r\nöncesi markalama yapmanın önemi açıklanır.\r\n• Elektrik ark kaynağı ile ile yatayda düz dikiş \r\nkaynağında başlangıç ve bitiş noktalarında dikkat \r\nedilecek hususlar belirtilir.\nOksi Gaz İle Dikiş \r\nÇekme\r\n1. Oksijen ve asetilen \r\ntüplerini açıp kapatma ve \r\nmanometre (Regülâtör) \r\nayarı \r\n2. Alev oluşturma ve alev \r\nayarı \r\n3. Yatayda telsiz dikiş \r\nçekme\r\n4. Yatayda telli dikiş çekme\r\n1. Oksijen ve asetilen tüplerini açıp kapatır ve \r\nmanometre (Regülâtör) ayarı yapar.\r\n• Oksijen ve asetilen tüplerini kurallara göre taşıması \r\naçıklanır\r\n• Manometrenin oksijen ve asetilen tüpüne \r\ntakılmasında dikkat edilecek hususlar hatırlatılır.\r\n• Tüplerin içindeki basıncın okunması ve çalışma \r\nbasıncının ayarı açıklanır.\r\n• Gaz kaçağı kontrolü yaptırılır.\r\n• Oksijen ve asetilen tüplerini kurallara göre kapatılması \r\nsağlanır.\r\n2. Alev oluşturarak alev ayarı yapar.\r\n• Tüplerin çalışma basınç ayarı yaptırılır.\r\n• Üflecin gaz kaçak kontrolünü yapartırılır.\r\n• Üfleç ile normal alev oluşturması sağlanarak \r\nuygulama yapmasına imkan sağlanır.\r\n3. Yatayda telsiz dikiş çeker.\r\n• Yatayda telsiz dikiş çekme için gerekli olan temel ve \r\nyardımcı elemanları hazırlattırılır\r\n• Yatayda telsiz dikiş çekilecek gereci markalaması \r\nsağlanır\r\n• Yatayda telsiz dikiş çekilecek gerecin ön temizliğini \r\nyapması sağlanır.\r\n• Yatayda telsiz dikiş çekme için basınç ve normal alev \r\nayarını yapması sağlanır.\r\n• Yatayda sağdan sola/soldan sağa telsiz düz kaynak \r\ndikişi çekmesi sağlanarak uygulama yapmasına imkân\r\nverilir.\r\n4. Yatayda telli dikiş çeker.\r\n• Yatayda telli dikiş çekme için gerekli olan temel ve \r\nyardımcı elemanları hazırlaması sağlanır.\r\n• Yatayda telli dikiş çekilecek gereci markalaması \r\nsağlanır.\r\n• Yatayda telli dikiş çekilecek gerecin ön temizliğini \r\nyapması gerçekleştirilir.\r\n• Yatayda telli dikiş çekme için basınç ve normal alev \r\nayarını yapması sağlanır.\r\n• Yatayda sağdan sola/soldan sağa telli düz kaynak \r\ndikişi çekmesi sağlanarak uygulama yapmasına fırsat \r\nverilir.",
     "metinIcerik": "DERS BİLGİ FORMU\r\nDERSİN ADI İMALAT YÖNTEMLERİ\r\nDERSİN SINIFI 10. Sınıf \r\nDERSİN SÜRESİ Haftalık 6 Ders Saati\r\nDERSİN AMACI\r\nBu derste öğrenciye; iş sağlığı ve güvenliği tedbirlerini alarak imalat \r\nişlemlerinde kullanılan takım tezgâhları ve el aletleriyle makine parçalarının \r\nimalatını yapma ile ilgili bilgi ve becerilerin kazandırılması \r\namaçlanmaktadır.\r\nDERSİN ÖĞRENME \r\nKAZANIMLARI\r\n1. Tornada delik delme, büyütme işlemleri yapar.\r\n2. İş sağlığı ve güvenliği tedbirlerini alarak tornada torna\r\ntezgâhlarında farklı profillerde vida açma işlemlerini yapar.\r\n3. Frezede delik delme ve kama kanalı açma işlemlerini yapar.\r\n4. Frezede Dişli Açma İşlemleri Yapar.\r\n5. Temel Taşlama İşlemleri Yapar.\r\n6. Elektrik Arkı İle Dikiş Çeker.\r\n7. Oksi Gaz İle Dikiş Çeker.\r\nEĞİTİM-ÖĞRETİM \r\nORTAM VE \r\nDONANIMI\r\nOrtam: İmalat işlemleri atelyesi,\r\nDonanım: Etkileşimli tahta/projeksiyon, Matkap tezgahı, torna tezgahı, \r\nfreze tezgahı, torna ve freze kesici ve kesici tutucuları, düzlem yüzey \r\ntaşlama tezgahı, silindirik taşlama tezgahı,Elektrik ark kaynak makinesi, \r\noksi-gaz kaynak makinesi. Tezgâh katalogları, vida katalogları,\r\nÖLÇME VE \r\nDEĞERLENDİRME\r\nBu derste; öğrenci performansı belirlemeye yönelik çalışmalar \r\ndeğerlendirilirken gözlem formu, derecelendirme ölçeği ve dereceli \r\npuanlama anahtarı gibi ölçme araçlarından uygun olanlar seçilerek \r\nkullanılabilir. Bunun yanında öz değerlendirme ve akran değerlendirme \r\nformları kullanılarak öğrencilerin, öğretimin süreç boyutuna katılmaları \r\nsağlanabilir.\r\nKAZANIM SAYISI VE \r\nSÜRE TABLOSU\r\nÖĞRENME BİRİMİ KAZANIM \r\nSAYISI DERS SAATİ ORAN (%)\r\nTorna \r\ntezgâhlarında delik \r\ndelme ve büyültme \r\n2 32 % 14,82\r\nTorna Tezgâhında \r\nvida açma 3 46 %21,29\r\nFrezede delik \r\ndelme ve kama \r\nkanalı açma \r\n2 24 % 11.11\r\nFrezede dişli açma 2 24 % 11.11\r\nTemel Taşlama \r\nişlemleri 3 34 % 15,74\r\nElektrik Arkı İle \r\nDikiş Çekme 3 26 % 12,03\r\nOksi Gaz İle Dikiş \r\nÇekme 4 30 % 13,90\r\nTOPLAM 19 216 100\nÖĞRENME BİRİMİ KONULAR ÖĞRENME BİRİMİ KAZANIMLARI ve KAZANIM \r\nAÇIKLAMALARI\r\nTorna \r\ntezgâhlarında delik\r\ndelme ve büyütme \r\n1. Tornada delik delmek \r\nve büyültme\r\n2. Ölçme ve kontrol yapma\r\n1. Tornada iş sağlığı ve güvenliği tedbirlerini alarak \r\ntorna tezgâhında delik delme ve büyütme işlemleri \r\nyapar.\r\n• Torna tezgâhında delik büyütme işlemini delik \r\nkalemi kullanılması sağlanır \r\n• Öğrencilere temrin parçasına delik büyütme \r\nişlemlerin yapılması sağlanır.\r\n2. Torna tezgâhında ölçme ve kontrol yapma\r\n• Torna tezgahında kullanılan ölçme ve kontrol \r\naletlerin hakkında araştırma yapması istenir.\r\n• Kumpas çeşitleri ve kullanılmasındaki hassas \r\nnoktalar açıklanır, torna tezgâhında kumpas \r\nkullandırılarak uygulama yapmasına fırsat verilir.\r\n• Mikrometreler ve kullanılma alanları ile ilgili \r\naçıklama yapılarak torna tezgâhında ürettikleri \r\nparçaların ölçülmesinde mikrometre kullandırılarak \r\nuygulama yapmasına fırsat verilir.\r\n• Komparatörler ve kullanılma alanları ile ilgili \r\naçıklama yapılarak torna tezgahında ürettikleri \r\nparçaların kontrolünde komparatör kullandırılarak \r\nuygulama yapmasına fırsat verilir.\r\nTorna \r\ntezgâhlarında vida \r\naçma\r\n1. Üçgen vida açma\r\n2. Kare vida açma \r\n3. Trapez vida açma\r\n1. Tornada iş sağlığı ve güvenliği tedbirlerini alarak \r\nüçgen vida ve somunu açma işlemleri yapar.\r\n• Üçgen vida torna tezgâhında açılması sağlanır.\r\n• Yapılan vida ve somun iki parça beraber \r\nçalıştırılmalı\r\n2. Torna tezgâhında kare vida açar.\r\n• Kare vida açılması sağlanır.\r\n3. İmalat resmine uygun trapez vida açma işlemlerini \r\nyapar.\r\n• İşlem sırasına uygun trapez vida açması sağlanır.\r\nFrezede delik \r\ndelme ve kama \r\nkanalı açma\r\n1. Freze tezgâhında delik \r\ndelmek ve büyütme\r\n2. Freze tezgâhında \r\nkama kanalı açma\r\n3. Freze tezgâhlarının \r\nbakım işlemleri\r\n1. Freze tezgâhında delik delme ve delik büyütme \r\nişlemleri yapar.\r\n• Freze tezgâhında delik delme ve büyültme \r\nişlemleri iş güvenliği tedbirlerini alarak uygulama \r\nyapmasına fırsat verilir.\r\n2. Freze tezgâhında imalatı yapılacak olan iş parçasının \r\nüzerine kama kanalı açma işlemlerini yapar.\r\n• Kama kanalının kullanım amacını açıklar.\r\n• Kama kanalı açmada kullanılan kesicileri sınıflandırır.\r\n• Kama kanalı açmada işlem sırasını açıklar.\n• Kesicileri tezgâha bağlar.\r\n• İş parçasını uygun bağlama aparatları ile tezgâha \r\nbağlar.\r\n• Miller üzerine kama kanalını açar\r\n• Düzlemsel parçalar üzerine kama kanalı açar\r\n• Düzlemsel parçalar üzerine T kanalı açar.\r\n• Deliklere kama kanalı açar.\r\n• Kama ölçülerine göre kama kanalını kontrol eder.\r\n3. Freze tezgâhlarının bakım işlemlerini yapar.\r\nFrezede dişli açma 1. Düz Dişli Açma\r\n2. Kremayer Dişli Açma\r\n1. Freze tezgâhında işlem sırasına dikkat ederek \r\nhesaplarına göre düz dişliyi açar.\r\n• Düz dişli hesabının yapılması sağlanır\r\n• Düz dişli temrinin yapılması sağlanır.\r\n• Açılan düz dişlinin kontrolünü yapar.\r\n2. Freze tezgâhında yapılan hesaba göre kremayer dişli \r\naçar.\r\n• Kremayer dişli hesabının yapılması sağlanır\r\n• Kremayer dişli temrinin yapılması sağlanır.\r\n• Açılan kremayer dişlinin kontrolünü yapar.\r\nTemel Taşlama \r\nişlemleri\r\n1. Zımpara Taşlarını \r\nDengelemek ve \r\nTezgâha Bağlama\r\n2. Düzlem yüzey Taşlama \r\n3. Silindirik Taşlama \r\n1. Zımpara Taşlarını Dengeleyerek Tezgâha Bağlar\r\n• Taş dengeleme sehbasını kullanma ve balans ayarı \r\nyaptırılarak uygulama yaptırılmasına fırsat verilir.\r\n2. Düzlem yüzey taşlama işlemleri yapar.\r\n• Yüzey pürüzlülüğü ve yüzey işleme işaretleri \r\nhakkında hakkında bilgi toplaması istenir\r\n3. Silindirik Taşlama işlemleri yapar.\r\n• Delik ve Mil geçme sistemleri hakkında bilgi \r\ntoplaması istenir.\r\nElektrik Arkı İle \r\nDikiş Çekme\r\n1. Kaynak makinesi \r\nbağlantısı \r\n2. Elektrik ark kaynağı ile \r\nark yapımı\r\n3. Yatayda düz dikiş \r\nçekme\r\n1. Kaynak makinesini güç kaynağına bağlar.\r\n• Elektrik ark kaynağının tarihçesi ve kullanılan kaynak \r\nyöntemlerini hakkında bilgi edinmesi istenir.\r\n• Elektrik ark kaynağında kullanılan temel ve yardımcı \r\nelemanlar açıklanır\r\n• Elektrik ark kaynak makinelerinin özellikleri belirtilir.\r\n2. Elektrik ark kaynağı ile ark yapar.\r\n• Elektrik ark kaynağında kaynak arkı oluşturma \r\niçin temel ve yardımcı elemanlar hazırlanır.\r\n• Elektrik ark kaynağında ark oluşturulacak parça \r\nyüzeyini temizlemesi istenir.\r\n• Elektrot çapına uygun amper ayarı seçiminin \r\nönemi açıklanır.\r\n3. Yatayda düz dikiş çeker.\r\n• Elektrik ark kaynağı ile yatayda düz dikiş çekme \r\nöncesi markalama yapmanın önemi açıklanır.\r\n• Elektrik ark kaynağı ile ile yatayda düz dikiş \r\nkaynağında başlangıç ve bitiş noktalarında dikkat \r\nedilecek hususlar belirtilir.\nOksi Gaz İle Dikiş \r\nÇekme\r\n1. Oksijen ve asetilen \r\ntüplerini açıp kapatma ve \r\nmanometre (Regülâtör) \r\nayarı \r\n2. Alev oluşturma ve alev \r\nayarı \r\n3. Yatayda telsiz dikiş \r\nçekme\r\n4. Yatayda telli dikiş çekme\r\n1. Oksijen ve asetilen tüplerini açıp kapatır ve \r\nmanometre (Regülâtör) ayarı yapar.\r\n• Oksijen ve asetilen tüplerini kurallara göre taşıması \r\naçıklanır\r\n• Manometrenin oksijen ve asetilen tüpüne \r\ntakılmasında dikkat edilecek hususlar hatırlatılır.\r\n• Tüplerin içindeki basıncın okunması ve çalışma \r\nbasıncının ayarı açıklanır.\r\n• Gaz kaçağı kontrolü yaptırılır.\r\n• Oksijen ve asetilen tüplerini kurallara göre kapatılması \r\nsağlanır.\r\n2. Alev oluşturarak alev ayarı yapar.\r\n• Tüplerin çalışma basınç ayarı yaptırılır.\r\n• Üflecin gaz kaçak kontrolünü yapartırılır.\r\n• Üfleç ile normal alev oluşturması sağlanarak \r\nuygulama yapmasına imkan sağlanır.\r\n3. Yatayda telsiz dikiş çeker.\r\n• Yatayda telsiz dikiş çekme için gerekli olan temel ve \r\nyardımcı elemanları hazırlattırılır\r\n• Yatayda telsiz dikiş çekilecek gereci markalaması \r\nsağlanır\r\n• Yatayda telsiz dikiş çekilecek gerecin ön temizliğini \r\nyapması sağlanır.\r\n• Yatayda telsiz dikiş çekme için basınç ve normal alev \r\nayarını yapması sağlanır.\r\n• Yatayda sağdan sola/soldan sağa telsiz düz kaynak \r\ndikişi çekmesi sağlanarak uygulama yapmasına imkân\r\nverilir.\r\n4. Yatayda telli dikiş çeker.\r\n• Yatayda telli dikiş çekme için gerekli olan temel ve \r\nyardımcı elemanları hazırlaması sağlanır.\r\n• Yatayda telli dikiş çekilecek gereci markalaması \r\nsağlanır.\r\n• Yatayda telli dikiş çekilecek gerecin ön temizliğini \r\nyapması gerçekleştirilir.\r\n• Yatayda telli dikiş çekme için basınç ve normal alev \r\nayarını yapması sağlanır.\r\n• Yatayda sağdan sola/soldan sağa telli düz kaynak \r\ndikişi çekmesi sağlanarak uygulama yapmasına fırsat \r\nverilir.\r\nUYGULAMA FAALİYETLERİ/TEMRİNLER\nUygulama faaliyeti/temrinler; ders kazanımına uygun olarak okulun fiziki kapasitesi ve donatımı, öğrenci sayısı göz \r\nönünde bulundurularak en fazla uygulama faaliyeti/temrini yaptıracak şekilde meslek alan zümre öğretmenler kurulu \r\ntarafından seçilir. Meslek alan zümre öğretmenleri tarafından aşağıda yer alan temrinlerden farklı temrinlerin \r\nuygulanmasına karar verilebilir.\r\nTorna \r\ntezgâhlarında delik \r\ndelme ve büyütme\r\n1. Tornada delik delmek ve büyültmek \r\n2. Ölçme ve kontrol yapmak\r\nTorna \r\ntezgâhlarında vida \r\naçma\r\n1. Üçgen vida açmak\r\n2. Kare vida açmak \r\n3. Trapez vida açmak\r\nFrezede delik \r\ndelme ve kama \r\nkanalı açma\r\n1. Freze tezgâhında delik delmek ve büyütmek \r\n2. Freze tezgâhında kama kanalı açmak \r\nFrezede dişli açma 1. Düz Dişli Açmak \r\n2. Kremayer Dişli Açmak \r\nTemel Taşlama \r\nişlemleri\r\n1. Zımpara Taşlarını Dengelemek ve Tezgâha Bağlamak\r\n2. Düzlem yüzey Taşlamak \r\n3. Silindirik Taşlamak \r\nElektrik Arkı İle \r\nDikiş Çekme\r\n1. Kaynak makinesi bağlantısı yapmak\r\n2. Elektrik ark kaynağı ile ark yapmak\r\n3. Yatayda düz dikiş çekmek\r\nOksi Gaz İle Dikiş \r\nÇekme\r\n1. Oksijen ve asetilen tüplerini açıp kapatma ve manometre (Regülâtör) ayarı yapmak\r\n2. Alev oluşturma ve alev ayarı yapmak\r\n3. Yatayda telsiz dikiş çekmek\r\n4. Yatayda telli dikiş çekmek\r\nDERSİN UYGULANMASINA İLİŞKİN AÇIKLAMALAR\r\n• Öğrencilerin iş sağlığı ve güvenliği kurallarına yönelik somut açıklamalar yapılmalıdır. \r\n• Anahtar yetkinliklerin kazandırılması yönünde açıklamalar yazılmalıdır. Ders kazanımları anahtar yetkinliklerle \r\nilişkilendirmeye uygunsa bu konuda uyarı yazılmalıdır. Örnek: Bu derste öğrencilere yaptığı çalışmalara sınıf \r\narkadaşlarına sunmasına fırsat verilerek iletişim becerilerinin gelişmesi sağlanmalıdır.\r\n•\r\n• Anlatımdan ve örnek çalışmalardan sonra, dersin öğrenme kazanımlarının öğrencide pekiştirilmesi amacıyla birden \r\nfazla uygulama faaliyeti yapılmalıdır. \r\n• Bu derste, verilen görevi yapma …………………..değer, tutum ve davranışları ön plana çıkaran etkinliklere yer \r\nverilmelidir. (Bu açıklama değerler eğitimi için matbudur. Kazanıma uygun değer ya da değerlere yer verilmelidir.) \r\n• Ders ile ilgili program uygulayıcısı öğretmenlere uyarı niteliğinde önem arz eden ve yukarıdaki açıklamalar dışında \r\nbulunan hususlara burada yer verilebilir.",
     "kaynakDosya": "2026-2027-YILLIK-PLAN/DERS BİLGİ FORMLARI/AMP  DERS BİLGİ FORMU/MAKİNE VE TAS. TEK/10.SINIF/5-Makine_Bakım_Onarım/10.SINIF/İmalat Yöntemleri_DBF.pdf"
   },
@@ -47,8 +115,8 @@ const DERS_BILGI_FORMLARI = [
     "dal": "Makine ve Tasarım Teknolojisi",
     "sinif": "11.SINIF",
     "dersAdi": "MEKANİZMALAR",
-    "dersSuresi": "Haftalık 3 Ders Saati",
     "dersSinifi": "11. Sınıf",
+    "dersSuresi": "Haftalık 3 Ders Saati",
     "dersAmaci": "Bu derste öğrenciye; iş sağlığı ve güvenliği tedbirlerini alarak TS EN ISO standartlarına göre basit mekanizmaları sökme ve takma ile ilgili bilgi ve becerilerin kazandırılması amaçlanmaktadır.",
     "kazanimlar": [
       "İş sağlığı ve güvenliği tedbirlerini alarak makine bağlantı elemanları ile birleştirme işlemlerini yapar.",
@@ -77,6 +145,11 @@ const DERS_BILGI_FORMLARI = [
         "modulAdi": "Basit Mekanizmalar",
         "modulSuresi": "",
         "modulAmaci": "",
+        "konular": [
+          "Vida, cıvata, saplama ve somun bağlama elemanlarını kullanarak birleştirme",
+          "Pim, perno, kama ve segmanlar ile makine parçalarını birleştirme",
+          "Makine parçalarını, perçin ve kaynak ile birleştirme"
+        ],
         "kazanimlar": [
           "Vida, cıvata, saplama ve somun bağlama elemanlarını kullanarak birleştirmeler yapar.",
           "Uygun vidayı seçmesi sağlanır",
@@ -92,17 +165,20 @@ const DERS_BILGI_FORMLARI = [
           "Makine parçalarını, perçin ve kaynak ile birleştirir",
           "İki veya daha fazla makine parçasını perçinleme yaparak uygulama yapmasına fırsat verilir.",
           "İş parçasına kaynak işlemi yaparak birleştirmesi sağlanır."
-        ],
-        "aciklamalar": [
-          "Vida, cıvata, saplama ve somun bağlama elemanlarını kullanarak birleştirme",
-          "Pim, perno, kama ve segmanlar ile makine parçalarını birleştirme",
-          "Makine parçalarını, perçin ve kaynak ile birleştirme"
         ]
       },
       {
         "modulAdi": "Mekanizmalarda Aktarma Elemanları",
         "modulSuresi": "",
         "modulAmaci": "",
+        "konular": [
+          "Mil, muylu ve yataklar ile makine montaj işlemleri",
+          "Sabit, kaymalı, hareketli ve esnek kavrama makine elemanlarını kullanma",
+          "Kam, kasnak, kayışlar ile hareket aktarma",
+          "Düz dişli çarklar ve Dişli çark hesaplamaları",
+          "Basit sökülebilen mekanizmalar",
+          "Yağlama sistemi ve arızaları giderme"
+        ],
         "kazanimlar": [
           "Mil, muylu ve yataklar ile makine montaj işlemleri yapar",
           "Mil çeşitlerini sınıflandırılarak Millerin kullanıldığı yerlere örnekler verilir.",
@@ -133,14 +209,6 @@ const DERS_BILGI_FORMLARI = [
           "Yağlama sisteminin arızalarını gidermesi sağlanır.",
           "Uygun yağ seçimini yaparak Yağı değişecek kısmın hazır duruma getirilmesi sağlanır",
           "Rulmanların ve kızakların yağlanması sağlanarak uygulama yapmasına fırsat tanınır"
-        ],
-        "aciklamalar": [
-          "Mil, muylu ve yataklar ile makine montaj işlemleri",
-          "Sabit, kaymalı, hareketli ve esnek kavrama makine elemanlarını kullanma",
-          "Kam, kasnak, kayışlar ile hareket aktarma",
-          "Düz dişli çarklar ve Dişli çark hesaplamaları",
-          "Basit sökülebilen mekanizmalar",
-          "Yağlama sistemi ve arızaları giderme"
         ]
       }
     ],
@@ -151,8 +219,8 @@ const DERS_BILGI_FORMLARI = [
     "dal": "Makine ve Tasarım Teknolojisi",
     "sinif": "11.SINIF",
     "dersAdi": "MEKANİK BAKIM ONARIM",
-    "dersSuresi": "Haftalık 6 Ders Saati",
     "dersSinifi": "11. Sınıf",
+    "dersSuresi": "Haftalık 6 Ders Saati",
     "dersAmaci": "Bu derste öğrenciye; iş sağlığı ve güvenliği tedbirlerini alarak makine yerleşim planı yapma ve makine kurma, TS EN ISO DIN standartlarına uygun şekilde sistemlerin düzenli kontrollerini yapma, kaldırma ve taşıma araçlarını kullanma, arıza tespiti yapma, arızalı makinenin onarımını yapma ile ilgili bilgi ve becerilerin kazandırılması amaçlanmaktadır.",
     "kazanimlar": [
       "İş sağlığı ve güvenliği tedbirlerini alıp Makine Yerleşim Planı Yapar",
@@ -226,6 +294,11 @@ const DERS_BILGI_FORMLARI = [
         "modulAdi": "Makine Yerleşim Planı",
         "modulSuresi": "",
         "modulAmaci": "",
+        "konular": [
+          "Makinenin kurma talimatı",
+          "Makinenin kurulum yeri belirleme",
+          "Makinenin alt yapısı hazırlama"
+        ],
         "kazanimlar": [
           "Makine Kullanma kılavuzu ve katalogları okur.",
           "Örnek makine kullanma kılavuzu edinerek makine hakkında araştırma yapması istenir.",
@@ -239,17 +312,19 @@ const DERS_BILGI_FORMLARI = [
           "Yerleşim planı çizerek basıçlı hava tesisatını hazırlar.",
           "Basınçlı hava tesisatını örneklerle izah eder",
           "Öğrencilerin kendi seçtikleri bir makine  ile basınçlı hava tesisatının montajı ile ilgili uygulama yapmasına fırsat verilir."
-        ],
-        "aciklamalar": [
-          "Makinenin kurma talimatı",
-          "Makinenin kurulum yeri belirleme",
-          "Makinenin alt yapısı hazırlama"
         ]
       },
       {
         "modulAdi": "Makine Kurma işlemleri",
         "modulSuresi": "",
         "modulAmaci": "",
+        "konular": [
+          "Makine  koruyucu yağını temizleme",
+          "Makine yerleşimi",
+          "Makine  hidrolik, pnömatik ve soğutma sıvı bağlantısı",
+          "Makine sabitleme",
+          "Makine yağlam ve parçaları sıkma"
+        ],
         "kazanimlar": [
           "1. Nakliye emniyetlerini çıkararak  Makineyi ambalajından güvenli bir şekilde  çıkarır.",
           "Örnek makine nakliye emniyeti için araştırma yapması istenir.",
@@ -266,19 +341,19 @@ const DERS_BILGI_FORMLARI = [
           "5. Makineye yağlama yağı katar  ve gevşeyen parçalarını sıkar.",
           "Makinelerde koruyucu yağ özellikleri ve temizlenmesi  için araştırma yapması istenir.",
           "Makinelerde koruyucu yağ özellikleri ve temizlenmesini  görsel video, resim, şema kullanım kılavuzu gibi materyalle uygulama yapmasına fırsat verilir."
-        ],
-        "aciklamalar": [
-          "Makine  koruyucu yağını temizleme",
-          "Makine yerleşimi",
-          "Makine  hidrolik, pnömatik ve soğutma sıvı bağlantısı",
-          "Makine sabitleme",
-          "Makine yağlam ve parçaları sıkma"
         ]
       },
       {
         "modulAdi": "Makinelerin Düzenli Bakımı",
         "modulSuresi": "",
         "modulAmaci": "",
+        "konular": [
+          "Bakım takvimi oluşturma",
+          "Katalog okuma ve parça seçimi",
+          "Sızdırmazlık elemanları  kontrolü",
+          "Karter ve boyun sızdırmazlık elemanları",
+          "Parça seçimi ve montajı"
+        ],
         "kazanimlar": [
           "Günlük, haftalık, aylık ve altı aylık bakım takvimini oluşturur.",
           "Örnek makinelerde günlük, haftalık, aylık ve altı aylık bakım takvimini oluşturması  için araştırma yapması istenir.",
@@ -294,19 +369,19 @@ const DERS_BILGI_FORMLARI = [
           "Kataloglardaki resimlerin okunmasını örnek göstererek açıklama yapması istenir.",
           "Kataloglardan parça seçimi yapması istenir.",
           "Katalogdan seçilen parçayı makineye monte etmesi istenerek uygulama yapmasına fırsat verilir."
-        ],
-        "aciklamalar": [
-          "Bakım takvimi oluşturma",
-          "Katalog okuma ve parça seçimi",
-          "Sızdırmazlık elemanları  kontrolü",
-          "Karter ve boyun sızdırmazlık elemanları",
-          "Parça seçimi ve montajı"
         ]
       },
       {
         "modulAdi": "Sistemlerin Düzenli kontrolleri",
         "modulSuresi": "",
         "modulAmaci": "",
+        "konular": [
+          "Rulman, yatak, dişli, mil,  kama ve burçların bakımı",
+          "Kavrama ve Fren sistemi kontrolü",
+          "Kayış kasnak sistemi ve koruyucularının bakımı",
+          "Makine Yağlama Sistemleri Kontrolü",
+          "Yağ değişimi"
+        ],
         "kazanimlar": [
           "Rulman, yatak, dişli, mil,  kama ve burçların bakımını yapar.",
           "Aktarma organları hakkında araştırma yapması istenir.",
@@ -326,19 +401,19 @@ const DERS_BILGI_FORMLARI = [
           "Yağlama pompaları ve çeşitlerini açıklanır.",
           "Yağ kataloglarını kullanılması izah edilir.",
           "Makine yağlama sistemlerinin kontrolü yaptırılarak özelliğine göre yağ katılası ile uygulama yapmasına fırsat verilir."
-        ],
-        "aciklamalar": [
-          "Rulman, yatak, dişli, mil,  kama ve burçların bakımı",
-          "Kavrama ve Fren sistemi kontrolü",
-          "Kayış kasnak sistemi ve koruyucularının bakımı",
-          "Makine Yağlama Sistemleri Kontrolü",
-          "Yağ değişimi"
         ]
       },
       {
         "modulAdi": "Kaldırma ve Taşıma Araçları",
         "modulSuresi": "",
         "modulAmaci": "",
+        "konular": [
+          "Tel halat ve, zincirlerle kaldırma",
+          "Krikolar",
+          "Vinçler",
+          "Forkliftler",
+          "Elevatörler"
+        ],
         "kazanimlar": [
           "Tel halat ve yük kaldırma zincirlerini kullanır.",
           "Kaldırılacak ağırlığa uygun şekilde tel halat ve kaldırma zinciri seçimini yapması sağlanır.",
@@ -357,19 +432,16 @@ const DERS_BILGI_FORMLARI = [
           "Elevatörlerle yük taşır",
           "Elevatörler çalışma sistemi ve çeşitleri hakkında bilgi toplaması sağlanır.",
           "Elevatör’ün  bulunduğu ortamda kullanılması ve/veya görsel video, resim maket gibi eğitim araçları ile uygulama yapması sağlanır."
-        ],
-        "aciklamalar": [
-          "Tel halat ve, zincirlerle kaldırma",
-          "Krikolar",
-          "Vinçler",
-          "Forkliftler",
-          "Elevatörler"
         ]
       },
       {
         "modulAdi": "Arıza Tespiti",
         "modulSuresi": "",
         "modulAmaci": "",
+        "konular": [
+          "Arızalı bölüm tespiti",
+          "Arıza nedenleri"
+        ],
         "kazanimlar": [
           "Arızalı bölüm ve parçayı tespit eder.",
           "Makine arıza tespit yöntemleri hakkında bilgi toplaması sağlanır.",
@@ -378,16 +450,18 @@ const DERS_BILGI_FORMLARI = [
           "Makinanın çalışma sistemini tanıyarak arızalı makinenin arıza sebebini araştırır.",
           "Makinelerin çalışma sistemleri hakkında bilgi toplanması sağlanır.",
           "Arızalı makinenin çalışma ortamını gözden geçirilmesi sağlanarak çevresel şartların arızaya sebebini araştırmasına imkân verilir."
-        ],
-        "aciklamalar": [
-          "Arızalı bölüm tespiti",
-          "Arıza nedenleri"
         ]
       },
       {
         "modulAdi": "Arızalı Makinenin Onarımı",
         "modulSuresi": "",
         "modulAmaci": "",
+        "konular": [
+          "Arızalı bölüm temizlemesi",
+          "Arızalı parça sökümü",
+          "Arızalı parça tamiri ve değişimi",
+          "Makine çalışma testi"
+        ],
         "kazanimlar": [
           "Vakum makinesi ve diğer temizleme malzemeleri (üstüpü, bez, güderi vs.) kullanarak arızalı kısmı temizler.",
           "Vakum makinesi ve diğer temizleme malzemelerini (üstüpü, bez, güderi vb.) kullanıp arızalı kısmı temizlesi sağlanır.",
@@ -405,12 +479,6 @@ const DERS_BILGI_FORMLARI = [
           "Tamir sonrası elle veya ölçü aleti ile makine testinin önemi açıklanır.",
           "Tamir sonrası elle veya ölçü aleti ile makine testi",
           "yaptırılarak uygulama yapmasına imkan tanınır."
-        ],
-        "aciklamalar": [
-          "Arızalı bölüm temizlemesi",
-          "Arızalı parça sökümü",
-          "Arızalı parça tamiri ve değişimi",
-          "Makine çalışma testi"
         ]
       }
     ],
@@ -421,8 +489,8 @@ const DERS_BILGI_FORMLARI = [
     "dal": "Makine ve Tasarım Teknolojisi",
     "sinif": "11.SINIF",
     "dersAdi": "OTOMATİK KONTROL SİSTEMLERİ",
-    "dersSuresi": "Haftalık 6 Ders Saati",
     "dersSinifi": "11. Sınıf",
+    "dersSuresi": "Haftalık 6 Ders Saati",
     "dersAmaci": "Bu ders ile öğrenciye iş sağlığı ve güvenliği tedbirlerini alarak, TS EN ISO standartlarına göre hidrolik ve pnömatik devre elemanlarını hazırlama, bakım ve onarımını yapma ile ilgili bilgi ve becerilerin kazandırılması amaçlanmaktadır.",
     "kazanimlar": [
       "Hidrolik devre elemanlarını hazırlar.",
@@ -479,6 +547,13 @@ const DERS_BILGI_FORMLARI = [
         "modulAdi": "Hidrolik Devre Elemanları",
         "modulSuresi": "",
         "modulAmaci": "",
+        "konular": [
+          "Hidrolik Devre Elemanlarını seçimi",
+          "Hidrolik devre çizimleri",
+          "Hidrolik devre elemanları montajı",
+          "Hidrolik boru montajı",
+          "Hidrolik akışkan seçimi"
+        ],
         "kazanimlar": [
           "Hidrolik devre elemanları seçimi yapar.",
           "Hidrolik sistemin yapısı ve çalışma kuralları açıklanır.",
@@ -502,19 +577,16 @@ const DERS_BILGI_FORMLARI = [
           "Hidrolik akışkan seçimi yapar.",
           "Yağlama ve hidrolik akışkan seçiminin önemi açıklanır.",
           "Yağlama devrelerinde, soğutma sisteminin önem ve gereğini izah edilir."
-        ],
-        "aciklamalar": [
-          "Hidrolik Devre Elemanlarını seçimi",
-          "Hidrolik devre çizimleri",
-          "Hidrolik devre elemanları montajı",
-          "Hidrolik boru montajı",
-          "Hidrolik akışkan seçimi"
         ]
       },
       {
         "modulAdi": "Hidrolik Devrelerde Bakım planı",
         "modulSuresi": "",
         "modulAmaci": "",
+        "konular": [
+          "Hidrolik sistem bakım planı hazırlama",
+          "Hidrolik sistemlerde arıza arama"
+        ],
         "kazanimlar": [
           "1. Bakım planı ve tamirat dosyasını hazırlar.",
           "Bakımı planı hazırlama. açıklanır.",
@@ -525,16 +597,17 @@ const DERS_BILGI_FORMLARI = [
           "Sistemlerde arıza araması istenir.",
           "Hidrolik arıza aramalarında kullanılan aletler ve göstergelerin bakımını yapması istenir",
           "Arızalı tesisatları sökerek, bakımını yapması gerçekleştirilir."
-        ],
-        "aciklamalar": [
-          "Hidrolik sistem bakım planı hazırlama",
-          "Hidrolik sistemlerde arıza arama"
         ]
       },
       {
         "modulAdi": "Hidrolik Devre Elemanları Bakım ve Onarımı",
         "modulSuresi": "",
         "modulAmaci": "",
+        "konular": [
+          "Hidrolik valflerde arıza arama",
+          "Hidrolik silindirlerde arıza arama",
+          "Hidrolik pompa ve motorlarda  arıza arama"
+        ],
         "kazanimlar": [
           "Hidrolik valflerde arıza arar.",
           "Valflerde arıza arama yöntemleri açıklanır.",
@@ -548,17 +621,18 @@ const DERS_BILGI_FORMLARI = [
           "Pompa ve motorlarda arıza arama yöntemleri açıklanır.",
           "Pompalarda arıza arama açıklanır.",
           "Pompa ve motorlarda bakım yaptırılarak sonrasında elemanları test etme işlemi ile uygulama yapmasına fırsat verilir."
-        ],
-        "aciklamalar": [
-          "Hidrolik valflerde arıza arama",
-          "Hidrolik silindirlerde arıza arama",
-          "Hidrolik pompa ve motorlarda  arıza arama"
         ]
       },
       {
         "modulAdi": "Pnömatik Devre Elemanları",
         "modulSuresi": "",
         "modulAmaci": "",
+        "konular": [
+          "Pnömatik Devre Elemanları seçimi",
+          "Pnömatik devre çizimi",
+          "Pnömatik devre elemanları montajı",
+          "Pnömatik-Hidrolik sistemler kurulumu"
+        ],
         "kazanimlar": [
           "Pnömatik devre elemanları seçimi yapar.",
           "Pnömatik sistemin yapısı ve çalışma kuralları açıklanır.",
@@ -576,18 +650,16 @@ const DERS_BILGI_FORMLARI = [
           "Pnömatik-Hidrolik sistemler kurulumu yapar.",
           "Makine hava-yağ yükselticilerinin kontrolünün yapılması açıklanır.",
           "Basınç yükselticilerinin kontrolünün yapılması açıklanır."
-        ],
-        "aciklamalar": [
-          "Pnömatik Devre Elemanları seçimi",
-          "Pnömatik devre çizimi",
-          "Pnömatik devre elemanları montajı",
-          "Pnömatik-Hidrolik sistemler kurulumu"
         ]
       },
       {
         "modulAdi": "Pnömatik Devrelerde Bakım planı",
         "modulSuresi": "",
         "modulAmaci": "",
+        "konular": [
+          "Pnömatik sistem bakım planı hazırlama",
+          "Pnömatik sistemlerde arıza arama"
+        ],
         "kazanimlar": [
           "Pnömatik sistem bakım planı hazırlar.",
           "Sistem bakım planı hazırlamada dikkat edilecek hususlar açıklanır.",
@@ -597,10 +669,6 @@ const DERS_BILGI_FORMLARI = [
           "Sistemlerde arıza arama tekniklerini izah edilir",
           "Arıza arama çizelgeleri tutmayı izah edilir",
           "Tesisat sökme usulleri açıklanır."
-        ],
-        "aciklamalar": [
-          "Pnömatik sistem bakım planı hazırlama",
-          "Pnömatik sistemlerde arıza arama"
         ]
       }
     ],
@@ -611,8 +679,8 @@ const DERS_BILGI_FORMLARI = [
     "dal": "Makine ve Tasarım Teknolojisi",
     "sinif": "11.SINIF",
     "dersAdi": "TEMEL ELEKTRİK BİLGİSİ",
-    "dersSuresi": "Haftalık 2 Ders Saati",
     "dersSinifi": "11. Sınıf",
+    "dersSuresi": "Haftalık 2 Ders Saati",
     "dersAmaci": "Bu ders ile öğrenciye iş sağlığı ve güvenliği tedbirlerini alarak,  iletkenleri bağlantıya hazırlama, iletkenlerin bağlantılarını yapma, basit elektrik devrelerini kurma, faz kontrolü yapma ve motor devir yönünü değiştirme ile ilgili bilgi ve becerilerin kazandırılması amaçlanmaktadır.",
     "kazanimlar": [
       "İş sağlığı ve güvenliği tedbirlerini alarak Elektrik İç Tesisat Yönetmeliği’ne göre iletkenleri kesme, soyma ve bükme işlemleri yapar.",
@@ -650,6 +718,11 @@ const DERS_BILGI_FORMLARI = [
         "modulAdi": "İletkenleri bağlantıya hazırlama",
         "modulSuresi": "",
         "modulAmaci": "",
+        "konular": [
+          "İletkenleri kesme",
+          "İletken üzerindeki yalıtkanı soyma",
+          "İletkenleri bükme"
+        ],
         "kazanimlar": [
           "İletkenleri keser",
           "Elektrik ve elektrikte kullanılan birimleri tanımlanır",
@@ -661,17 +734,19 @@ const DERS_BILGI_FORMLARI = [
           "İletkenleri büker",
           "Kablo çeşitlerini ve özelliklerini açıklanır.",
           "Kabloların bükümünde dikkat edilecek hususlar açıklanarak  kablo bükme uygulamaları yaptırılır."
-        ],
-        "aciklamalar": [
-          "İletkenleri kesme",
-          "İletken üzerindeki yalıtkanı soyma",
-          "İletkenleri bükme"
         ]
       },
       {
         "modulAdi": "İletkenleri ekleme ve bağlama",
         "modulSuresi": "",
         "modulAmaci": "",
+        "konular": [
+          "Tekli düz ek yapma",
+          "Çiftli düz ek yapma",
+          "Klemens ile bağlantı yapma",
+          "İletkenlerin terminale bağlantısını yapma",
+          "Topraklı fiş ve prize kablo bağlantısı yapmak"
+        ],
         "kazanimlar": [
           "Tekli düz ek yapar",
           "İletkenlerin birbiri ile ek yapılmasında kullanılan aletler hakkında bilgi toplaması istenir.",
@@ -698,19 +773,17 @@ const DERS_BILGI_FORMLARI = [
           "Topraklama elemanlarını sıralanarak Toprak hattı kontrol ölçümleri  açıklanır",
           "Sıfırlama açıklanarak Sıfırlamanın önemi belirtilir.",
           "Topraklı fiş ve priz bağlantısı için kablo uçları hazırlatılarak  Topraklı fiş ve prize kablo bağlantıları yaptırılır."
-        ],
-        "aciklamalar": [
-          "Tekli düz ek yapma",
-          "Çiftli düz ek yapma",
-          "Klemens ile bağlantı yapma",
-          "İletkenlerin terminale bağlantısını yapma",
-          "Topraklı fiş ve prize kablo bağlantısı yapmak"
         ]
       },
       {
         "modulAdi": "Elektrik devresi kurma ve faz kontrolü",
         "modulSuresi": "",
         "modulAmaci": "",
+        "konular": [
+          "Basit elektrik devresi kurma ve çalıştırma",
+          "Basit faz (enerji) kontrol yapma",
+          "Basit müdahale ile motor devir yönünü değiştirme"
+        ],
         "kazanimlar": [
           "Basit elektrik devrelerini kurar ve çalıştırır",
           "Elektrik devresi için gerekli elemanlar hazırlattırılır.",
@@ -727,11 +800,6 @@ const DERS_BILGI_FORMLARI = [
           "Motorların dönüş yönünün tespiti açıklanır.",
           "Tek fazlı motorlarda devir yönü değiştirilir",
           "Üç fazlı motorlarda devir yönünü değiştirilerek uygulama yapmasına fırsat verilir."
-        ],
-        "aciklamalar": [
-          "Basit elektrik devresi kurma ve çalıştırma",
-          "Basit faz (enerji) kontrol yapma",
-          "Basit müdahale ile motor devir yönünü değiştirme"
         ]
       }
     ],
@@ -742,17 +810,41 @@ const DERS_BILGI_FORMLARI = [
     "dal": "Makine ve Tasarım Teknolojisi",
     "sinif": "11.SINIF",
     "dersAdi": "WEB UYGULAMALARI",
-    "dersSuresi": "3 Ders Saati",
     "dersSinifi": "11.-12. Sınıf",
+    "dersSuresi": "3 Ders Saati",
     "dersAmaci": "Bu ders ile öğrenciye; web editörü yardımıyla web sitesi tasarlama, yönetme ve yayınlamaya ile ilgili bilgi ve becerilerin kazandırılması amaçlanmaktadır.",
-    "kazanimlar": [],
-    "modulTablosu": [],
+    "kazanimlar": [
+      "Web editöründe temel düzenlemeler ve nesne işlemleri yapar.",
+      "Hazır blog ve web sitesi şablonları kullanarak web sitesini yönetir, günceller ve yayınlar."
+    ],
+    "modulTablosu": [
+      {
+        "modulAdi": "Web Tasarım Editörü",
+        "konular": "",
+        "kazanimSayisiModul": "21",
+        "kazanimSayisiDers": "",
+        "dersSaati": "40",
+        "agirlik": "40"
+      },
+      {
+        "modulAdi": "Hazır Blog ve Web Sitesi Şablonu",
+        "konular": "",
+        "kazanimSayisiModul": "13",
+        "kazanimSayisiDers": "",
+        "dersSaati": "68",
+        "agirlik": "60"
+      }
+    ],
     "moduller": [
       {
         "modulAdi": "Web Tasarım Editörü",
-        "modulSuresi": "",
-        "modulAmaci": "",
-        "kazanimlar": [
+        "modulSuresi": "40 Ders Saati",
+        "icerikMaddeleri": [
+          "IP (İnternet Protocol)numarası tanımlama",
+          "Alan Adı(Domain) tanımlama",
+          "Hosting(Barındırma) tanımlama",
+          "Web Sayfası Tasarım Editörü tanıma",
+          "Web Tasarım Editörü Temel İşlemler yapma",
           "IP (İnternet Protocol)numarası kavramını açıklar.",
           "Alan adı (Domain) kavramını açıklar.",
           "Hosting (Barındırma) kavramını açıklar.",
@@ -763,21 +855,11 @@ const DERS_BILGI_FORMLARI = [
           "Site tanımlaması yapar.",
           "Ön izlemede kullanılacak web tarayıcıyı seçer.",
           "Paneller ve araç çubuklarını tanır.",
-          "Web sayfası oluşturur ve kaydeder."
-        ],
-        "aciklamalar": [
-          "IP (İnternet Protocol)numarası tanımlama",
-          "Alan Adı(Domain) tanımlama",
-          "Hosting(Barındırma) tanımlama",
-          "Web Sayfası Tasarım Editörü tanıma",
-          "Web Tasarım Editörü Temel İşlemler yapma"
-        ]
-      },
-      {
-        "modulAdi": "Web Tasarım Editörü",
-        "modulSuresi": "",
-        "modulAmaci": "",
-        "kazanimlar": [
+          "Web sayfası oluşturur ve kaydeder.",
+          "1.Metin Türleri ve özellikleri",
+          "2. Metin girişi",
+          "3. Temel metin düzenleme işlemleri",
+          "4. Listeler",
           "Metin türleri ve özellikleri anlatılır.",
           "Metin girişi işlemleri yapar.",
           "Temel metin düzenleme işlemleri yapar.",
@@ -786,67 +868,34 @@ const DERS_BILGI_FORMLARI = [
           "Yazı tipini değiştirir.",
           "Metin hizalar ve girinti verir.",
           "Listeler oluşturur.",
-          "İç içe liste oluşturur."
-        ],
-        "aciklamalar": [
-          "1.Metin Türleri ve özellikleri",
-          "2. Metin girişi",
-          "3. Temel metin düzenleme işlemleri",
-          "4. Listeler"
-        ]
-      },
-      {
-        "modulAdi": "Web Tasarım Editörü",
-        "modulSuresi": "",
-        "modulAmaci": "",
-        "kazanimlar": [
+          "İç içe liste oluşturur.",
+          "Tablo düzenleme",
+          "Tablo expanded modu",
           "Tablo düzenleme işlemleri yapar.",
           "Satır ve sütün ekler ve siler.",
           "Satır ve sütun düzenler.",
-          "Tablo expanded modunu kavrar ve uygular."
-        ],
-        "aciklamalar": [
-          "Tablo düzenleme",
-          "Tablo expanded modu"
-        ]
-      },
-      {
-        "modulAdi": "Web Tasarım Editörü",
-        "modulSuresi": "",
-        "modulAmaci": "",
-        "kazanimlar": [
+          "Tablo expanded modunu kavrar ve uygular.",
+          "1. Resimlerle çalışma",
           "Resimlerle çalışır.",
           "Arka plan resmi kullanır.",
           "Sayfaya resim ekler.",
           "Asset panelinden sayfaya resim ekler.",
           "Görüntü yer tutucu(İmage Placeholder) ekler.",
           "Rollover İmage ekler.",
-          "Resim düzenleme işlemleri yapar."
-        ],
-        "aciklamalar": [
-          "1. Resimlerle çalışma"
-        ]
-      },
-      {
-        "modulAdi": "Web Tasarım Editörü",
-        "modulSuresi": "",
-        "modulAmaci": "",
-        "kazanimlar": [
+          "Resim düzenleme işlemleri yapar.",
+          "1. Animasyon ekleme",
           "Animasyon ekleme işlemleri yapar.",
           "Flash animasyon ekler.",
           "Flash video ekler.",
           "Ses oynatıcısı ekler.",
-          "Param ekler."
-        ],
-        "aciklamalar": [
-          "1. Animasyon ekleme"
-        ]
-      },
-      {
-        "modulAdi": "Web Tasarım Editörü",
-        "modulSuresi": "",
-        "modulAmaci": "",
-        "kazanimlar": [
+          "Param ekler.",
+          "Metinlere bağlantı ekleme",
+          "Bağlantı özellikleri",
+          "Bağlantı adreslerinin açılış şekilleri",
+          "Resimlere bağlantı",
+          "Etkin resim noktaları",
+          "Named Anchor(çapa)",
+          "Eposta Bağlantıları",
           "Metinlere bağlantı ekler.",
           "Bağlantı özelliklerini düzenler.",
           "Bağlantı adreslerinin açılış şekillerini yapar.",
@@ -854,49 +903,69 @@ const DERS_BILGI_FORMLARI = [
           "Etkin resim noktaları oluşturur.",
           "Named Anchor(çapa) ekleme işlemini yapar.",
           "Eposta Bağlantı işlemlerini yapar."
-        ],
-        "aciklamalar": [
-          "Metinlere bağlantı ekleme",
-          "Bağlantı özellikleri",
-          "Bağlantı adreslerinin açılış şekilleri",
-          "Resimlere bağlantı",
-          "Etkin resim noktaları",
-          "Named Anchor(çapa)",
-          "Eposta Bağlantıları"
         ]
       },
       {
-        "modulAdi": "Hazır Blog Ve Web Sitesi Şablonu",
-        "modulSuresi": "",
-        "modulAmaci": "",
-        "kazanimlar": [
+        "modulAdi": "Hazır Blog ve Web Sitesi Şablonu",
+        "modulSuresi": "68 Ders Saati",
+        "icerikMaddeleri": [
+          "İnternette kullanılan blog ve hazır websitesi şablonları",
+          "Yerel sunucu kurulumu y",
           "İnternette kullanılan blog ve hazır websitesi şablonu kavramlarını açıklar",
           "Yerel sunucu kurulumunu yapar",
           "PhpMyAdmin ile Veritabanı Oluşturur",
           "Veri tabanı kullanıcısı oluşturur",
           "Hazır blog/şablon dosyalarını internetten indirir ve localhost’a yükler",
-          "Hazır blog/website kurulumunu yapar"
-        ],
-        "aciklamalar": [
-          "İnternette kullanılan blog ve hazır websitesi şablonları",
-          "Yerel sunucu kurulumu y"
-        ]
-      },
-      {
-        "modulAdi": "Hazır Blog Ve Web Sitesi Şablonu",
-        "modulSuresi": "",
-        "modulAmaci": "",
-        "kazanimlar": [
+          "Hazır blog/website kurulumunu yapar",
+          "Hazır Blog/Websitesi yönetim paneli ve ayarları",
           "Hazır Blog/Websitesi yönetim paneli ve ayarlarını yapar",
           "Kurulum sonrası dil ayarlarını  yapar",
           "Son sürüm dosyalarını indirerek yükler",
           "Genel ayarlarda, Site başlığı, slagon, site adresi (url), zaman dilimi, Tarih biçimi düzenlemeleri yapar.",
           "Okuma, yazma, tartışma ve ortam ayarlarını düzenler.",
           "Kullanıcı tanımlar ve yetkilerini düzenler",
-          "Kalıcı bağlantıları düzenler"
-        ],
-        "aciklamalar": [
-          "Hazır Blog/Websitesi yönetim paneli ve ayarları"
+          "Kalıcı bağlantıları düzenler",
+          "Tema ayarları ve düzenleme",
+          "Eklenti yüklemek ve düzenleme",
+          "Kategori ve Etiket Oluşturma",
+          "Sayfa ve yazı oluşturma",
+          "Ortam Kütüphanesi oluşturma",
+          "Yorum izinleri düzenleme",
+          "İletişim formu oluşturma",
+          "Hazır blog/websitesi tema ayarlarını yapar.",
+          "Yeni tema yükler veya yüklü temaları aktif yapar",
+          "Tema özelliklerinden site başlığını (banner) düzenler",
+          "Anasayfa blog düzenini ayarlar",
+          "Web sitesi/blog footer sabit bilgilerini düzenler ve görünümünü ayarlar",
+          "Menülere alt başlık ekler ve menü yapısını düzenler",
+          "Ana sayfa ve sayfalarda kullanılacak bileşenleri düzenler",
+          "Oluşturulacak sayfaların özelliklerini düzenler.",
+          "Eklenti yükler ve eklenti ayarlarını yapar.",
+          "Kategori ve Etiket oluşturur.",
+          "Blog/websitesi için sayfalar oluşturur.",
+          "Sayfa oluşturarak içerik ekler ve yayınlar",
+          "Sayfaları bölümler ekleyerek resim, şekil, tablo ekler",
+          "Sayfaları menülere bağlar",
+          "Sayfa oluştururken öne çıkan görseli ayarlar",
+          "Sayfa içinde texbox, banner, düğme ve köprü kullanır.",
+          "Sayfa yapısını blog post olarak ayarlar",
+          "Sayfa içine arama kutusu, galeri ve video ekler",
+          "Sayfa içinde yeni satır ve grid oluşturarak düzenler",
+          "Portfolyo sayfası yapar.",
+          "Sayfa içine slider, akordion ve tab menü ekler",
+          "Ortam kütüphanesine resim, video, animasyon dosyası ekler ve sayfa içinde kullanır.",
+          "Sayfa ve yazıların yorum izinlerini düzenler",
+          "Sayfa içine iletişim formu ekler ve menü bağlantısını yapar.",
+          "Web sitesi güvenliğini sağlama",
+          "Blog/Websitesi yedekleme",
+          "Web sitesi güvenliğini sağlama",
+          "Güçlü şifre oluşturur",
+          "Blog/websitesini düzenli olarak güncellemesini yapar",
+          "Güvenlik eklentilerini yükler",
+          "Düzenli yedekleme yapar",
+          "Blok/Websitesini yedekleme yapar",
+          "Veritabanı yedeklemesini yapar",
+          "Ftp bağlantısı oluşturur ve dosya yedeklemesi yapar"
         ]
       }
     ],
@@ -907,8 +976,8 @@ const DERS_BILGI_FORMLARI = [
     "dal": "Makine ve Tasarım Teknolojisi",
     "sinif": "12.SINIF",
     "dersAdi": "MAKİNE ELEMANLARI",
-    "dersSuresi": "Haftalık 2 Ders Saati",
     "dersSinifi": "11. Sınıf",
+    "dersSuresi": "Haftalık 2 Ders Saati",
     "dersAmaci": "Bu derste öğrenciye; iş sağlığı ve güvenliği tedbirlerini alarak motorlu araçlarda kullanılan makine elemanlarının temel işlemleri ve hesaplamaları ile ilgili bilgi ve becerilerin kazandırılması amaçlanmaktadır.",
     "kazanimlar": [
       "Birleştirme elemanları ile ilgili işlem ve hesaplamaları yapar.",
@@ -937,6 +1006,24 @@ const DERS_BILGI_FORMLARI = [
         "modulAdi": "Birleştirme Elemanları",
         "modulSuresi": "",
         "modulAmaci": "",
+        "konular": [
+          "Sökülebilen Birleştirme Elemanları",
+          "Kamalar",
+          "Pimler",
+          "Vida, cıvata ve somunlar",
+          "Tolerans hesaplamaları",
+          "Yüzey kalite işaretleri",
+          "Sökülebilen birleştirme elemanlarının hesapları",
+          "Sökülemeyen Birleştirme Elemanları",
+          "Perçinler",
+          "Kaynaklı birleştirmeler",
+          "Lehimleme",
+          "Yağlar ve Yağlama",
+          "Madensel yağlar",
+          "Kataloga uygun yağlama",
+          "Soğutma sıvıları",
+          "Yağ katalogları"
+        ],
         "kazanimlar": [
           "Sökülebilen birleştirme elemanlarının seçimini ve ilgili hesaplamalarını yapar.",
           "Kama ile birleştirme yapılması sağlanır.",
@@ -954,30 +1041,22 @@ const DERS_BILGI_FORMLARI = [
           "Makine parçalarının yağlama şekillerinin tespit edilmesi sağlanır.",
           "Yağ kataloglarının incelenmesi sağlanır.",
           "Kataloga uygun yağlama yapılması sağlanır."
-        ],
-        "aciklamalar": [
-          "Sökülebilen Birleştirme Elemanları",
-          "Kamalar",
-          "Pimler",
-          "Vida, cıvata ve somunlar",
-          "Tolerans hesaplamaları",
-          "Yüzey kalite işaretleri",
-          "Sökülebilen birleştirme elemanlarının hesapları",
-          "Sökülemeyen Birleştirme Elemanları",
-          "Perçinler",
-          "Kaynaklı birleştirmeler",
-          "Lehimleme",
-          "Yağlar ve Yağlama",
-          "Madensel yağlar",
-          "Kataloga uygun yağlama",
-          "Soğutma sıvıları",
-          "Yağ katalogları"
         ]
       },
       {
         "modulAdi": "Hareket İletme Elemanları",
         "modulSuresi": "",
         "modulAmaci": "",
+        "konular": [
+          "Miller, Muylu ve Yataklar",
+          "Miller, muylular ve yataklar",
+          "Yuvarlanma dirençli yataklar",
+          "Mil, muylu ve yatakların hesapları",
+          "Kayış, Kasnak,.Dişli Çark ve Zincirler",
+          "Kayış, kasnak dişli çark ve zincirler",
+          "Kayış, kasnak dişli çark ve zincirlerinin hesaplamaları",
+          "Kavramalar"
+        ],
         "kazanimlar": [
           "Miller, muylular ve yatakların seçimini ve ilgili hesaplamalarını yapar.",
           "Düz miller ve çeşitleri açıklanır.",
@@ -993,16 +1072,6 @@ const DERS_BILGI_FORMLARI = [
           "Kavramaların seçimini yapar",
           "Kavramaların hareket iletim hesaplamaları yapılması sağlanır.",
           "Kavramaların çeşitleri ve kullanıldığı yerler açıklanır."
-        ],
-        "aciklamalar": [
-          "Miller, Muylu ve Yataklar",
-          "Miller, muylular ve yataklar",
-          "Yuvarlanma dirençli yataklar",
-          "Mil, muylu ve yatakların hesapları",
-          "Kayış, Kasnak,.Dişli Çark ve Zincirler",
-          "Kayış, kasnak dişli çark ve zincirler",
-          "Kayış, kasnak dişli çark ve zincirlerinin hesaplamaları",
-          "Kavramalar"
         ]
       }
     ],
@@ -1013,8 +1082,8 @@ const DERS_BILGI_FORMLARI = [
     "dal": "Makine ve Tasarım Teknolojisi",
     "sinif": "12.SINIF",
     "dersAdi": "MEKANİZMA ÇİZİMLERİ",
-    "dersSuresi": "3 Ders Saati",
     "dersSinifi": "11. Sınıf",
+    "dersSuresi": "3 Ders Saati",
     "dersAmaci": "Bu derste öğrenciye; çeşitli mekanizmaların özelliklerini ve mekanizma tasarlama ilkeleri ile ilgili bilgi ve becerilerin kazandırılması amaçlanmaktadır.",
     "kazanimlar": [],
     "modulTablosu": [],
@@ -1023,6 +1092,16 @@ const DERS_BILGI_FORMLARI = [
         "modulAdi": "Kayış Kasnak Sistemleri",
         "modulSuresi": "",
         "modulAmaci": "",
+        "konular": [
+          "Kayışlar",
+          "a.Kayış çeşitleri",
+          "b.Kayış uzunluğu hesabı",
+          "Gerdirme Sistemleri",
+          "Yük taşıyışı kasnaklar",
+          "a.Basit makaralar",
+          "b.Hareketli makaralar",
+          "c.Diferansiyel Palanga"
+        ],
         "kazanimlar": [
           "Kayış tipini seçer.",
           "Eksenler arası açı dikkate alınarak kayış tipi seçimi sağlanır..",
@@ -1042,22 +1121,21 @@ const DERS_BILGI_FORMLARI = [
           "Moment ve güç hesaplamaların yapılması için önce örnek hesaplamalar yapılır, sonra öğrencilerin yapması sağlanır.",
           "Kayış kasnak tertibatı ile güç ve hareket aktarımı yapma işlemleri montajı yapılmış  sistemler üzerinde açıklanır.",
           "Motor ve avara miline kasnak takma işlemleri beraber yapılarak açıklanır."
-        ],
-        "aciklamalar": [
-          "Kayışlar",
-          "a.Kayış çeşitleri",
-          "b.Kayış uzunluğu hesabı",
-          "Gerdirme Sistemleri",
-          "Yük taşıyışı kasnaklar",
-          "a.Basit makaralar",
-          "b.Hareketli makaralar",
-          "c.Diferansiyel Palanga"
         ]
       },
       {
         "modulAdi": "Kam Sistemleri",
         "modulSuresi": "",
         "modulAmaci": "",
+        "konular": [
+          "Kamlar",
+          "Kam Mekanizmalarının Sınıflandırılması",
+          "a.Hareket Modu",
+          "b.İzleyici Biçimi",
+          "c.İzleyicinin Yerleşimi",
+          "3.  Kam elemanları",
+          "4.  Kam diyagramı çizimi"
+        ],
         "kazanimlar": [
           "Kam diyagramı çizer.",
           "Kam tertibatının hareketinin kamın şekline bağlı olduğu açıklanır.",
@@ -1069,42 +1147,13 @@ const DERS_BILGI_FORMLARI = [
           "Kam mekanizması elemanlarını çizme işlem sırası açıklanır.",
           "Kam mekanizması montaj resmini çizer.",
           "Kam mekanizmaları montaj resmi çizme işlem sırası çizilerek gösterilir sonra öğrencilerin çizmesi  sağlanır."
-        ],
-        "aciklamalar": [
-          "Kamlar",
-          "Kam Mekanizmalarının Sınıflandırılması",
-          "a.Hareket Modu",
-          "b.İzleyici Biçimi",
-          "c.İzleyicinin Yerleşimi",
-          "3.  Kam elemanları",
-          "4.  Kam diyagramı çizimi"
         ]
       },
       {
         "modulAdi": "Hareket Sistemleri",
         "modulSuresi": "",
         "modulAmaci": "",
-        "kazanimlar": [
-          "Düzlemsel hareket yapan mekanizmaların montaj resmini çizer.",
-          "Düzlemsel hareket yapan mekanizmalara dair örnek animasyonlar gösterlir.",
-          "Düzlemsel hareket yapan mekanizma resimleri nin çizilmesi sağlanır.",
-          "Düzlemsel hareket yapan mekanizmaların çeşitlerini tanır",
-          "Salınım hareketi yapan mekanizmaların  çizilmesi sağlanır.",
-          "Hızlı dönüş mekanizmalarının çizilmesi sağlanır.",
-          "Düz-kremayer dişli mekanizması sistemler üzerinde önce gösterilir sonra öğrencilere çizdirilir.",
-          "Kam ve izleyici mekanizmaları sistemler üzerinde önce gösterilir sonra öğrencilere çizdirilir.",
-          "Doğrusal hareketlendirici mekanizmalar sistemler üzerinde önce gösterilir sonra öğrencilere çizdirilir.",
-          "Dairesel hareket yapan mekanizmaların montaj resmini çizer.",
-          "Dairesel hareket yapan mekanizma tipleri örneklerle anlatılır.",
-          "Dairesel hareket yapan mekanizmaların montaj resimlerinin çizdirilmesi sağlanır.",
-          "Kayma hareketi yapan mekanizmaların montaj resmini çizer.",
-          "Kayma hareketi yapan mekanizmalar a dair örnekler gösterilir.",
-          "Kayma hareketi yapan mekanizmaların montaj resimlerinin çizilmesi sağlanır.",
-          "Dairesel hareketle güç aktaran mekanizmaların montaj resmini çizer.",
-          "Güç aktaran mekanizmalara dair örnek modeller gösterilir.",
-          "Güç aktaran mekanizmaların montaj resimlerinin çizilmesi sağlanır ."
-        ],
-        "aciklamalar": [
+        "konular": [
           "Düzlemsel hareket mekanizmalar",
           "Uzuvlar ve mafsallar",
           "Mafsal çeşitleri",
@@ -1131,6 +1180,26 @@ const DERS_BILGI_FORMLARI = [
           "Dairesel Hareket Mekanizmaları",
           "Kayma Hareketi Yapan Mekanizmalar",
           "Dairesel Hareketle Güç Aktarım Mekanizmaları"
+        ],
+        "kazanimlar": [
+          "Düzlemsel hareket yapan mekanizmaların montaj resmini çizer.",
+          "Düzlemsel hareket yapan mekanizmalara dair örnek animasyonlar gösterlir.",
+          "Düzlemsel hareket yapan mekanizma resimleri nin çizilmesi sağlanır.",
+          "Düzlemsel hareket yapan mekanizmaların çeşitlerini tanır",
+          "Salınım hareketi yapan mekanizmaların  çizilmesi sağlanır.",
+          "Hızlı dönüş mekanizmalarının çizilmesi sağlanır.",
+          "Düz-kremayer dişli mekanizması sistemler üzerinde önce gösterilir sonra öğrencilere çizdirilir.",
+          "Kam ve izleyici mekanizmaları sistemler üzerinde önce gösterilir sonra öğrencilere çizdirilir.",
+          "Doğrusal hareketlendirici mekanizmalar sistemler üzerinde önce gösterilir sonra öğrencilere çizdirilir.",
+          "Dairesel hareket yapan mekanizmaların montaj resmini çizer.",
+          "Dairesel hareket yapan mekanizma tipleri örneklerle anlatılır.",
+          "Dairesel hareket yapan mekanizmaların montaj resimlerinin çizdirilmesi sağlanır.",
+          "Kayma hareketi yapan mekanizmaların montaj resmini çizer.",
+          "Kayma hareketi yapan mekanizmalar a dair örnekler gösterilir.",
+          "Kayma hareketi yapan mekanizmaların montaj resimlerinin çizilmesi sağlanır.",
+          "Dairesel hareketle güç aktaran mekanizmaların montaj resmini çizer.",
+          "Güç aktaran mekanizmalara dair örnek modeller gösterilir.",
+          "Güç aktaran mekanizmaların montaj resimlerinin çizilmesi sağlanır ."
         ]
       }
     ],
@@ -1141,6 +1210,20 @@ const DERS_BILGI_FORMLARI = [
     "dal": "Makine ve Tasarım Teknolojisi",
     "sinif": "9.SINIF",
     "dersAdi": "TEKNİK RESİM",
+    "dersSinifi": "9. Sınıf",
+    "dersSuresi": "3 Ders Saati",
+    "dersAmaci": "Bu ders ile öğrenciye geometrik çizimler yapma, görünüş çıkarma ve ölçülendirme/yüzey sembollerini kullanma ile ilgili bilgi ve becerilerin kazandırılması amaçlanmaktadır.",
+    "kazanimlar": [
+      "Teknik resim kurallarına uygun olarak yazı yazar ve geometrik şekiller çizer.",
+      "Teknik resim kurallarına uygun olarak verilen parçanın görünüşlerini (üç görünüşü, kesit görünüşleri, detay görünüşleri vb) çıkarma işlemini yapar.",
+      "Teknik resim kurallarına uygun olarak parça çizimlerinin ölçülendirme, tolerans ve yüzey işleme işlemlerini uygular.",
+      "Teknik resim kurallarına uygun olarak parçaların yapım ve perspektif resimlerini çizer."
+    ],
+    "ortamDonanim": "Ortam: Teknik Resim Atölyesi, \nDonanım: Akıllı tahta/projeksiyon, çizim masası, çizim araç gereçleri (gönye, T \ncetveli, daire şablonu vb)",
+    "olcmeDegerlendirme": "Bu derste; öğrenci performansı belirlemeye yönelik çalışmalar değerlendirilirken gözlem formu, derecelendirme ölçeği ve dereceli puanlama anahtarı gibi ölçme araçlarından uygun olanlar seçilerek kullanılabilir. Bu derste öğrenciler yaptıkları bütün uygulamaları bir dosyada saklamalıdırlar. Bunun yanında öz değerlendirme ve akran değerlendirme formları kullanılarak öğrencilerin, öğretimin süreç boyutuna katılmaları sağlanabilir.",
+    "uygulamaFaaliyetleri": "Uygulama faaliyeti/temrinler; ders kazanımına uygun olarak okulun fiziki kapasitesi ve donatımı, öğrenci \r\nsayısı göz önünde bulundurularak en fazla uygulama faaliyeti/temrini yaptıracak şekilde meslek alan zümre \r\nöğretmenler kurulu tarafından seçilir. Meslek alan zümre öğretmenleri tarafından aşağıda yer alan \r\ntemrinlerden farklı temrinlerin uygulanmasına karar verilebilir.\r\nGeometrik Çizimler\r\nTeknik resim kurallarına ve TS EN ISO standartlarına uygun olarak eğik ve \r\ndik standart yazı yazma (Atatürk’ün Gençliğe Hitabesi, İstiklal Marşı vb)\r\nTeknik resim kurallarına uygun olarak serbest elle ve çizim takımlarıyla \r\nçizgi çalışmaları yapma.\r\nTeknik resim kurallarına uygun olarak geometrik şekiller çizme.\r\nGörünüş Çıkarma\r\nTeknik resim kurallarına uygun olarak serbest elle ve çizim takımlarıyla \r\nçeşitli iş parçalarına ait görünüşleri çizme.\r\nTeknik resim kurallarına uygun olarak serbest elle ve çizim takımlarıyla \r\nçeşitli iş parçalarına ait kesit görünüşleri çizme.\r\nÖlçülendirme Ve Yüzey \r\nİşlemleri\r\nTeknik resim kurallarına uygun olarak resmini çizdiği iş parçalarının \r\nölçülendirme işlemini yapma.\r\nTeknik resim kurallarına uygun olarak resmini çizdiği iş parçalarına ait \r\nyüzey pürüzlülük değerlerini verme.\r\nTeknik resim kurallarına uygun olarak resmini çizdiği iş parçalarına ait \r\ntolerans değerlerini verme.\r\nKroki, Perspektif Ve \r\nYapım Resmi\r\nTeknik resim kurallarına uygun olarak standart resim kâğıtlarına çeşitli iş \r\nparçalarının kroki resimlerini çizme.\r\nTeknik resim kurallarına uygun olarak standart resim kâğıtlarına çeşitli iş \r\nparçalarının perspektif resimlerini çizme.\r\nTeknik resim kurallarına uygun olarak standart resim kâğıtlarına çeşitli iş \r\nparçalarının imalat resimlerini çizme.",
+    "dersUygulamaAciklamalari": "1. Öğretmenler ders öncesinde temrin çalışmalarında gerekli ekipmanları hazır bulundurmaya dikkat \r\netmelidir.\n2. Öğretmenler ders esnasında gereken temrin/iş resmi hazır bulundurmaya dikkat etmelidir.\r\n3. İş sağlığı ve güvenliği tedbirleri alınarak standartlara göre atölyede öğretmen gözetiminde \r\nyukarıdaki kazanımlara yönelik bilgi ve beceri kazandırılmalıdır.\r\n4. Öğrencilerin kullanacakları ekipmanları amacına uygun kullanmalarına dikkat edilmelidir.\r\n5. Bu derste, verilen görevi yapma, çalışkan ve azimli olma, sabırlı olma, zamana riayet değer, tutum \r\nve davranışları ön plana çıkaran etkinliklere yer verilmelidir.",
+    "kazanimSayisiSureTablosuHam": "ÖĞRENME BİRİMİ/ÜNİTE KAZANIM \r\nSAYISI DERS SAATİ ORAN (%)\r\nGeometrik Çizimler 3 27 25\r\nGörünüş Çıkarma 2 27 25\r\nÖlçülendirme Ve Yüzey \r\nİşlemleri 3 27 25\r\nKroki, Perspektif Ve Yapım \r\nResmi 3\r\n27\r\n25\r\nTOPLAM 11 108 100\nÖĞRENME \r\nBİRİMİ KONULAR ÖĞRENME BİRİMİ KAZANIMLARI ve KAZANIM \r\nAÇIKLAMALARI\r\nGEOMETRİK \r\nÇİZİMLER\r\n1. Eğik ve Dik \r\nStandart Yazı \r\n2. Çizgi Çalışmaları\r\n3. Geometrik \r\nŞekiller\r\n1. Teknik resim kurallarına (TS EN ISO \r\nstandartlarına) uygun olarak eğik ve dik \r\nstandart yazı yazar.\r\n1. Teknik resmin endüstrideki önemi üzerinde \r\ndurulur.\r\n2. Teknik resim araç gereçleri ve çizim kâğıtları \r\nüzerinde durulur.\r\n3. Standart yazı ve norm yazı örnekleri verilir.\r\n4. Norm yazı temrinleri verilir.\r\n5. Teknik resim kurallarına uygun olarak \r\nserbest elle ve çizim takımlarıyla çizgi \r\nçalışmaları yapar\r\n1. Çizgi çeşitleri ve çizgi kalınlıkları üzerinde \r\ndurulur.\r\n2. Çizgi çeşitlerinin kullanım alanları ile ilgili \r\nörnekler verilir.\r\n3. Çizgi çalışması temrinleri verilir.\r\n4. Teknik resim kurallarına uygun olarak \r\ngeometrik şekiller çizer.\r\n1. Teknik resimde açı, paralellik ve diklik kavramları \r\nüzerinde durulur.\r\n2. Çember ve teğet doğrular üzerinde durulur.\r\n3. Teğet çizim örnekleri verilir.\r\n4. Çokgen çizim yöntemleri üzerinde durulur.\r\n5. Açılı çizimler, çember ve teğet çizimleri, çokgen \r\nçizim temrinleri verilir.\r\n6. Çokgen çizim örnekleri verilir.\r\n7. Elips, oval, parabol, evolvent, spiral çizimlerine \r\ngirilmez.\r\nGÖRÜNÜŞ \r\nÇIKARMA\r\n1. Teknik Resim \r\nGörünüşler\r\n2. Kesit Görünüşler\r\n1. Teknik resim kurallarına uygun olarak \r\nserbest elle ve çizim takımlarıyla çeşitli iş \r\nparçalarına ait görünüşleri çizer.\r\n1. İzdüşüm ve görünüş çeşitleri üzerinde durulur.\r\n2. Görünüş sayısı, yardımcı, detay ve özel görünüş \nbelirleme üzerinde durulur.\r\n3. Dik izdüşüm örnekleri ve temrinleri verilir.\r\n4. Tek görünüşün yeterli olduğu temrinler verilir.\r\n5. İki veya daha fazla görünüş isteyen temrinler \r\nverilir.\r\n6. Yardımcı, detay ve özel görünüş temrinleri verilir.\r\n7. Teknik resim kurallarına uygun olarak \r\nserbest elle ve çizim takımlarıyla çeşitli iş \r\nparçalarına ait kesit görünüşleri çizer.\r\n1. Kesit alma ve kesit görünüş almanın gerekliliği \r\nüzerinde durulur.\r\n2. Kesit görünüş çeşitleri ve kesit görünüş almada \r\nuyulacak çizim kuralları üzerinde durulur.\r\n3. Parçanın özelliğine uygun türde kesit alma \r\nörnekleri ve temrinleri verilir.\r\n4. Kesit elemanlarını çizim kurallarına göre \r\ngörünüşler üzerinde gösterme örnekleri verilir.\r\nÖLÇÜLENDİR\r\nME VE \r\nYÜZEY \r\nİŞLEMLERİ\r\n1. Ölçülendirme\r\n2. Yüzey \r\nPürüzlülük \r\nİşlemleri\r\n3. Tolerans \r\nİşlemleri\r\n1. Teknik resim kurallarına uygun olarak \r\nresmini çizdiği iş parçalarının ölçülendirme \r\nişlemini yapar\r\n1. Ölçülendirme işlemi, doğru ölçülendirmenin \r\nönemi üzerinde durulur.\r\n2. Ölçülendirme sistemleri, çeşitleri ve yöntemleri \r\nüzerinde durulur.\r\n3. Ölçek türleri ve ölçeklendirme oranlarına \r\nörnekler verilir.\r\n4. Ölçülendirme ve ölçeklendirme temrinleri verilir.\r\n5. Teknik resim kurallarına uygun olarak \r\nresmini çizdiği iş parçalarına ait yüzey \r\npürüzlülük değerlerini uygun sembolleri \r\nkullanarak resim üzerinde gösterir.\r\n1. İmalatta yüzey pürüzlülüğü, yüzey kalite çeşitleri \r\nve yüzey pürüzlülük değerinin ölçülme \r\nyöntemleri üzerinde durulur.\r\n2. Yüzey kalite sembolündeki değer ve işaretler ile \r\nilgili temrinler verilir.\r\n3. Teknik resim kurallarına uygun olarak \r\nresmini çizdiği iş parçalarına ait tolerans \r\ndeğerlerini uygun sembolleri kullanarak \nresim üzerinde gösterir.\r\n1. İmalatta tolerans kavramı, tolerans türleri, önemi \r\nüzerinde durulur.\r\n2. Boyut toleranslarına örnekler verilir.\r\n3. Şekil ve konum toleranslarına örnekler verilir.\r\n4. Tolerans çizelgelerine örnekler verilir.\r\n5. Tolerans temrinleri verilir.\r\nKROKİ, \r\nPERSPEKTİF \r\nVE YAPIM \r\nRESMİ\r\n1. Kroki Çizimi\r\n2. Perspektif Çizimi\r\n3. İmalat Resmi \r\nÇizimi\r\n1. Teknik resim kurallarına uygun olarak \r\nstandart resim kâğıtlarına çeşitli iş \r\nparçalarının kroki resimlerini çizer.\r\n1. İmalatta kroki resmi, kroki çizmenin önemi \r\nüzerinde durulur.\r\n2. Kroki çiziminde işlem sırası üzerinde durulur.\r\n3. Makine parçalarında kroki çizme temrinleri verilir.\r\n4. Teknik resim kurallarına uygun olarak \r\nstandart resim kâğıtlarına çeşitli iş \r\nparçalarının perspektif resimlerini çizer.\r\n1. Perspektif kavramı, perspektif çizmenin önemi \r\nüzerinde durulur.\r\n2. Perspektif resim türleri ve perspektif resim \r\nözellikleri üzerinde durulur.\r\n3. İzometrik, eğik ve merkezi perspektif üzerinde \r\ndurulur.\r\n4. İmalatta kullanılan perspektif temrinleri verilir.\r\n5. Teknik resim kurallarına uygun olarak \r\nstandart resim kâğıtlarına çeşitli iş \r\nparçalarının imalat resimlerini çizer.\r\n1. İmalat resmi, imalat resminin özellikleri üzerinde \r\ndurulur.\r\n2. İmalat resim ölçeği, görünüş sayısı, kesit ve \r\ndetaylarla ilgili örnekler verilir.\r\n3. İmalat resim temrinleri verilir.",
     "metinIcerik": "DERSİN ADI TEKNİK RESİM\r\nDERSİN SINIFI 9. Sınıf\r\nDERSİN SÜRESİ 3 Ders Saati\r\nDERSİN AMACI\r\nBu ders ile öğrenciye geometrik çizimler yapma, görünüş çıkarma ve \r\nölçülendirme/yüzey sembollerini kullanma ile ilgili bilgi ve becerilerin kazandırılması \r\namaçlanmaktadır.\r\nDERSİN ÖĞRENME \r\nKAZANIMLARI\r\n1. Teknik resim kurallarına uygun olarak yazı yazar ve geometrik şekiller çizer.\r\n2. Teknik resim kurallarına uygun olarak verilen parçanın görünüşlerini (üç \r\ngörünüşü, kesit görünüşleri, detay görünüşleri vb) çıkarma işlemini yapar.\r\n3. Teknik resim kurallarına uygun olarak parça çizimlerinin ölçülendirme, \r\ntolerans ve yüzey işleme işlemlerini uygular.\r\n4. Teknik resim kurallarına uygun olarak parçaların yapım ve perspektif\r\nresimlerini çizer.\r\nEĞİTİM-ÖĞRETİM \r\nORTAM VE \r\nDONANIMI\r\nOrtam: Teknik Resim Atölyesi, \r\nDonanım: Akıllı tahta/projeksiyon, çizim masası, çizim araç gereçleri (gönye, T \r\ncetveli, daire şablonu vb)\r\nÖLÇME VE \r\nDEĞERLENDİRME\r\nBu derste; öğrenci performansı belirlemeye yönelik çalışmalar değerlendirilirken \r\ngözlem formu, derecelendirme ölçeği ve dereceli puanlama anahtarı gibi ölçme \r\naraçlarından uygun olanlar seçilerek kullanılabilir. Bu derste öğrenciler yaptıkları \r\nbütün uygulamaları bir dosyada saklamalıdırlar. Bunun yanında öz değerlendirme ve \r\nakran değerlendirme formları kullanılarak öğrencilerin, öğretimin süreç boyutuna \r\nkatılmaları sağlanabilir.\r\nKAZANIM SAYISI VE \r\nSÜRE TABLOSU\r\nÖĞRENME BİRİMİ/ÜNİTE KAZANIM \r\nSAYISI DERS SAATİ ORAN (%)\r\nGeometrik Çizimler 3 27 25\r\nGörünüş Çıkarma 2 27 25\r\nÖlçülendirme Ve Yüzey \r\nİşlemleri 3 27 25\r\nKroki, Perspektif Ve Yapım \r\nResmi 3\r\n27\r\n25\r\nTOPLAM 11 108 100\nÖĞRENME \r\nBİRİMİ KONULAR ÖĞRENME BİRİMİ KAZANIMLARI ve KAZANIM \r\nAÇIKLAMALARI\r\nGEOMETRİK \r\nÇİZİMLER\r\n1. Eğik ve Dik \r\nStandart Yazı \r\n2. Çizgi Çalışmaları\r\n3. Geometrik \r\nŞekiller\r\n1. Teknik resim kurallarına (TS EN ISO \r\nstandartlarına) uygun olarak eğik ve dik \r\nstandart yazı yazar.\r\n1. Teknik resmin endüstrideki önemi üzerinde \r\ndurulur.\r\n2. Teknik resim araç gereçleri ve çizim kâğıtları \r\nüzerinde durulur.\r\n3. Standart yazı ve norm yazı örnekleri verilir.\r\n4. Norm yazı temrinleri verilir.\r\n5. Teknik resim kurallarına uygun olarak \r\nserbest elle ve çizim takımlarıyla çizgi \r\nçalışmaları yapar\r\n1. Çizgi çeşitleri ve çizgi kalınlıkları üzerinde \r\ndurulur.\r\n2. Çizgi çeşitlerinin kullanım alanları ile ilgili \r\nörnekler verilir.\r\n3. Çizgi çalışması temrinleri verilir.\r\n4. Teknik resim kurallarına uygun olarak \r\ngeometrik şekiller çizer.\r\n1. Teknik resimde açı, paralellik ve diklik kavramları \r\nüzerinde durulur.\r\n2. Çember ve teğet doğrular üzerinde durulur.\r\n3. Teğet çizim örnekleri verilir.\r\n4. Çokgen çizim yöntemleri üzerinde durulur.\r\n5. Açılı çizimler, çember ve teğet çizimleri, çokgen \r\nçizim temrinleri verilir.\r\n6. Çokgen çizim örnekleri verilir.\r\n7. Elips, oval, parabol, evolvent, spiral çizimlerine \r\ngirilmez.\r\nGÖRÜNÜŞ \r\nÇIKARMA\r\n1. Teknik Resim \r\nGörünüşler\r\n2. Kesit Görünüşler\r\n1. Teknik resim kurallarına uygun olarak \r\nserbest elle ve çizim takımlarıyla çeşitli iş \r\nparçalarına ait görünüşleri çizer.\r\n1. İzdüşüm ve görünüş çeşitleri üzerinde durulur.\r\n2. Görünüş sayısı, yardımcı, detay ve özel görünüş \nbelirleme üzerinde durulur.\r\n3. Dik izdüşüm örnekleri ve temrinleri verilir.\r\n4. Tek görünüşün yeterli olduğu temrinler verilir.\r\n5. İki veya daha fazla görünüş isteyen temrinler \r\nverilir.\r\n6. Yardımcı, detay ve özel görünüş temrinleri verilir.\r\n7. Teknik resim kurallarına uygun olarak \r\nserbest elle ve çizim takımlarıyla çeşitli iş \r\nparçalarına ait kesit görünüşleri çizer.\r\n1. Kesit alma ve kesit görünüş almanın gerekliliği \r\nüzerinde durulur.\r\n2. Kesit görünüş çeşitleri ve kesit görünüş almada \r\nuyulacak çizim kuralları üzerinde durulur.\r\n3. Parçanın özelliğine uygun türde kesit alma \r\nörnekleri ve temrinleri verilir.\r\n4. Kesit elemanlarını çizim kurallarına göre \r\ngörünüşler üzerinde gösterme örnekleri verilir.\r\nÖLÇÜLENDİR\r\nME VE \r\nYÜZEY \r\nİŞLEMLERİ\r\n1. Ölçülendirme\r\n2. Yüzey \r\nPürüzlülük \r\nİşlemleri\r\n3. Tolerans \r\nİşlemleri\r\n1. Teknik resim kurallarına uygun olarak \r\nresmini çizdiği iş parçalarının ölçülendirme \r\nişlemini yapar\r\n1. Ölçülendirme işlemi, doğru ölçülendirmenin \r\nönemi üzerinde durulur.\r\n2. Ölçülendirme sistemleri, çeşitleri ve yöntemleri \r\nüzerinde durulur.\r\n3. Ölçek türleri ve ölçeklendirme oranlarına \r\nörnekler verilir.\r\n4. Ölçülendirme ve ölçeklendirme temrinleri verilir.\r\n5. Teknik resim kurallarına uygun olarak \r\nresmini çizdiği iş parçalarına ait yüzey \r\npürüzlülük değerlerini uygun sembolleri \r\nkullanarak resim üzerinde gösterir.\r\n1. İmalatta yüzey pürüzlülüğü, yüzey kalite çeşitleri \r\nve yüzey pürüzlülük değerinin ölçülme \r\nyöntemleri üzerinde durulur.\r\n2. Yüzey kalite sembolündeki değer ve işaretler ile \r\nilgili temrinler verilir.\r\n3. Teknik resim kurallarına uygun olarak \r\nresmini çizdiği iş parçalarına ait tolerans \r\ndeğerlerini uygun sembolleri kullanarak \nresim üzerinde gösterir.\r\n1. İmalatta tolerans kavramı, tolerans türleri, önemi \r\nüzerinde durulur.\r\n2. Boyut toleranslarına örnekler verilir.\r\n3. Şekil ve konum toleranslarına örnekler verilir.\r\n4. Tolerans çizelgelerine örnekler verilir.\r\n5. Tolerans temrinleri verilir.\r\nKROKİ, \r\nPERSPEKTİF \r\nVE YAPIM \r\nRESMİ\r\n1. Kroki Çizimi\r\n2. Perspektif Çizimi\r\n3. İmalat Resmi \r\nÇizimi\r\n1. Teknik resim kurallarına uygun olarak \r\nstandart resim kâğıtlarına çeşitli iş \r\nparçalarının kroki resimlerini çizer.\r\n1. İmalatta kroki resmi, kroki çizmenin önemi \r\nüzerinde durulur.\r\n2. Kroki çiziminde işlem sırası üzerinde durulur.\r\n3. Makine parçalarında kroki çizme temrinleri verilir.\r\n4. Teknik resim kurallarına uygun olarak \r\nstandart resim kâğıtlarına çeşitli iş \r\nparçalarının perspektif resimlerini çizer.\r\n1. Perspektif kavramı, perspektif çizmenin önemi \r\nüzerinde durulur.\r\n2. Perspektif resim türleri ve perspektif resim \r\nözellikleri üzerinde durulur.\r\n3. İzometrik, eğik ve merkezi perspektif üzerinde \r\ndurulur.\r\n4. İmalatta kullanılan perspektif temrinleri verilir.\r\n5. Teknik resim kurallarına uygun olarak \r\nstandart resim kâğıtlarına çeşitli iş \r\nparçalarının imalat resimlerini çizer.\r\n1. İmalat resmi, imalat resminin özellikleri üzerinde \r\ndurulur.\r\n2. İmalat resim ölçeği, görünüş sayısı, kesit ve \r\ndetaylarla ilgili örnekler verilir.\r\n3. İmalat resim temrinleri verilir.\nUYGULAMA FAALİYETLERİ/TEMRİNLER\r\nUygulama faaliyeti/temrinler; ders kazanımına uygun olarak okulun fiziki kapasitesi ve donatımı, öğrenci \r\nsayısı göz önünde bulundurularak en fazla uygulama faaliyeti/temrini yaptıracak şekilde meslek alan zümre \r\nöğretmenler kurulu tarafından seçilir. Meslek alan zümre öğretmenleri tarafından aşağıda yer alan \r\ntemrinlerden farklı temrinlerin uygulanmasına karar verilebilir.\r\nGeometrik Çizimler\r\nTeknik resim kurallarına ve TS EN ISO standartlarına uygun olarak eğik ve \r\ndik standart yazı yazma (Atatürk’ün Gençliğe Hitabesi, İstiklal Marşı vb)\r\nTeknik resim kurallarına uygun olarak serbest elle ve çizim takımlarıyla \r\nçizgi çalışmaları yapma.\r\nTeknik resim kurallarına uygun olarak geometrik şekiller çizme.\r\nGörünüş Çıkarma\r\nTeknik resim kurallarına uygun olarak serbest elle ve çizim takımlarıyla \r\nçeşitli iş parçalarına ait görünüşleri çizme.\r\nTeknik resim kurallarına uygun olarak serbest elle ve çizim takımlarıyla \r\nçeşitli iş parçalarına ait kesit görünüşleri çizme.\r\nÖlçülendirme Ve Yüzey \r\nİşlemleri\r\nTeknik resim kurallarına uygun olarak resmini çizdiği iş parçalarının \r\nölçülendirme işlemini yapma.\r\nTeknik resim kurallarına uygun olarak resmini çizdiği iş parçalarına ait \r\nyüzey pürüzlülük değerlerini verme.\r\nTeknik resim kurallarına uygun olarak resmini çizdiği iş parçalarına ait \r\ntolerans değerlerini verme.\r\nKroki, Perspektif Ve \r\nYapım Resmi\r\nTeknik resim kurallarına uygun olarak standart resim kâğıtlarına çeşitli iş \r\nparçalarının kroki resimlerini çizme.\r\nTeknik resim kurallarına uygun olarak standart resim kâğıtlarına çeşitli iş \r\nparçalarının perspektif resimlerini çizme.\r\nTeknik resim kurallarına uygun olarak standart resim kâğıtlarına çeşitli iş \r\nparçalarının imalat resimlerini çizme.\r\nDERSİN UYGULANMASINA İLİŞKİN AÇIKLAMALAR\r\n1. Öğretmenler ders öncesinde temrin çalışmalarında gerekli ekipmanları hazır bulundurmaya dikkat \r\netmelidir.\n2. Öğretmenler ders esnasında gereken temrin/iş resmi hazır bulundurmaya dikkat etmelidir.\r\n3. İş sağlığı ve güvenliği tedbirleri alınarak standartlara göre atölyede öğretmen gözetiminde \r\nyukarıdaki kazanımlara yönelik bilgi ve beceri kazandırılmalıdır.\r\n4. Öğrencilerin kullanacakları ekipmanları amacına uygun kullanmalarına dikkat edilmelidir.\r\n5. Bu derste, verilen görevi yapma, çalışkan ve azimli olma, sabırlı olma, zamana riayet değer, tutum \r\nve davranışları ön plana çıkaran etkinliklere yer verilmelidir. ",
     "kaynakDosya": "2026-2027-YILLIK-PLAN/DERS BİLGİ FORMLARI/AMP  DERS BİLGİ FORMU/MAKİNE VE TAS. TEK/9.SINIF/Teknik_Resim_DBF.pdf"
   },
@@ -1149,8 +1232,8 @@ const DERS_BILGI_FORMLARI = [
     "dal": "Bilgisayarlı Makine İmalatı",
     "sinif": "11-B",
     "dersAdi": "BİLGİSAYAR DESTEKLİ ÇİZİM DERSİ",
-    "dersSuresi": "2 ders saati (11. sınıfta 1 ders saati okulda, 1 ders saati işletmede uygulanacaktır.)",
     "dersSinifi": "",
+    "dersSuresi": "2 ders saati (11. sınıfta 1 ders saati okulda, 1 ders saati işletmede uygulanacaktır.)",
     "dersAmaci": "Bu ders ile öğrenciye; TS EN ISO standartlarına ve teknik resim kurallarına uygun olarak, çizim programı ile iki boyutlu çizimler yapma, özellik ve tanımlama komutlarını kullanma, çizim kütüphanesi oluşturma ve perspektif çizme ile ilgili bilgi ve becerilerin kazandırılması amaçlanmaktadır",
     "kazanimlar": [
       "İş sağlığı ve güvenliği tedbirlerini alıp CAD programında oluşturduğu çizim sayfasında çizim komutlarını kullanarak iki boyutlu çizimler yapar.",
@@ -1248,8 +1331,8 @@ const DERS_BILGI_FORMLARI = [
     "dal": "Bilgisayarlı Makine İmalatı",
     "sinif": "11-B",
     "dersAdi": "MAKİNE MESLEK RESMİ",
-    "dersSuresi": "4 Ders saati (11. sınıfta 2 ders saati okulda, 2 ders saati işletmede uygulanacaktır.)",
     "dersSinifi": "12. Sınıf",
+    "dersSuresi": "4 Ders saati (11. sınıfta 2 ders saati okulda, 2 ders saati işletmede uygulanacaktır.)",
     "dersAmaci": "Bu derste öğrenciye; iş sağlığı ve güvenliği tedbirlerini alarak TS ISO DIN standartlarına ve teknik resim kurallarına uygun şekilde cisimlerin ara kesit ve açınımlarını, standart makine elemanlarını, dişlileri çizme ve katı modelleme programlarını kullanarak katı modeller çizme, montajlar oluşturma ve montaj unsurları arasında hareket verme ile ilgili bilgi ve becerilerin kazandırılması amaçlanmaktadır.",
     "kazanimlar": [
       "İş sağlığı ve güvenliği tedbirlerini alıp teknik resim kurallarına göre birleştirme elemanlarını çizer.",
@@ -1509,8 +1592,8 @@ const DERS_BILGI_FORMLARI = [
     "dal": "Bilgisayarlı Makine İmalatı",
     "sinif": "11-B",
     "dersAdi": "İMALAT İŞLEMLERİ",
-    "dersSuresi": "8 Ders saati (11. sınıfta 4 ders saati okulda, 4 ders saati işletmede uygulanacaktır.)",
     "dersSinifi": "11. Sınıf",
+    "dersSuresi": "8 Ders saati (11. sınıfta 4 ders saati okulda, 4 ders saati işletmede uygulanacaktır.)",
     "dersAmaci": "Bu derste öğrenciye; iş sağlığı ve güvenliği tedbirlerini alarak imalat işlemlerinde kullanılan takım tezgâhları ve el aletleriyle makine parçalarının imalatını yapma ile ilgili bilgi ve becerilerin kazandırılması amaçlanmaktadır.",
     "kazanimlar": [
       "İş sağlığı ve güvenliği tedbirlerini alarak torna tezgâhında ölçüsünde delik delme, ölçme ve kontrol işlemlerini yapar.",
@@ -1767,8 +1850,8 @@ const DERS_BILGI_FORMLARI = [
     "dal": "Bilgisayarlı Makine İmalatı",
     "sinif": "12-B",
     "dersAdi": "BİLGİSAYAR DESTEKLİ TASARIM VE ÜRETİM (CAD/CAM)",
-    "dersSuresi": "4 Ders Saati (12. sınıfta 2 ders saati okulda, 2 ders saati işletmede uygulanacaktır.)",
     "dersSinifi": "12. Sınıf",
+    "dersSuresi": "4 Ders Saati (12. sınıfta 2 ders saati okulda, 2 ders saati işletmede uygulanacaktır.)",
     "dersAmaci": "Bu ders ile öğrenciye CNC tezgâhlarında bilgisayar destekli tasarım ve üretim programlarını ile iş sağlığı ve güvenliği tedbirleri alarak imalat yapma ile ilgili bilgi ve becerilerin kazandırılması amaçlanmaktadır.",
     "kazanimlar": [
       "İş sağlığı ve güvenliği tedbirlerini alarak CAM programında parça ölçüsüne uygun iki boyutlu çizimler yapar.",
@@ -1936,8 +2019,8 @@ const DERS_BILGI_FORMLARI = [
     "dal": "Bilgisayarlı Makine İmalatı",
     "sinif": "12-B",
     "dersAdi": "BİLGİSAYAR KONTROLLÜ TEZGÂHLARLA ÜRETİM (CNC)",
-    "dersSuresi": "7 ders saati (12. sınıfta 4 ders saati okulda, 3 ders saati işletmede uygulanacaktır.)",
     "dersSinifi": "12. Sınıf",
+    "dersSuresi": "7 ders saati (12. sınıfta 4 ders saati okulda, 3 ders saati işletmede uygulanacaktır.)",
     "dersAmaci": "Bu derste öğrenciye; iş sağlığı ve güvenliği tedbirlerini alarak CNC torna tezgâhları ve CNC freze tezgâhlarında iş parçası ve kesici ayarları, elle program yazma ve tezgâh kullanımı ile ilgili bilgi ve becerilerin kazandırılması amaçlanmaktadır.",
     "kazanimlar": [
       "İş sağlığı ve güvenliği tedbirlerini alıp CNC torna tezgâhlarını kontrol panelindeki tuşları kullanarak çalıştırır.",
@@ -2243,8 +2326,8 @@ const DERS_BILGI_FORMLARI = [
     "dal": "Bilgisayarlı Makine İmalatı",
     "sinif": "12-B",
     "dersAdi": "AHİLİK KÜLTÜRÜ VE GİRİŞİMCİLİK",
-    "dersSuresi": "1 ders saati (12. sınıfta 1 ders saati okulda uygulanacaktır.)",
     "dersSinifi": "",
+    "dersSuresi": "1 ders saati (12. sınıfta 1 ders saati okulda uygulanacaktır.)",
     "dersAmaci": "Bu derste öğrenciye; ahilik kültürü ve girişimcilik ile ilgili bilgi ve becerilerin kazandırılması amaçlanmaktadır.",
     "kazanimlar": [
       "Ahilik kültürü ve meslek etiğine uygun davranışlar gösterir.",
@@ -2328,8 +2411,8 @@ const DERS_BILGI_FORMLARI = [
     "dal": "Mermercilik",
     "sinif": "12-C",
     "dersAdi": "İŞ ETÜDÜ VE KALİTE KONTROL",
-    "dersSuresi": "2 Ders saati (12. sınıfta 1 ders saati okulda, 1 ders saati işletmede uygulanacaktır.)",
     "dersSinifi": "",
+    "dersSuresi": "2 Ders saati (12. sınıfta 1 ders saati okulda, 1 ders saati işletmede uygulanacaktır.)",
     "dersAmaci": "Bu derste öğrenciye; insan ve malzeme kaynaklarının verimli kullanımı, üretimde kalite kontrol ve iş sağlığı ve güvenliği ile ilgili bilgi ve becerilerin kazandırılması amaçlanmaktadır.",
     "kazanimlar": [
       "Yönetim ve iş etüdü uygulamaları yapar.",
@@ -2447,8 +2530,8 @@ const DERS_BILGI_FORMLARI = [
     "dal": "Mermercilik",
     "sinif": "12-C",
     "dersAdi": "MERMER OCAKÇILIĞI",
-    "dersSuresi": "4 Ders Saati (12. sınıfta 2 ders saati okulda, 2 ders saati işletmede uygulanacaktır.)",
     "dersSinifi": "12. Sınıf",
+    "dersSuresi": "4 Ders Saati (12. sınıfta 2 ders saati okulda, 2 ders saati işletmede uygulanacaktır.)",
     "dersAmaci": "Bu derste öğrenciye; iş sağlığı ve güvenliği tedbirlerini alarak mermer ocaklarından her türlü blok mermeri üretme ile ilgili bilgi ve becerilerin kazandırılması amaçlanmaktadır.",
     "kazanimlar": [
       "İş sağlığı ve güvenliği ve maden mevzuatına uygun olarak mermer ocakçılığında tel kesme makinesi elmas telini hazırlar.",
@@ -2598,8 +2681,8 @@ const DERS_BILGI_FORMLARI = [
     "dal": "Mermercilik",
     "sinif": "12-C",
     "dersAdi": "MERMER PLAKA İMALATI",
-    "dersSuresi": "4 Ders Saati (12. sınıfta 4 ders saati okulda uygulanacaktır.)",
     "dersSinifi": "12. Sınıf",
+    "dersSuresi": "4 Ders Saati (12. sınıfta 4 ders saati okulda uygulanacaktır.)",
     "dersAmaci": "Bu ders ile öğrenciye iş sağlığı ve güvenliği tedbirlerini alarak her türlü mermer bloktan plaka kesme, parlatma, ebatlama, kalite kontrol, renk seleksiyonu, ambalajlama yapma ile ilgili bilgi ve becerilerin kazandırılması amaçlanmaktadır.",
     "kazanimlar": [
       "İş sağlığı ve güvenliği tedbirlerini alarak mermer plaka kesimi için kullanılan makine ve ekipmanların düzenli bakımını yapar",
@@ -2729,8 +2812,8 @@ const DERS_BILGI_FORMLARI = [
     "dal": "Mermercilik",
     "sinif": "12-C",
     "dersAdi": "AHİLİK KÜLTÜRÜ VE GİRİŞİMCİLİK",
-    "dersSuresi": "1 ders saati (12. sınıfta 1 ders saati okulda uygulanacaktır.)",
     "dersSinifi": "",
+    "dersSuresi": "1 ders saati (12. sınıfta 1 ders saati okulda uygulanacaktır.)",
     "dersAmaci": "Bu derste öğrenciye; ahilik kültürü ve girişimcilik ile ilgili bilgi ve becerilerin kazandırılması amaçlanmaktadır.",
     "kazanimlar": [
       "Ahilik kültürü ve meslek etiğine uygun davranışlar gösterir.",
@@ -2814,8 +2897,8 @@ const DERS_BILGI_FORMLARI = [
     "dal": "Mermercilik",
     "sinif": "11-C",
     "dersAdi": "BİLGİSAYAR DESTEKLİ ÇİZİM DERSİ",
-    "dersSuresi": "2 ders saati (11. sınıfta 1 ders saati okulda, 1 ders saati işletmede uygulanacaktır.)",
     "dersSinifi": "",
+    "dersSuresi": "2 ders saati (11. sınıfta 1 ders saati okulda, 1 ders saati işletmede uygulanacaktır.)",
     "dersAmaci": "Bu ders ile öğrenciye; TS EN ISO standartlarına ve teknik resim kurallarına uygun olarak, çizim programı ile iki boyutlu çizimler yapma, özellik ve tanımlama komutlarını kullanma, çizim kütüphanesi oluşturma ve perspektif çizme ile ilgili bilgi ve becerilerin kazandırılması amaçlanmaktadır",
     "kazanimlar": [
       "İş sağlığı ve güvenliği tedbirlerini alıp CAD programında oluşturduğu çizim sayfasında çizim komutlarını kullanarak iki boyutlu çizimler yapar.",
@@ -2913,8 +2996,8 @@ const DERS_BILGI_FORMLARI = [
     "dal": "Mermercilik",
     "sinif": "11-C",
     "dersAdi": "MERMER MESLEK RESMİ",
-    "dersSuresi": "2 Ders Saati (11. Sınıfta 1 ders saati okulda, 1 ders saati işletmede uygulanacaktır.)",
     "dersSinifi": "11. Sınıf",
+    "dersSuresi": "2 Ders Saati (11. Sınıfta 1 ders saati okulda, 1 ders saati işletmede uygulanacaktır.)",
     "dersAmaci": "Bu derste öğrenciye; iş sağlığı ve güvenliği tedbirlerini alarak TS EN ISO DIN standartlarına, teknik resim kurallarına ve mimari ve iç mimari proje düzenleme esaslarına uygun şekilde bilgisayarla iç mekân proje çizimleri ile ilgili bilgi ve becerilerin kazandırılması amaçlanmaktadır.",
     "kazanimlar": [
       "İş sağlığı ve güvenliği tedbirlerini alarak iç mekân elemanlarını, bilgisayar ortamında oluşturduğu çalışma sayfasında ilgili komutlar yardımı ile iç mimari proje çizim esaslarına uygun şekilde çizer.",
@@ -3012,8 +3095,8 @@ const DERS_BILGI_FORMLARI = [
     "dal": "Mermercilik",
     "sinif": "11-C",
     "dersAdi": "MOZAİK ESKİTME",
-    "dersSuresi": "5 Ders Saati (11. Sınıfta 2 ders saati okulda, 3 ders saati işletmede uygulanacaktır.)",
     "dersSinifi": "11. Sınıf",
+    "dersSuresi": "5 Ders Saati (11. Sınıfta 2 ders saati okulda, 3 ders saati işletmede uygulanacaktır.)",
     "dersAmaci": "Bu ders ile öğrenciye iş sağlığı ve güvenliği tedbirlerini alarak her türlü mozaik parçalarını makinelerde kesme, eskitme ve mozaiklerin yerine montajını yapma ile ilgili bilgi ve becerilerin kazandırılması amaçlanmaktadır.",
     "kazanimlar": [
       "İş sağlığı ve güvenliği tedbirlerini alarak tasarıma uygun her türlü doğal taştan mozaik keser.",
@@ -3163,8 +3246,8 @@ const DERS_BILGI_FORMLARI = [
     "dal": "Bakım Onarım",
     "sinif": "11-A",
     "dersAdi": "TEMEL ELEKTRİK",
-    "dersSuresi": "2 Ders Saati (11. sınıfta 1 ders saati okulda, 1 ders saati işletmede uygulanacaktır.)",
     "dersSinifi": "11. Sınıf",
+    "dersSuresi": "2 Ders Saati (11. sınıfta 1 ders saati okulda, 1 ders saati işletmede uygulanacaktır.)",
     "dersAmaci": "Bu ders ile öğrenciye iş sağlığı ve güvenliği tedbirlerini alarak,  iletkenleri bağlantıya hazırlama, iletkenlerin bağlantılarını yapma, basit elektrik devrelerini kurma, faz kontrolü yapma ve motor devir yönünü değiştirme ile ilgili bilgi ve becerilerin kazandırılması amaçlanmaktadır.",
     "kazanimlar": [
       "İş sağlığı ve güvenliği tedbirlerini alarak Elektrik İç Tesisat Yönetmeliği’ne göre iletkenleri kesme, soyma ve bükme işlemleri yapar.",
@@ -3257,8 +3340,8 @@ const DERS_BILGI_FORMLARI = [
     "dal": "Bakım Onarım",
     "sinif": "11-A",
     "dersAdi": "BAKIM ONARIM MESLEK RESMİ",
-    "dersSuresi": "4 Ders Saati (11. sınıfta 2 ders saati okulda, 2 ders saati işletmede uygulanacaktır.)",
     "dersSinifi": "11. Sınıf",
+    "dersSuresi": "4 Ders Saati (11. sınıfta 2 ders saati okulda, 2 ders saati işletmede uygulanacaktır.)",
     "dersAmaci": "Bu ders ile öğrenciye iş sağlığı ve güvenliği tedbirleri alarak, TS, ISO, DIN standartlarına ve teknik resim kurallarına göre sökülebilen makine elemanları, sökülemeyen birleştirmeler, kasnak, yatak sistemleri, makine elemanlarının montaj ve komple resimlerini çizme ile ilgili bilgi ve becerilerin kazandırılması amaçlanmaktadır.",
     "kazanimlar": [
       "İş sağlığı ve güvenliği tedbirlerini alarak vidalı birleştirme çizimlerini yapar.",
@@ -3413,8 +3496,8 @@ const DERS_BILGI_FORMLARI = [
     "dal": "Bakım Onarım",
     "sinif": "11-A",
     "dersAdi": "İMALAT YÖNTEMLERİ",
-    "dersSuresi": "6 Ders Saati (11. sınıfta 3 ders saati okulda, 3 ders saati işletmede uygulanacaktır.)",
     "dersSinifi": "11. Sınıf",
+    "dersSuresi": "6 Ders Saati (11. sınıfta 3 ders saati okulda, 3 ders saati işletmede uygulanacaktır.)",
     "dersAmaci": "Bu ders ile öğrenciye iş sağlığı ve güvenliği tedbirlerini alarak imalat işlemlerinde kullanılan takım tezgâhları ve el aletleri ile makine parçalarının imalatını tekniğine uygun olarak imal etme, elektrik ark kaynağı ve oksigaz ile küt ek kaynağı yapma ile ilgili bilgi ve becerilerin kazandırılması amaçlanmaktadır.",
     "kazanimlar": [
       "İş sağlığı ve güvenliği tedbirlerini alarak torna tezgâhında ölçüsünde delik delme ve ölçme kontrol işlemlerini yapar.",
@@ -3618,8 +3701,8 @@ const DERS_BILGI_FORMLARI = [
     "dal": "Bakım Onarım",
     "sinif": "11-A",
     "dersAdi": "BİLGİSAYAR DESTEKLİ ÇİZİM DERSİ",
-    "dersSuresi": "2 ders saati (11. sınıfta 1 ders saati okulda, 1 ders saati işletmede uygulanacaktır.)",
     "dersSinifi": "",
+    "dersSuresi": "2 ders saati (11. sınıfta 1 ders saati okulda, 1 ders saati işletmede uygulanacaktır.)",
     "dersAmaci": "Bu ders ile öğrenciye; TS EN ISO standartlarına ve teknik resim kurallarına uygun olarak, çizim programı ile iki boyutlu çizimler yapma, özellik ve tanımlama komutlarını kullanma, çizim kütüphanesi oluşturma ve perspektif çizme ile ilgili bilgi ve becerilerin kazandırılması amaçlanmaktadır",
     "kazanimlar": [
       "İş sağlığı ve güvenliği tedbirlerini alıp CAD programında oluşturduğu çizim sayfasında çizim komutlarını kullanarak iki boyutlu çizimler yapar.",
@@ -3717,8 +3800,8 @@ const DERS_BILGI_FORMLARI = [
     "dal": "Bakım Onarım",
     "sinif": "12-A",
     "dersAdi": "MEKANİZMALAR",
-    "dersSuresi": "2 Ders Saati (12. sınıfta 2 ders saati okulda uygulanacaktır.)",
     "dersSinifi": "12. Sınıf",
+    "dersSuresi": "2 Ders Saati (12. sınıfta 2 ders saati okulda uygulanacaktır.)",
     "dersAmaci": "Bu derste öğrenciye; iş sağlığı ve güvenliği tedbirlerini alarak TS EN ISO standartlarına göre basit mekanizmaları sökme ve takma ile ilgili bilgi ve becerilerin kazandırılması amaçlanmaktadır.",
     "kazanimlar": [
       "İş sağlığı ve güvenliği tedbirlerini alarak makine bağlantı elemanları ile birleştirme işlemlerini yapar.",
@@ -3790,8 +3873,8 @@ const DERS_BILGI_FORMLARI = [
     "dal": "Bakım Onarım",
     "sinif": "12-A",
     "dersAdi": "OTOMATİK KONTROL SİSTEMLERİ",
-    "dersSuresi": "5 Ders Saati (12. sınıfta 2 ders saati okulda, 3 ders saati işletmede uygulanacaktır.)",
     "dersSinifi": "",
+    "dersSuresi": "5 Ders Saati (12. sınıfta 2 ders saati okulda, 3 ders saati işletmede uygulanacaktır.)",
     "dersAmaci": "Bu ders ile öğrenciye iş sağlığı ve güvenliği tedbirlerini alarak, TS EN ISO standartlarına göre hidrolik ve pnömatik devre elemanlarını hazırlama, bakım ve onarımını yapma ile ilgili bilgi ve becerilerin kazandırılması amaçlanmaktadır.",
     "kazanimlar": [
       "Standartlara uygun olarak hidrolik devre şemaları çizer.",
@@ -3961,8 +4044,8 @@ const DERS_BILGI_FORMLARI = [
     "dal": "Bakım Onarım",
     "sinif": "12-A",
     "dersAdi": "MEKANİK BAKIM ONARIM",
-    "dersSuresi": "6 Ders Saati (12. sınıfta 3 ders saati okulda, 3 ders saati işletmede uygulanacaktır.)",
     "dersSinifi": "12. Sınıf",
+    "dersSuresi": "6 Ders Saati (12. sınıfta 3 ders saati okulda, 3 ders saati işletmede uygulanacaktır.)",
     "dersAmaci": "Bu derste öğrenciye; iş sağlığı ve güvenliği tedbirlerini alarak makine yerleşim planı yapma ve makine kurma, TS EN ISO DIN standartlarına uygun şekilde sistemlerin düzenli kontrollerini yapma, kaldırma ve taşıma araçlarını kullanma, arıza tespiti yapma, arızalı makinenin onarımını yapma ile ilgili bilgi ve becerilerin kazandırılması amaçlanmaktadır.",
     "kazanimlar": [
       "Makinenin yerleşim planını atölyenin fiziki şartlarına ve makinenin işlevine göre iş sağlığı ve güvenliği tedbirlerini alarak hazırlar.",
@@ -4136,8 +4219,8 @@ const DERS_BILGI_FORMLARI = [
     "dal": "Bakım Onarım",
     "sinif": "12-A",
     "dersAdi": "AHİLİK KÜLTÜRÜ VE GİRİŞİMCİLİK",
-    "dersSuresi": "1 ders saati (12. sınıfta 1 ders saati okulda uygulanacaktır.)",
     "dersSinifi": "",
+    "dersSuresi": "1 ders saati (12. sınıfta 1 ders saati okulda uygulanacaktır.)",
     "dersAmaci": "Bu derste öğrenciye; ahilik kültürü ve girişimcilik ile ilgili bilgi ve becerilerin kazandırılması amaçlanmaktadır.",
     "kazanimlar": [
       "Ahilik kültürü ve meslek etiğine uygun davranışlar gösterir.",
@@ -4221,8 +4304,8 @@ const DERS_BILGI_FORMLARI = [
     "dal": "Bakım Onarım",
     "sinif": "10-A",
     "dersAdi": "TEMEL İMALAT İŞLEMLERİ",
-    "dersSuresi": "8 ders saati (10. sınıfta 2 ders saati okulda, 6 ders saati işletmede uygulanacaktır.)",
     "dersSinifi": "",
+    "dersSuresi": "8 ders saati (10. sınıfta 2 ders saati okulda, 6 ders saati işletmede uygulanacaktır.)",
     "dersAmaci": "Bu ders ile öğrenciye; iş sağlığı ve güvenliği tedbirlerini alarak takım tezgâhlarını ve el aletlerini kullanma, malzeme seçimi, malzemeyi test etme ve temel imalat işlemlerini gerçekleştirme ile ilgili bilgi ve becerilerin kazandırılması amaçlanmaktadır.",
     "kazanimlar": [],
     "modulTablosu": [
@@ -4456,8 +4539,8 @@ const DERS_BILGI_FORMLARI = [
     "dal": "Bakım Onarım",
     "sinif": "10-A",
     "dersAdi": "TEKNİK RESİM DERSİ",
-    "dersSuresi": "4 ders saati (10. sınıfta 2 ders saati okulda, 2 ders saati işletmede uygulanacaktır.)",
     "dersSinifi": "",
+    "dersSuresi": "4 ders saati (10. sınıfta 2 ders saati okulda, 2 ders saati işletmede uygulanacaktır.)",
     "dersAmaci": "Bu derste öğrenciye; iş sağlığı ve güvenliği tedbirleri doğrultusunda TS EN ISO standartlarına ve teknik resim kurallarına uygun şekilde geometrik çizimler yapma, görünüş çıkarma, ölçülendirme, yüzey işleme işaretlerini resim üzerine aktarma, kroki, perspektif ve yapım resimlerini çizme ile ilgili bilgi ve becerilerin kazandırılması amaçlanmaktadır.",
     "kazanimlar": [
       "İş sağlığı ve güvenliği tedbirleri doğrultusunda teknik resim kurallarına uygun olarak standart resim kâğıtları üzerinde yazı, çizgi ve geometrik şekillerle ilgili çalışmalar yapar.",
@@ -4579,8 +4662,8 @@ const DERS_BILGI_FORMLARI = [
     "dal": "Bakım Onarım",
     "sinif": "9-A",
     "dersAdi": "MAKİNE MESLEK BİLGİSİ DERSİ",
-    "dersSuresi": "2 ders saati (9. sınıfta 2 ders saati okulda uygulanacaktır.)",
     "dersSinifi": "",
+    "dersSuresi": "2 ders saati (9. sınıfta 2 ders saati okulda uygulanacaktır.)",
     "dersAmaci": "Bu derste öğrenciye; temel ve mesleği ile ilgili iş sağlığı ve güvenliği tedbirlerini alma ile Makine Teknolojisi alanındaki temel kavramlar ve işlemlerle ilgili bilgi ve becerilerin kazandırılması amaçlanmaktadır.",
     "kazanimlar": [],
     "modulTablosu": [

@@ -240,6 +240,21 @@ function normalizeState(s) {
   if (s.akademikTakvim && (!s.akademikTakvim.sinavTarihleri || typeof s.akademikTakvim.sinavTarihleri !== "object")) {
     s.akademikTakvim.sinavTarihleri = { d1s1: "", d1s2: "", d2s1: "", d2s2: "" };
   }
+  if (s.akademikTakvim) {
+    const st = s.akademikTakvim.sinavTarihleri;
+    if (typeof st.d1pt !== "string") st.d1pt = "";
+    if (typeof st.d2pt !== "string") st.d2pt = "";
+  }
+  if (s.akademikTakvim && (!s.akademikTakvim.onemliGunler || typeof s.akademikTakvim.onemliGunler !== "object")) {
+    s.akademikTakvim.onemliGunler = { d1: [], d2: [] };
+  }
+  if (s.akademikTakvim) {
+    const og = s.akademikTakvim.onemliGunler;
+    if (!Array.isArray(og.d1)) og.d1 = [];
+    if (!Array.isArray(og.d2)) og.d2 = [];
+    while (og.d1.length < 6) og.d1.push("");
+    while (og.d2.length < 6) og.d2.push("");
+  }
   if (s.akademikTakvim && !Array.isArray(s.akademikTakvim.haftalar)) s.akademikTakvim.haftalar = [];
   if (!Array.isArray(s.yillikPlanlar)) s.yillikPlanlar = [];
   if (!Array.isArray(s.gunlukPlanlar)) s.gunlukPlanlar = [];
