@@ -400,7 +400,12 @@ function findBestTeamForAssignment(cls, assignment, blocks) {
 }
 
 function distributeAllBestAsync(attempts, onDone, onProgress) {
-  Object.keys(S.schedule).forEach(k => { if (S.schedule[k].courseId === KOORD_COURSE_ID) delete S.schedule[k]; });
+  // Koordinatörlük artık burada hiç ele alınmıyor — kullanıcı işletme
+  // ziyaretlerini kendi eliyle, Programlar ekranındaki öğretmen tablosunun
+  // boş hücrelerine tıklayarak atıyor (bkz. teacherGridAddKoordCell). Var
+  // olan koordinatörlük hücreleri (excludeFromDistribution sınıfında
+  // oldukları için) hiç silinmeden aynen korunur, bu fonksiyon sadece
+  // normal ders saatlerini dağıtır.
   const frozenSnapshot = {};
   const lockedAssignmentKeys = new Set();
   Object.keys(S.schedule).forEach(k => {
@@ -414,9 +419,6 @@ function distributeAllBestAsync(attempts, onDone, onProgress) {
   let bestScoreValue = null;
   let candidates = [];
   function attempt() {
-    // Önce normal ders saatleri yerleştirilir, koordinatörlük ancak ondan
-    // sonra kalan boş günlere sığdırılır (öncelik: ders programının tam
-    // olması). Sığmayan koordinatörlük, aşağıda "failedList" ile bildirilir.
     S.schedule = JSON.parse(JSON.stringify(frozenSnapshot));
     let tasks = [];
     S.classes.forEach(cls => {
@@ -443,16 +445,8 @@ function distributeAllBestAsync(attempts, onDone, onProgress) {
       tryPlaceAssignmentWithTeam(cls, a, blocks, team, true);
       placed += blocks.length;
     });
-    const koordFailed = placeCoordinatorTasks();
-    failed += koordFailed.length;
-    failedList = failedList.concat(koordFailed.map(name => ({ isletmeName: name })));
     const q = scheduleQualityScore();
-    // Yerleşemeyen koordinatörlük ziyaretleri de arama sırasında hesaba
-    // katılmalı — yoksa "en iyi" seçilen deneme, ders saatlerini tam
-    // yerleştirdiği için eşit sayılıyor ama koordinatörlüğü gereksiz yere
-    // az yerleştirmiş olabiliyordu. Yine de ders saati eksikliğinden
-    // (unplaced*1000) daha hafif tutulur — öncelik her zaman derste kalır.
-    const combinedScore = q.score + koordFailed.length * 600;
+    const combinedScore = q.score;
     const snapshot = JSON.parse(JSON.stringify(S.schedule));
     if (bestScoreValue === null || combinedScore < bestScoreValue) {
       bestScoreValue = combinedScore;
@@ -470,25 +464,12 @@ function distributeAllBestAsync(attempts, onDone, onProgress) {
 }
 
 /* ------------------------------------------------------------
-   KOORDİNATÖRLÜK (İŞLETME) — her işletmenin kendi "Koordinatörlük
-   Saati" (isl.koordSaat, yoksa KOORD_BLOCK_LEN) kadar saati, uygun
-   gün grubundaki (Pzt-Sal-Çar / Çar-Per-Cum / MESEM) günlerden birine
-   yerleştirilir. Ders programı ÖNCE dağıtılır (öğretmenin ders saatleri
-   TEACHER_TARGET_DERS_DAYS = 3 güne toplanmaya çalışılır, ki geri kalan
-   günler koordinatörlüğe temiz kalsın), koordinatörlük ondan sonra
-   kalan TAM DERS-BOŞ günlere yerleştirilir:
-     - Öğretmenin o gün HİÇ dersi olmadığı bir gün seçilir — o gün
-       sadece koordinatörlük olur, ders ile ASLA karışmaz. Böyle bir
-       günde, Madde 88'in günlük 8 saat tavanına kadar birden fazla
-       işletme İSTİFLENİR (ör. 4 saat + 4 saat = 8 saat) — tek
-       işletmeyle günü yarım bırakmak yerine mümkün olduğunca
-       doldurulmaya çalışılır.
-     - Uygun günlerin hiçbirinde ders-boş yer/kapasite yoksa, o ziyaret
-       ASLA bir ders gününe sıkıştırılmaz — "failed" olarak kalır.
-       Böyle artakalan koordinatörlükleri kullanıcı Koordinatörlük
-       sekmesinden kendi eliyle dilediği öğretmene/güne atar.
-   Günün tamamı asla topyekûn bloklanmaz — aynı gün içinde başka
-   dersler veya başka işletme ziyaretleri farklı saatlerde yer alabilir.
+   KOORDİNATÖRLÜK (İŞLETME) — otomatik yerleştirme YOK. İşletmeler
+   burada sadece isim/grup/koordinatörlük-saati olarak tanımlanır;
+   hangi öğretmenin hangi gün/saatte hangi işletmeyi ziyaret ettiğini
+   kullanıcı Programlar ekranındaki öğretmen tablosunun boş bir
+   hücresine tıklayarak kendi eliyle yazar (bkz. addManualKoordCell,
+   teacherGridAddKoordCell).
    ------------------------------------------------------------ */
 
 function addIsletme(groupKey, name) {
@@ -550,29 +531,10 @@ function saveIsletmeEdit(id) {
   isl.groups = groups;
   save(); closeModal(); renderMain();
 }
-function setIsletmeTeacher(isletmeId, teacherId) {
-  if (teacherId) S.isletmeTeacherAssign[isletmeId] = teacherId;
-  else delete S.isletmeTeacherAssign[isletmeId];
-  save(); renderMain();
-}
-function isletmeAtamaEkle(isletmeId) {
-  isletmeAtamaGosterilen.add(isletmeId);
-  renderMain();
-}
-function isletmeAtamaKaldir(isletmeId) {
-  isletmeAtamaGosterilen.delete(isletmeId);
-  if (S.isletmeTeacherAssign[isletmeId]) {
-    delete S.isletmeTeacherAssign[isletmeId];
-    save();
-  }
-  renderMain();
-}
 function tumIsletmeleriSil() {
   if (!confirm("Tüm işletmeler kalıcı olarak silinsin mi? Bu işlem geri alınamaz.")) return;
   const silinenIdler = S.isletmeler.map(i => i.id);
   S.isletmeler = [];
-  S.isletmeTeacherAssign = {};
-  isletmeAtamaGosterilen.clear();
   silinenIdler.forEach(id => {
     const classId = "isletme-" + id;
     S.classes = S.classes.filter(c => c.id !== classId);
@@ -588,134 +550,41 @@ function updateIsletmeSaat(isletmeId, value) {
   else isl.koordSaat = n;
   save();
 }
-function isPscCpcShared(isl) {
-  return isl.groups.length === 2 && isl.groups.includes("psc") && isl.groups.includes("cpc");
-}
-// O gün, o öğretmenin NORMAL DERSİ var mı (koordinatörlük hariç)? Bir gün
-// "koordinatörlük günü" sayılabilmesi için ders içermemesi yeterli — o günde
-// başka bir işletmenin koordinatörlüğü zaten olabilir (aynı güne istiflenir).
-function isTeacherDayDersFree(teacherId, day) {
-  for (const key in S.schedule) {
-    const cell = S.schedule[key];
-    if (cell.day === day && cell.teacherIds.includes(teacherId) && cell.courseId !== KOORD_COURSE_ID) return false;
+// Koordinatörlük (işletme ziyareti) artık otomatik dağıtılmıyor — kullanıcı
+// bunu Programlar ekranındaki öğretmen tablosunun boş bir hücresine
+// tıklayıp elle ekliyor. Aşağıdaki iki fonksiyon o elle-ekleme akışını
+// destekler; ders dağıtım algoritmasına (distributeAllBestAsync) hiç
+// karışmazlar, hangi hücrelerin dolu/boş olduğuna göre sadece basit bir
+// çakışma kontrolü yapıp seçilen saatleri yazarlar.
+function koordManualConflicts(teacherId, classId, day, hourStart, hourCount) {
+  const problems = [];
+  for (let h = hourStart; h < hourStart + hourCount; h++) {
+    if (!isClassFree(classId, day, h)) problems.push(h);
+    else if (!isTeacherFreeAt(teacherId, day, h)) problems.push(h);
   }
-  return true;
+  return problems;
 }
-// O gün, o öğretmene o güne kadar yazılmış (ücretli) koordinatörlük saati
-// toplamı — Madde 88'in günlük 8 saat tavanına ne kadar yaklaşıldığını
-// görmek ve aynı güne birden fazla işletmeyi istifleyebilmek için kullanılır.
-function teacherCoordHoursOnDay(teacherId, day) {
-  return Object.values(S.schedule).filter(c => c.day === day && c.courseId === KOORD_COURSE_ID && c.paid && c.teacherIds.includes(teacherId)).length;
-}
-// O gün, o öğretmenin boş kalan kesintisiz saat aralıklarının listesi
-// ({start, length}). Tam boş bir gün bulunamadığında, dersler arasındaki
-// artakalan boşluklara kısmen de olsa koordinatörlük sığdırmak için kullanılır.
-function teacherFreeRunsOnDay(teacherId, day) {
-  const runs = [];
-  let start = null;
-  for (let h = 0; h < S.hoursPerDay; h++) {
-    if (isTeacherFreeAt(teacherId, day, h)) {
-      if (start === null) start = h;
-    } else if (start !== null) {
-      runs.push({ start, length: h - start });
-      start = null;
-    }
+function addManualKoordCell(teacherId, isletmeId, day, hourStart, hourCount) {
+  const isl = isletmeById(isletmeId);
+  if (!isl) return { ok: false, error: "İşletme bulunamadı." };
+  const hours = Math.max(1, Math.min(hourCount, S.hoursPerDay - hourStart));
+  const conflicts = koordManualConflicts(teacherId, "isletme-" + isl.id, day, hourStart, hours);
+  if (conflicts.length > 0) {
+    const t = teacherById(teacherId);
+    return { ok: false, error: `${t ? t.name : '?'} · ${DAYS[day]} · ${conflicts[0] + 1}. saat müsait değil.` };
   }
-  if (start !== null) runs.push({ start, length: S.hoursPerDay - start });
-  return runs;
-}
-function placeCoordinatorTasks() {
-  const failed = [];
-  let tasks = [];
-  S.isletmeler.forEach(isl => {
-    // psc/cpc birleştirme mantığı sadece bu ikisi arasında geçerli; mesem gibi
-    // üçüncü bir grup varsa (aynı işletme hem staj hem MESEM alıyor olabilir)
-    // o her zaman kendi ayrı ziyaretini alır, coin-flip'ten etkilenmez.
-    const shared = isPscCpcShared(isl);
-    if (shared && Math.random() < 0.5) {
-      tasks.push({ isl, allowedDays: [2], label: "ortak (Çarşamba)" });
-    } else {
-      ['psc', 'cpc'].forEach(g => {
-        if (!isl.groups.includes(g)) return;
-        const days = shared ? GROUP_DAYS[g].filter(d => d !== 2) : GROUP_DAYS[g];
-        tasks.push({ isl, allowedDays: days, label: GROUP_LABELS[g] });
-      });
-    }
-    isl.groups.filter(g => g !== 'psc' && g !== 'cpc').forEach(g => {
-      tasks.push({ isl, allowedDays: GROUP_DAYS[g], label: GROUP_LABELS[g] });
-    });
-  });
-  const buckets = {};
-  tasks.forEach(t => {
-    const key = (S.isletmeTeacherAssign[t.isl.id] ? 0 : 1) * 10 + t.allowedDays.length;
-    if (!buckets[key]) buckets[key] = [];
-    buckets[key].push(t);
-  });
-  tasks = Object.keys(buckets).map(Number).sort((a, b) => a - b).reduce((acc, k) => acc.concat(shuffle(buckets[k])), []);
-  tasks.forEach(task => {
-    const isl = task.isl;
-    const fixedTeacherId = S.isletmeTeacherAssign[isl.id];
-    const pool = fixedTeacherId ? [fixedTeacherId] : S.teachers.filter(t => t.coordEligible !== false).map(t => t.id);
-    const isletmeSaat = isl.koordSaat || KOORD_BLOCK_LEN;
-    let chosen = null, chosenDay = null, startHour = null, placedHours = 0;
-
-    // 1. aşama: tercih edilen durum — uygun günlerden, öğretmenin o gün HİÇ
-    // dersi olmayan bir günü bulunur (varsa sadece başka koordinatörlük
-    // ziyaretleri olabilir) ve günün 8 saatlik tavanına kadar kalan yeri
-    // doldurulur. Böylece aynı öğretmenin aynı gününe birden fazla işletme
-    // istiflenebilir (ör. 4 saat + 4 saat = 8 saat), tek işletmeyle günü
-    // yarım bırakmak yerine.
-    for (const day of task.allowedDays) {
-      const candidates = pool.filter(tid => isTeacherDayDersFree(tid, day) && teacherCoordHoursOnDay(tid, day) < KOORD_BLOCK_LEN);
-      if (candidates.length === 0) continue;
-      candidates.sort((a, b) => {
-        const diff = teacherCoordHoursOnDay(b, day) - teacherCoordHoursOnDay(a, day);
-        if (diff !== 0) return diff; // aynı günde zaten koordinatörlüğü olanı tercih et (istifle)
-        return teacherLoad(a) - teacherLoad(b);
-      });
-      const tid = candidates[0];
-      const usedCoord = teacherCoordHoursOnDay(tid, day);
-      const wantHours = Math.min(isletmeSaat, KOORD_BLOCK_LEN - usedCoord);
-      let bestRun = null;
-      teacherFreeRunsOnDay(tid, day).forEach(run => {
-        const usable = Math.min(run.length, wantHours);
-        if (usable <= 0) return;
-        // taze (henüz hiç koordinatörlüğü olmayan) bir günde tutarlılık için
-        // KOORD_START_HOUR'dan başlamak tercih edilir; değilse boşluğun
-        // başından (mevcut koordinatörlük bloğunun hemen ardından) devam edilir.
-        const anchor = (usedCoord === 0 && run.start <= KOORD_START_HOUR && run.start + run.length >= KOORD_START_HOUR + usable) ? KOORD_START_HOUR : run.start;
-        if (!bestRun || usable > bestRun.usable) bestRun = { start: anchor, usable };
-      });
-      if (bestRun) {
-        chosen = tid;
-        chosenDay = day;
-        startHour = bestRun.start;
-        placedHours = bestRun.usable;
-        break;
-      }
-    }
-
-    // Ders içeren bir güne ASLA koordinatörlük eklenmez — uygun günlerin
-    // hiçbirinde ders-boş yer/kapasite bulunamazsa bu ziyaret "failed"
-    // olarak kalır; kullanıcı böyle artakalan koordinatörlükleri kendi
-    // eliyle, dilediği öğretmene/güne elle atar (Koordinatörlük sekmesinden).
-
-    if (chosen) {
-      const classId = "isletme-" + isl.id;
-      if (!classById(classId)) {
-        S.classes.push({ id: classId, name: isl.name, grade: 0, dal: "KOORD", excludeFromDistribution: true, maxTeachersPerCourse: 1, assignments: [] });
-      }
-      for (let h = startHour; h < startHour + placedHours; h++) {
-        S.schedule[scheduleKey(classId, chosenDay, h)] = {
-          day: chosenDay, hour: h, classId, assignmentId: isl.id + "-" + task.label, courseId: KOORD_COURSE_ID,
-          teacherIds: [chosen], roomIds: [], locked: true, isletme: isl.name, paid: true
-        };
-      }
-    } else {
-      failed.push(isl.name + " (" + task.label + ")");
-    }
-  });
-  return failed;
+  const classId = "isletme-" + isl.id;
+  if (!classById(classId)) {
+    S.classes.push({ id: classId, name: isl.name, grade: 0, dal: "KOORD", excludeFromDistribution: true, maxTeachersPerCourse: 1, assignments: [] });
+  }
+  const assignmentId = uid("koord");
+  for (let h = hourStart; h < hourStart + hours; h++) {
+    S.schedule[scheduleKey(classId, day, h)] = {
+      day, hour: h, classId, assignmentId, courseId: KOORD_COURSE_ID,
+      teacherIds: [teacherId], roomIds: [], locked: true, isletme: isl.name, paid: true
+    };
+  }
+  return { ok: true };
 }
 function teacherCoordHours(teacherId) {
   return Object.values(S.schedule).filter(c => c.courseId === KOORD_COURSE_ID && c.paid && c.teacherIds.includes(teacherId)).length;

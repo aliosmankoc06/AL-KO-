@@ -51,7 +51,6 @@ let activeTeacherId = S.teachers[0] ? S.teachers[0].id : null;
 let multiSelectMode = false;
 let selectedTeacherCells = new Set();
 let activeOffTeacherId = null;
-let isletmeAtamaGosterilen = new Set();
 let activePlanSistem = "maarif";
 let activePlanEntryId = { yillik: null, gunluk: null };
 
@@ -5821,7 +5820,6 @@ function viewOgretmen() {
     const dersSaat = hrs - teacherCoordHours(t.id);
     const target = (typeof t.hoursTarget === "number") ? t.hoursTarget : "";
     const mode = t.hoursMode || "min";
-    const coordEligible = t.coordEligible !== false;
     const title = teacherTitleLabel(t.id);
     return `<tr>
       <td>${t.name} ${title !== 'Öğretmen' ? `<span class="pill info">${title}</span>` : ''}</td>
@@ -5831,7 +5829,6 @@ function viewOgretmen() {
             <option value="min" ${mode === 'min' ? 'selected' : ''}>En az (asgari)</option>
             <option value="exact" ${mode === 'exact' ? 'selected' : ''}>Tam bu kadar (sabit)</option>
           </select></td>
-      <td style="text-align:center;"><input type="checkbox" ${coordEligible ? 'checked' : ''} onchange="setTeacherCoordEligible('${t.id}', this.checked)"></td>
       <td class="no-print"><div class="row" style="margin:0;"><button class="btn" onclick="editTeacher('${t.id}')">Düzenle</button><button class="btn danger" onclick="deleteTeacher('${t.id}')">Sil</button></div></td>
     </tr>`;
   }).join("");
@@ -5846,7 +5843,7 @@ function viewOgretmen() {
   <div class="print-area">
     ${belgeYazdirmaBasligi("Öğretmenler")}
     <div class="card">
-      <table><tr><th>Ad Soyad</th><th>Ders Saati</th><th>Saat Hedefi</th><th>Tür</th><th>Koordinatörlük Alsın</th><th class="no-print"></th></tr>${rows}</table>
+      <table><tr><th>Ad Soyad</th><th>Ders Saati</th><th>Saat Hedefi</th><th>Tür</th><th class="no-print"></th></tr>${rows}</table>
     </div>
   </div>`;
 }
@@ -5860,11 +5857,6 @@ function setTeacherHoursTarget(teacherId, value) {
 function setTeacherHoursMode(teacherId, mode) {
   const t = teacherById(teacherId);
   t.hoursMode = mode;
-  save(); renderMain();
-}
-function setTeacherCoordEligible(teacherId, checked) {
-  const t = teacherById(teacherId);
-  t.coordEligible = !!checked;
   save(); renderMain();
 }
 function setTeacherTimeOff(teacherId, day, value) {
@@ -5894,7 +5886,7 @@ function openOffCellModal(teacherId, day, hour) {
       <div class="modal-bg" onclick="if(event.target===this) closeModal()">
         <div class="modal">
           <h3>${t.name} · ${DAYS[day]} · ${hour + 1}. saat</h3>
-          <p class="small">Bu gün <b>Koordinatörlük</b> günü (${cell.isletme || 'işletme belirlenmedi'}). Değiştirmek için <b>Koordinatörlük</b> sekmesini kullanın.</p>
+          <p class="small">Bu gün <b>Koordinatörlük</b> günü (${cell.isletme || 'işletme belirlenmedi'}). Değiştirmek veya kaldırmak için <b>Programlar</b> ekranındaki öğretmen tablosunu kullanın.</p>
           <div class="row"><button class="btn" onclick="closeModal()">Kapat</button></div>
         </div>
       </div>`;
@@ -6283,8 +6275,6 @@ function setAllEligible(classId, assignmentId, on) {
 /* ---- Ders Dağıtım ---- */
 
 function viewKoordinatorluk() {
-  const teacherOpts = (isl) => `<option value="">— Otomatik (fark etmez) —</option>` + S.teachers.filter(t => t.coordEligible !== false).map(t => `<option value="${t.id}" ${S.isletmeTeacherAssign[isl.id] === t.id ? 'selected' : ''}>${t.name}</option>`).join("");
-
   function isletmeListHtml(groupKey) {
     const items = S.isletmeler.filter(i => i.groups.includes(groupKey));
     if (items.length === 0) return `<p class="small">Henüz işletme eklenmedi.</p>`;
@@ -6299,25 +6289,6 @@ function viewKoordinatorluk() {
       </div>`;
     }).join("");
   }
-
-  const gosterilecekIsletmeler = S.isletmeler.filter(isl => isletmeAtamaGosterilen.has(isl.id) || S.isletmeTeacherAssign[isl.id]);
-  const teacherAssignRows = gosterilecekIsletmeler.map(isl => {
-    return `<tr>
-      <td>${isl.name}</td>
-      <td>${isl.groups.map(g => GROUP_LABELS[g]).join(" + ")}</td>
-      <td><select onchange="setIsletmeTeacher('${isl.id}', this.value)" style="width:100%">${teacherOpts(isl)}</select></td>
-      <td class="no-print"><span onclick="isletmeAtamaKaldir('${isl.id}')" style="cursor:pointer;" title="Kaldır">✕</span></td>
-    </tr>`;
-  }).join("");
-  const isletmeSecOptions = S.isletmeler.filter(isl => !gosterilecekIsletmeler.includes(isl));
-  const isletmeSecDropdown = `<div class="tab-dropdown no-print">
-    <button class="btn primary" onclick="toggleTabDropdown('isletme-sec')">İşletme Seç ▾</button>
-    <div id="tabdd-isletme-sec" class="tab-dropdown-menu">${
-      isletmeSecOptions.length
-        ? isletmeSecOptions.map(isl => `<div class="tab-dropdown-item" onclick="isletmeAtamaEkle('${jsq(isl.id)}'); toggleTabDropdown('isletme-sec');">${escHtml(isl.name)}</div>`).join("")
-        : '<div class="tab-dropdown-item small">Tüm işletmeler zaten listede.</div>'
-    }</div>
-  </div>`;
 
   return `
   <div class="card no-print" style="background:var(--teal-bg);border-color:var(--teal);">
@@ -6353,11 +6324,9 @@ function viewKoordinatorluk() {
       </div>
     </div>
   </div>
-  <div class="card no-print">
-    <h2>Öğretmen Ata (opsiyonel)</h2>
-    <p class="small">İstemezseniz boş bırakın — "Programı Yenile" sırasında sistem her işletmeye, o günlerde tam gün müsait olan ve o an en az yüklü öğretmeni otomatik atar. Sadece belirli bir işletmeye mutlaka belirli bir öğretmenin gitmesini istiyorsanız buradan işletme seçip öğretmen atayın.</p>
-    ${isletmeSecDropdown}
-    ${teacherAssignRows ? `<table style="margin-top:10px;"><tr><th>İşletme</th><th>Gün Grubu</th><th>Öğretmen</th><th class="no-print"></th></tr>${teacherAssignRows}</table>` : ''}
+  <div class="card no-print" style="background:var(--panel-2);">
+    <h2>Koordinatörlük ziyaretleri artık elle atanır</h2>
+    <p class="small">"Programı Yenile" sadece ders saatlerini dağıtır, işletme ziyaretlerine hiç dokunmaz. Bir öğretmenin işletme ziyaretini yazmak için <b>Programlar</b> ekranından ilgili öğretmenin haftalık tablosunu açın, boş bir hücreye tıklayın ve açılan pencereden işletmeyi ve kaç saat yazılacağını seçin.</p>
   </div>
   `;
 }
@@ -6499,21 +6468,6 @@ function preDistributionChecks() {
         });
       }
     });
-  });
-  S.isletmeler.forEach(isl => {
-    const fixedTeacherId = S.isletmeTeacherAssign[isl.id];
-    if (fixedTeacherId) {
-      const allowedDaysUnion = isl.groups.length === 2 ? [0, 1, 2, 3, 4] : GROUP_DAYS[isl.groups[0]];
-      const t = teacherById(fixedTeacherId);
-      const anyFree = allowedDaysUnion.some(d => isTeacherDayDersFree(fixedTeacherId, d) && teacherCoordHoursOnDay(fixedTeacherId, d) < KOORD_BLOCK_LEN);
-      if (!anyFree) {
-        warnings.push({
-          text: `${isl.name} işletmesi için atadığınız ${t ? t.name : '?'} öğretmeni, uygun günlerin hiçbirinde ders-boş bir gün/kapasite görünmüyor — bu işletme otomatik yerleşemeyebilir, elle atamanız gerekebilir.`,
-          buttonLabel: "Çözüm önerisi: sabit atamayı kaldır, otomatik seçime bırak",
-          buttonAction: `setIsletmeTeacher('${isl.id}', ''); closeModal();`
-        });
-      }
-    }
   });
   return warnings;
 }
@@ -7013,7 +6967,8 @@ function openTeacherCellModal(teacherId, day, hour) {
       <div class="modal-bg" onclick="if(event.target===this) closeModal()">
         <div class="modal">
           <h3>${t.name} · ${DAYS[day]} · ${hour + 1}. saat</h3>
-          <p class="small">Bu gün <b>Koordinatörlük</b> günü (${cell.isletme || 'işletme belirlenmedi'}). Değiştirmek veya kaldırmak için <b>Koordinatörlük</b> sekmesini kullanın.</p>
+          <p class="small"><b>Koordinatörlük</b> — ${escHtml(cell.isletme || 'işletme belirlenmedi')}</p>
+          <div class="row"><button class="btn danger" onclick="teacherGridRemoveCell('${cell.classId}',${day},${hour})">Kaldır</button></div>
           <div class="row"><button class="btn" onclick="closeModal()">Kapat</button></div>
         </div>
       </div>`;
@@ -7057,6 +7012,10 @@ function openTeacherCellModal(teacherId, day, hour) {
   const options = openList.map(({ cls, assignment, course }) =>
     `<option value="${cls.id}|${assignment.id}">${cls.name} — ${course.name}</option>`
   ).join("");
+  const maxKoordSaat = S.hoursPerDay - hour;
+  const isletmeOptions = S.isletmeler.map(isl =>
+    `<option value="${isl.id}">${escHtml(isl.name)}</option>`
+  ).join("");
   root.innerHTML = `
     <div class="modal-bg" onclick="if(event.target===this) closeModal()">
       <div class="modal">
@@ -7065,11 +7024,33 @@ function openTeacherCellModal(teacherId, day, hour) {
         <select id="tgrid-assignment" style="width:100%" onchange="renderTeacherGridPicker('${teacherId}',${day},${hour})">${options || '<option value="">Bu öğretmen için açık ders yok</option>'}</select>
         <div id="tgrid-teacher-picker"></div>
         <div class="row"><button class="btn primary" onclick="teacherGridAddCell('${teacherId}',${day},${hour})">Ekle</button></div>
+        ${S.isletmeler.length ? `
+        <div style="border-top:1px solid var(--line);padding-top:8px;margin-top:8px;">
+          <label>Buraya koordinatörlük (işletme ziyareti) ekle</label>
+          <select id="tgrid-isletme" style="width:100%">
+            <option value="">İşletme seçin</option>
+            ${isletmeOptions}
+          </select>
+          <label class="small" style="display:flex;align-items:center;gap:4px;margin-top:6px;">Kaç saat:
+            <input type="number" id="tgrid-koord-saat" min="1" max="${maxKoordSaat}" value="${Math.min(KOORD_BLOCK_LEN, maxKoordSaat)}" style="width:60px">
+          </label>
+          <div class="row"><button class="btn primary" onclick="teacherGridAddKoordCell('${teacherId}',${day},${hour})">Koordinatörlük Ekle</button></div>
+        </div>` : ``}
         <div class="row"><button class="btn danger" onclick="teacherBlockSlot('${teacherId}',${day},${hour})">Bu saati boşta kilitle</button></div>
         <div class="row"><button class="btn" onclick="closeModal()">Kapat</button></div>
       </div>
     </div>`;
   renderTeacherGridPicker(teacherId, day, hour);
+}
+function teacherGridAddKoordCell(teacherId, day, hour) {
+  const sel = document.getElementById("tgrid-isletme");
+  const saatInput = document.getElementById("tgrid-koord-saat");
+  if (!sel || !sel.value) { alert("Bir işletme seçin."); return; }
+  let saat = parseInt(saatInput ? saatInput.value : "", 10);
+  if (!Number.isFinite(saat) || saat < 1) saat = 1;
+  const result = addManualKoordCell(teacherId, sel.value, day, hour, saat);
+  if (!result.ok) { alert(result.error); return; }
+  save(); closeModal(); renderMain();
 }
 
 function renderTeacherGridPicker(teacherId, day, hour) {
