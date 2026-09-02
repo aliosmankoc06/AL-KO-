@@ -6014,6 +6014,30 @@ function sinifDersHavuzuDropdown(clsId, available) {
     <div id="tabdd-sinif-ders-havuzu" class="tab-dropdown-menu" style="top:auto;bottom:calc(100% + 4px);">${items}</div>
   </div>`;
 }
+// İdari Görevler'de normal "Ders Havuzundan Ekle" (ekip halinde tek bloğu
+// paylaşan öğretmen mantığı) yerine BUNU kullanıyoruz: seçtiğin her
+// öğretmen, dersin toplam saatini PAYLAŞMAZ — her biri kendi ayrı, TAM
+// (6 saatlik) Planlama Bakım Onarım (Atölye Şefi) bloğunu alır.
+function idariOgretmenEkleWidget(clsId) {
+  const cls = classById(clsId);
+  if (!cls) return "";
+  const mevcutOgretmenIds = new Set();
+  cls.assignments.forEach(a => { if (a.courseId === "pbo-6") (a.eligibleTeacherIds || []).forEach(id => mevcutOgretmenIds.add(id)); });
+  const secilebilecekler = S.teachers.filter(t => !mevcutOgretmenIds.has(t.id));
+  const items = secilebilecekler.map(t => `
+    <div class="tab-dropdown-item" onclick="idariOgretmenEkle('${jsq(clsId)}','${jsq(t.id)}'); toggleTabDropdown('idari-ogretmen-ekle');">${escHtml(t.name)}</div>`).join("")
+    || `<div class="tab-dropdown-item small">Eklenebilecek başka öğretmen yok.</div>`;
+  return `<div class="tab-dropdown no-print">
+    <button class="btn primary" onclick="toggleTabDropdown('idari-ogretmen-ekle')">▴ Öğretmen Ekle (Planlama Bakım Onarım — Atölye Şefi, 6 saat, kendine ayrı)</button>
+    <div id="tabdd-idari-ogretmen-ekle" class="tab-dropdown-menu" style="top:auto;bottom:calc(100% + 4px);">${items}</div>
+  </div>`;
+}
+function idariOgretmenEkle(clsId, teacherId) {
+  const cls = classById(clsId);
+  if (!cls) return;
+  cls.assignments.push({ id: uid("a"), courseId: "pbo-6", eligibleTeacherIds: [teacherId], teacherCount: 1, roomIds: [] });
+  save(); renderMain();
+}
 function viewSinif() {
   const listHtml = S.classes.filter(c => !c.id.startsWith("isletme-")).map(c => `
     <div class="list-item ${c.id === activeClassId ? 'active' : ''}" onclick="setActiveClass('${c.id}')">
@@ -6028,7 +6052,7 @@ function viewSinif() {
   let detail = `<p class="small">Soldan bir sınıf seçin.</p>`;
   if (cls) {
     const available = S.courses.filter(c => c.id !== KOORD_COURSE_ID && !cls.assignments.some(a => a.courseId === c.id));
-    const dersHavuzuDropdown = cls.id === "cl-idari" ? "" : sinifDersHavuzuDropdown(cls.id, available);
+    const dersHavuzuDropdown = cls.id === "cl-idari" ? idariOgretmenEkleWidget(cls.id) : sinifDersHavuzuDropdown(cls.id, available);
 
     const assignedRows = cls.assignments.map(a => {
       const course = courseById(a.courseId);
