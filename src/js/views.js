@@ -3442,7 +3442,8 @@ function snYeniKayitNesnesi(kind, ekAlanlar) {
     d2: { t1: "", t2: "", ih1: "", ih2: "", proje: "", deney: "" },
     isDosyasi: { k1: "", k2: "", k3: "", k4: "" }, isDosyasiTeslimEtmedi: false,
     sinavPuani: "", aciklama: "", kagitAdedi: "",
-    degerlendirici1: "", degerlendirici2: "", degerlendirici3: ""
+    degerlendirici1: "", degerlendirici2: "", degerlendirici3: "",
+    isletmeAdi: "", isletmeTel: "", isletmeEmail: "", telafiEgitimPuani: "", beceriYarismaPuani: ""
   }, ekAlanlar);
 }
 function sayiYaziIleTr(n) {
@@ -3656,7 +3657,7 @@ function viewKalfalikUstalik() {
       <button class="btn primary" onclick="snEkleKayit('ku',{tur:activeKuTur,dal:activeKuDal})">Öğrenci Ekle</button>
       <button class="btn" onclick="snListedenTopluEkleModal('ku')">Öğrenci Listesinden Toplu Ekle</button>
     </div>
-    ${snBelgeSeciciBar()}
+    ${snBelgeSeciciBar("ku")}
     ${belgeAracCubugu(dosyaAdi)}
   </div>
   ${activeSnBelge === "cizelge" ? snIsDosyasiKriterAciklamasi() : ""}
@@ -3744,7 +3745,11 @@ function snBelgeSeciciBar(kind) {
     { id: "cizelge", label: "Değerlendirme Çizelgesi" },
     { id: "tutanak", label: "Sınav Tutanağı" },
     { id: "sonuc-tutanak", label: "Sınav Sonuç Tutanağı" },
-    { id: "sarf-not", label: "Sarf / Not Çizelgesi" }
+    { id: "sarf-not", label: "Sarf / Not Çizelgesi" },
+    { id: "is-dosyasi", label: "İş Dosyası Derecelendirme" },
+    { id: "aday-gelmedi", label: "Aday Gelmedi Tutanağı" },
+    { id: "not-fisi", label: "Not Fişi" },
+    { id: "sinav-kagidi", label: "Sınav Kağıdı (Uygulama Sorusu)" }
   ];
   if (kind === "bs") secenekler.push({ id: "komisyon-karar", label: "Komisyon Karar Tutanağı" });
   return `<div class="row no-print" style="flex-wrap:wrap;">${secenekler.map(s => `<button class="btn ${s.id === activeSnBelge ? 'primary' : ''}" onclick="setSnBelge('${s.id}')">${s.label}</button>`).join("")}</div>`;
@@ -3877,6 +3882,273 @@ function renderSarfNotCizelgesi(kind, kayitlar, t, baslik) {
     <tbody>${satirlar || `<tr><td colspan="5" class="small">Henüz aday yok.</td></tr>`}</tbody>
   </table>`;
 }
+
+/* ---- İş Dosyası (Staj Defteri) Derecelendirme Anahtarı ----
+   Gerçek Is_Dosyasi_Derecelendirme_2025-2026.xlsx dosyalarından: aynı
+   veri (isDosyasi.k1-4, aciklama) zaten ana çizelgede tutuluyor — burada
+   sadece kendi başlığı, kriter açıklamaları, sınıf ortalaması ve imza
+   bloğuyla bağımsız bir belge olarak yeniden dizilir. */
+function renderIsDosyasiDerecelendirme(kind, kayitlar, baslik) {
+  const dalEtiket = kayitlar.length ? (DAL_LABELS[kayitlar[0].dal] || kayitlar[0].dal) : "";
+  const ogretimYili = S.akademikTakvim ? S.akademikTakvim.ogretimYili : "";
+  let siraNo = 0;
+  const toplamlar = [0, 0, 0, 0, 0];
+  const rows = kayitlar.map(k => {
+    siraNo++;
+    const puanlar = ["k1", "k2", "k3", "k4"].map(f => snSayi(k.isDosyasi[f]) || 0);
+    const toplam = snIsDosyasiPuani(k);
+    puanlar.forEach((v, i) => { toplamlar[i] += v; });
+    toplamlar[4] += toplam;
+    const hucre = (f) => `<td><input class="no-print" type="text" value="${escHtml(k.isDosyasi[f])}" style="width:40px;text-align:center;" onchange="snGuncelleAlan('${kind}','${k.id}','isDosyasi.${f}',this.value)"><span class="print-only-inline">${escHtml(k.isDosyasi[f])}</span></td>`;
+    return `<tr>
+      <td>${siraNo}</td>
+      <td>${escHtml(k.ogrenciNo)}</td>
+      <td>${escHtml(k.ad)}</td>
+      <td>${escHtml(k.soyad)}</td>
+      ${hucre("k1")}${hucre("k2")}${hucre("k3")}${hucre("k4")}
+      <td style="font-weight:600;">${toplam}</td>
+      <td class="no-print"><input type="text" value="${escHtml(k.aciklama)}" style="width:110px;" onchange="snGuncelleAlan('${kind}','${k.id}','aciklama',this.value)"><span class="print-only-inline">${escHtml(k.aciklama)}</span></td>
+    </tr>`;
+  }).join("");
+  const n = kayitlar.length || 1;
+  const ort = toplamlar.map(t => (t / n).toFixed(2));
+  return `
+  <div style="text-align:center;margin-bottom:10px;">
+    <div style="font-weight:700;">${escHtml((S.kurumBilgileri.okulAdi || "").toLocaleUpperCase("tr-TR"))}</div>
+    <div style="font-weight:700;">${escHtml((S.kurumBilgileri.alanAdi || "").toLocaleUpperCase("tr-TR"))}${dalEtiket ? " — " + escHtml(dalEtiket) + " DALI" : ""}</div>
+    <div style="font-weight:700;">İŞ DOSYASI (STAJ DEFTERİ) DERECELENDİRME ANAHTARI — ${escHtml(ogretimYili)} EĞİTİM-ÖĞRETİM YILI</div>
+  </div>
+  <p class="small">${escHtml(baslik)}</p>
+  <table style="font-size:10.5px;">
+    <thead>
+      <tr><th rowspan="2">Sıra<br>No</th><th rowspan="2">Öğrenci<br>No</th><th rowspan="2">Adı</th><th rowspan="2">Soyadı</th>
+      <th>Kriter 1<br>Sayfa Düzeni ve Temizliği (Max: 25)</th><th>Kriter 2<br>Teknik Resim ve Çizim Kuralları (Max: 25)</th><th>Kriter 3<br>Yapılan İşlerin Anlatımı (Max: 25)</th><th>Kriter 4<br>Usta Öğretici İmzaları (Max: 25)</th>
+      <th rowspan="2">TOPLAM<br>(Max: 100)</th><th rowspan="2">Açıklama /<br>Komisyon Notu</th></tr>
+      <tr></tr>
+    </thead>
+    <tbody>${rows || `<tr><td colspan="10" class="small">Henüz öğrenci yok.</td></tr>`}
+    <tr style="font-weight:700;"><td colspan="4">SINIF ORTALAMASI</td><td>${ort[0]}</td><td>${ort[1]}</td><td>${ort[2]}</td><td>${ort[3]}</td><td>${ort[4]}</td><td></td></tr>
+    </tbody>
+  </table>
+  <div class="small" style="margin-top:10px;">
+    <p><b>Kriter 1 — Sayfa Düzeni ve Temizliği:</b> 0-5 Çok dağınık ve kirli · 6-12 Kısmen düzenli · 13-19 Büyük ölçüde düzenli · 20-24 Düzenli ve temiz · 25 Mükemmel düzen</p>
+    <p><b>Kriter 2 — Teknik Resim ve Çizim Kuralları:</b> 0-5 Hiç kural yok · 6-12 Kısmen uygun · 13-19 Büyük ölçüde uygun · 20-24 Kurallara uygun · 25 Tam ve eksiksiz</p>
+    <p><b>Kriter 3 — Yapılan İşlerin Anlatımı:</b> 0-5 Yok / çok yetersiz · 6-12 Kısmen açıklama var · 13-19 Yeterli açıklama · 20-24 Detaylı anlatım · 25 Eksiksiz ve detaylı</p>
+    <p><b>Kriter 4 — Usta Öğretici İmzaları:</b> 0-5 İmza çok eksik · 6-12 Kısmen imzalı · 13-19 Büyük bölümü imzalı · 20-24 Neredeyse tamamı · 25 Tamamı imzalı</p>
+  </div>
+  ${snImzaBlogu(3)}`;
+}
+
+/* ---- Sınav Yapılamadığına İlişkin Tutanak (Aday Gelmedi) ----
+   TUTANAK ADAY GELMEDİ.doc gerçek şablonundan birebir. ---- */
+function adayGelmediTutanagiOlusturVeyaGetir(kind, ekAlanlar) {
+  const anahtar = sinavTutanagiAnahtari(kind, ekAlanlar);
+  let t = S.adayGelmediTutanaklari.find(x => sinavTutanagiAnahtari(x.kind, x) === anahtar);
+  if (!t) {
+    t = Object.assign({ id: uid("agt"), kind,
+      ogretimYili: S.akademikTakvim ? S.akademikTakvim.ogretimYili : "", sinavDonemi: "", sinavTarihi: "", dersinAdi: "",
+      sinavCesidi: "Yazılı", toplanmaTarihi: "", toplanmaGunu: "", toplanmaSaati: "", beklemeSaati: "" }, ekAlanlar);
+    S.adayGelmediTutanaklari.push(t);
+  }
+  return t;
+}
+function updateAdayGelmediAlan(id, alan, value) {
+  const t = S.adayGelmediTutanaklari.find(x => x.id === id);
+  if (!t) return;
+  t[alan] = value;
+  save();
+}
+function setAdayGelmediCesidi(id, value) {
+  const t = S.adayGelmediTutanaklari.find(x => x.id === id);
+  if (!t) return;
+  t.sinavCesidi = value;
+  save(); renderMain();
+}
+function renderAdayGelmediTutanagi(kind, ekAlanlar, dalEtiket) {
+  const t = adayGelmediTutanagiOlusturVeyaGetir(kind, ekAlanlar);
+  const alan = (etiket, field, w) => `<tr><td>${etiket}</td><td class="no-print"><input type="text" value="${escHtml(t[field])}" style="width:${w || 160}px" onchange="updateAdayGelmediAlan('${t.id}','${field}',this.value)"></td><td class="print-only-cell">${escHtml(t[field] || '…')}</td></tr>`;
+  const sinavAdi = kind === "ku"
+    ? "Kalfalık-Ustalık Denklik (" + (t.sinavDonemi || "……………") + " Dönemi)"
+    : "İşletmelerde Beceri Eğitimi Yıl Sonu Beceri Sınavı";
+  const cesitler = ["Yazılı", "Sözlü", "Uygulama"];
+  const turEtiket = kind === "ku" ? (ekAlanlar.tur === "ustalik" ? "USTALIK" : "KALFALIK") : "BECERİ SINAVI";
+  return `
+  <div style="text-align:center;margin-bottom:14px;">
+    <div style="font-weight:700;">SINAV YAPILAMADIĞINA İLİŞKİN TUTANAK</div>
+  </div>
+  <table style="margin-bottom:14px;">
+    <tr><td>Okulun Adı</td><td colspan="2">${escHtml(S.kurumBilgileri.okulAdi)}</td></tr>
+    ${alan("Öğretim Yılı", "ogretimYili")}
+    ${alan("Sınav Dönemi", "sinavDonemi")}
+    ${alan("Sınav Tarihi", "sinavTarihi")}
+    <tr><td>Sınavın Adı</td><td colspan="2">${escHtml(sinavAdi)}</td></tr>
+    ${alan("Sınavı Yapılacak Dersin Adı", "dersinAdi", 220)}
+    <tr><td>Sınavın Çeşidi</td><td colspan="2" class="no-print">${cesitler.map(c => `<button class="btn ${t.sinavCesidi === c ? 'primary' : ''}" style="padding:4px 9px;font-size:11px;margin-right:4px;" onclick="setAdayGelmediCesidi('${t.id}','${c}')">${c}</button>`).join("")}</td>
+    <td class="print-only-cell">${cesitler.map(c => (t.sinavCesidi === c ? "[X] " : "[  ] ") + c).join("   ")}</td></tr>
+  </table>
+  <p class="small" style="margin-bottom:16px;">Komisyonumuz ${escHtml(t.toplanmaTarihi || ".…./…../" + (t.ogretimYili || "….."))} tarih ve ${escHtml(t.toplanmaGunu || "……………")} günü saat ${escHtml(t.toplanmaSaati || "…..:….")}'te ${turEtiket} ${escHtml(dalEtiket || "……………………………")} Meslek Dalı sınavını yapmak üzere toplanmış ve gerekli hazırlıkları yapmıştır. Ancak sınava girecek öğrenci/öğrencilerin gelmediğinin anlaşılması üzerine komisyon saat ${escHtml(t.beklemeSaati || "…..:…..")}'a kadar bekledikten sonra dağılmıştır.</p>
+  <div class="row no-print" style="flex-wrap:wrap;gap:10px;margin-bottom:16px;">
+    <label class="small">Toplanma Tarihi <input type="text" value="${escHtml(t.toplanmaTarihi)}" style="width:100px;" onchange="updateAdayGelmediAlan('${t.id}','toplanmaTarihi',this.value)"></label>
+    <label class="small">Günü <input type="text" value="${escHtml(t.toplanmaGunu)}" style="width:100px;" onchange="updateAdayGelmediAlan('${t.id}','toplanmaGunu',this.value)"></label>
+    <label class="small">Toplanma Saati <input type="text" value="${escHtml(t.toplanmaSaati)}" style="width:70px;" onchange="updateAdayGelmediAlan('${t.id}','toplanmaSaati',this.value)"></label>
+    <label class="small">Bekleme Saati <input type="text" value="${escHtml(t.beklemeSaati)}" style="width:70px;" onchange="updateAdayGelmediAlan('${t.id}','beklemeSaati',this.value)"></label>
+  </div>
+  <div style="text-align:center;font-weight:700;margin-bottom:10px;">S I N A V   K O M İ S Y O N U</div>
+  <table>
+    <tr><td style="font-weight:600;">${escHtml(S.kurumBilgileri.mudurAdi)}</td></tr>
+    <tr><td>Okul Müdürü / Sınava Kom. Başkanı</td></tr>
+    <tr><td style="height:26px;">ÜYE</td></tr>
+    <tr><td style="height:26px;">ÜYE</td></tr>
+    <tr><td style="height:26px;">ÜYE</td></tr>
+  </table>`;
+}
+
+/* ---- İşletmelerde Meslek Eğitimi Gören Öğrencilere Ait Dönem Not Fişi ----
+   NOT FİŞİ.xlsx gerçek şablonundan; her öğrenci için ayrı bir fiş basılır
+   (İşletmelerde Verilen Puanlar bölümü zaten ana çizelgedeki d1/d2 dönem
+   verilerinden gelir — Telafi Eğitim ve Beceri Yarışması puanları buradan
+   girilir). ---- */
+let activeNotFisiDonem = "1";
+function setNotFisiDonem(d) { activeNotFisiDonem = d; renderMain(); }
+function renderNotFisiTek(kind, k, donem) {
+  const d = donem === "2" ? k.d2 : k.d1;
+  const temrin = snOrtalama([d.t1, d.t2]);
+  const isHizmet = snOrtalama([d.ih1, d.ih2]);
+  const proje = snSayi(d.proje) || 0;
+  const deney = snSayi(d.deney) || 0;
+  const degerler = [temrin, isHizmet, proje, deney];
+  if (k.telafiEgitimPuani !== "") degerler.push(snSayi(k.telafiEgitimPuani) || 0);
+  if (k.beceriYarismaPuani !== "") degerler.push(snSayi(k.beceriYarismaPuani) || 0);
+  const donemOrt = Math.round((degerler.reduce((a, b) => a + b, 0) / degerler.length) * 10) / 10;
+  const donemOrtTamsayi = Math.min(100, Math.max(0, Math.round(donemOrt)));
+  const kurum = S.kurumBilgileri;
+  return `
+  <div class="card" style="page-break-inside:avoid;margin-bottom:16px;">
+    <div style="text-align:center;margin-bottom:10px;">
+      <div style="font-weight:700;">İŞLETMELERDE MESLEK EĞİTİMİ GÖREN ÖĞRENCİLERE AİT DÖNEM NOT FİŞİ</div>
+    </div>
+    <table style="margin-bottom:10px;">
+      <tr><td>Okul/Kurumun Adı</td><td colspan="3">${escHtml(kurum.okulAdi)} / MESEM PROGRAMI</td></tr>
+      <tr><td>Öğretim Yılı</td><td>${escHtml(S.akademikTakvim ? S.akademikTakvim.ogretimYili : '')}</td><td>Dönemi</td><td>${donem}. Dönem</td></tr>
+      <tr><td>İşletmenin Adı</td><td class="no-print"><input type="text" value="${escHtml(k.isletmeAdi)}" style="width:160px;" onchange="snGuncelleAlan('${kind}','${k.id}','isletmeAdi',this.value)"><span class="print-only-inline"></span></td><td class="print-only-cell">${escHtml(k.isletmeAdi || '…')}</td>
+        <td>Tel: <span class="no-print"><input type="text" value="${escHtml(k.isletmeTel)}" style="width:90px;" onchange="snGuncelleAlan('${kind}','${k.id}','isletmeTel',this.value)"></span><span class="print-only-inline">${escHtml(k.isletmeTel || '…')}</span></td></tr>
+      <tr><td>Dersin Adı</td><td colspan="3">İşletmede Beceri Eğitimi</td></tr>
+    </table>
+    <table style="font-size:10.5px;">
+      <thead><tr><th>Öğrenci No</th><th>Adı Soyadı</th><th>Meslek Alan/Dalı</th><th>Temrin</th><th>İş-Hizmet</th><th>Proje</th><th>Deney</th><th>Telafi Eğitim Puanı (*)</th><th>Beceri Yarışması Puanı (*)</th><th>Dönem Puanı<br>Rakam ile</th><th>Dönem Puanı<br>Yazı ile</th></tr></thead>
+      <tbody><tr>
+        <td>${escHtml(k.ogrenciNo)}</td><td>${escHtml(k.ad)} ${escHtml(k.soyad)}</td><td>${escHtml(DAL_LABELS[k.dal] || k.dal || '')}</td>
+        <td>${temrin.toFixed(1)}</td><td>${isHizmet.toFixed(1)}</td><td>${proje}</td><td>${deney}</td>
+        <td class="no-print"><input type="text" value="${escHtml(k.telafiEgitimPuani)}" style="width:44px;text-align:center;" onchange="snGuncelleAlan('${kind}','${k.id}','telafiEgitimPuani',this.value)"><span class="print-only-inline">${escHtml(k.telafiEgitimPuani || '-')}</span></td>
+        <td class="no-print"><input type="text" value="${escHtml(k.beceriYarismaPuani)}" style="width:44px;text-align:center;" onchange="snGuncelleAlan('${kind}','${k.id}','beceriYarismaPuani',this.value)"><span class="print-only-inline">${escHtml(k.beceriYarismaPuani || '-')}</span></td>
+        <td style="font-weight:600;">${donemOrt}</td><td>${sayiYaziIleTr(donemOrtTamsayi)}</td>
+      </tr></tbody>
+    </table>
+    <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:14px;margin-top:26px;text-align:center;font-size:11px;">
+      <div>…………………………………<div style="margin-top:4px;">Usta Öğretici<br>Eğitici Personel</div></div>
+      <div>…………………………………<div style="margin-top:4px;">İşletme Yetkilisi</div></div>
+      <div><div style="font-weight:600;">${escHtml(kurum.mudurAdi)}</div><div style="margin-top:4px;">Okul/Kurum Müdürü</div></div>
+      <div>…………………………………<div style="margin-top:4px;">Koor. Müdür Yardımcısı</div></div>
+    </div>
+    <p class="small" style="margin-top:14px;">AÇIKLAMALAR: 1) Bu çizelge; Mesleki ve Teknik Eğitim Yönetmeliğinin 82'inci maddesine göre, işletme yetkilisi tarafından doldurulacak ve dönem sona ermeden beş (5) gün önceden kapalı zarf içinde okul/kurum müdürlüğüne teslim edilecektir. 2) (*) işareti bölümler okul/kurum müdürlüğümüzce doldurulacak ve puan ortalaması alınarak dönem notu belirlenecektir.</p>
+  </div>`;
+}
+function renderNotFisi(kind, kayitlar) {
+  const donemBar = `<div class="row no-print" style="margin-bottom:10px;"><button class="btn ${activeNotFisiDonem === '1' ? 'primary' : ''}" onclick="setNotFisiDonem('1')">1. Dönem</button><button class="btn ${activeNotFisiDonem === '2' ? 'primary' : ''}" onclick="setNotFisiDonem('2')">2. Dönem</button></div>`;
+  const govde = kayitlar.length ? kayitlar.map(k => renderNotFisiTek(kind, k, activeNotFisiDonem)).join("") : `<div class="card"><p class="small">Henüz öğrenci yok.</p></div>`;
+  return donemBar + govde;
+}
+
+/* ---- Sınav Kağıdı (Uygulama Sorusu) ----
+   SINAV KAĞITLARI/*.xlsx gerçek örneklerinden: soru metni + puan
+   unsurları tur/dal (ya da sınıf) bazında bir kez tanımlanır, her
+   öğrenci için ayrı bir uygulama kağıdı basılır. ---- */
+function sinavKagidiOlusturVeyaGetir(kind, ekAlanlar) {
+  const anahtar = sinavTutanagiAnahtari(kind, ekAlanlar);
+  let sk = S.beceriSinavKagitlari.find(x => sinavTutanagiAnahtari(x.kind, x) === anahtar);
+  if (!sk) {
+    sk = Object.assign({ id: uid("bsk"), kind, soruMetni: "", unsurlar: [] }, ekAlanlar);
+    S.beceriSinavKagitlari.push(sk);
+  }
+  return sk;
+}
+function updateSinavKagidiAlan(id, alan, value) {
+  const sk = S.beceriSinavKagitlari.find(x => x.id === id);
+  if (!sk) return;
+  sk[alan] = value;
+  save();
+}
+function sinavKagidiUnsurEkle(id) {
+  const sk = S.beceriSinavKagitlari.find(x => x.id === id);
+  if (!sk) return;
+  sk.unsurlar.push({ id: uid("bsu"), ad: "", puan: "" });
+  save(); renderMain();
+}
+function sinavKagidiUnsurSil(id, unsurId) {
+  const sk = S.beceriSinavKagitlari.find(x => x.id === id);
+  if (!sk) return;
+  sk.unsurlar = sk.unsurlar.filter(u => u.id !== unsurId);
+  save(); renderMain();
+}
+function updateSinavKagidiUnsur(id, unsurId, alan, value) {
+  const sk = S.beceriSinavKagitlari.find(x => x.id === id);
+  const u = sk && sk.unsurlar.find(x => x.id === unsurId);
+  if (!u) return;
+  u[alan] = value;
+  save();
+}
+function renderSinavKagidi(kind, kayitlar, ekAlanlar, baslik, dalEtiket) {
+  const sk = sinavKagidiOlusturVeyaGetir(kind, ekAlanlar);
+  const toplamPuan = sk.unsurlar.reduce((s, u) => s + (snSayi(u.puan) || 0), 0);
+  const belgeBasligi = kind === "ku"
+    ? (ekAlanlar.tur === "ustalik" ? "USTALIK" : "KALFALIK") + " BECERİ SINAVI UYGULAMA SORUSU"
+    : "BECERİ SINAVI UYGULAMA SORUSU";
+  const editor = `
+  <div class="card no-print">
+    <h3>Uygulama Sorusu ve Değerlendirme Unsurları</h3>
+    <label class="small">Soru Metni / Uygulama Görevi Tanımı</label>
+    <textarea rows="6" style="width:100%;border:1px solid var(--line);border-radius:4px;padding:6px;font-family:inherit;font-size:11.5px;" oninput="updateSinavKagidiAlan('${sk.id}','soruMetni',this.value)" onblur="save()">${escHtml(sk.soruMetni)}</textarea>
+    <table style="margin-top:10px;">
+      <thead><tr><th>Değerlendirme Unsuru</th><th style="width:70px;">Puan</th><th></th></tr></thead>
+      <tbody>${sk.unsurlar.map(u => `<tr>
+        <td><input type="text" value="${escHtml(u.ad)}" style="width:100%;" onchange="updateSinavKagidiUnsur('${sk.id}','${u.id}','ad',this.value)"></td>
+        <td><input type="text" value="${escHtml(u.puan)}" style="width:60px;text-align:center;" onchange="updateSinavKagidiUnsur('${sk.id}','${u.id}','puan',this.value); renderMain();"></td>
+        <td><button class="btn danger" onclick="sinavKagidiUnsurSil('${sk.id}','${u.id}')">Sil</button></td>
+      </tr>`).join("") || `<tr><td colspan="3" class="small">Henüz unsur eklenmedi.</td></tr>`}</tbody>
+    </table>
+    <div class="row" style="margin-top:8px;align-items:center;"><button class="btn" onclick="sinavKagidiUnsurEkle('${sk.id}')">Unsur Ekle</button><span class="small">Toplam: ${toplamPuan}p</span></div>
+  </div>`;
+  const sayfalar = kayitlar.length ? kayitlar.map(k => `
+  <div class="card" style="page-break-inside:avoid;margin-bottom:16px;">
+    <div style="text-align:center;margin-bottom:10px;">
+      <div style="font-weight:700;">${escHtml((S.kurumBilgileri.okulAdi || "").toLocaleUpperCase("tr-TR"))}</div>
+      <div style="font-weight:700;">${escHtml((S.kurumBilgileri.alanAdi || "").toLocaleUpperCase("tr-TR"))}</div>
+      ${dalEtiket ? `<div style="font-weight:700;">${escHtml(dalEtiket).toLocaleUpperCase("tr-TR")} DALI</div>` : ""}
+      <div style="font-weight:700;">${escHtml(belgeBasligi)}</div>
+    </div>
+    <div style="min-height:160px;border:1px solid var(--line);padding:8px;margin-bottom:14px;white-space:pre-wrap;">${nlToBr(sk.soruMetni) || '<span class="small">—</span>'}</div>
+    <table style="margin-bottom:10px;">
+      <tr><td>Öğrenci Adı Soyadı / Sınıf / No</td><td>${escHtml(k.ad)} ${escHtml(k.soyad)} — ${escHtml(k.dal ? (DAL_LABELS[k.dal] || k.dal) : '')} — ${escHtml(k.ogrenciNo)}</td></tr>
+      <tr><td>Başlama Tarihi</td><td>…</td></tr>
+      <tr><td>Bitiş Tarihi</td><td>…</td></tr>
+      <tr><td>Verilen Süre</td><td>…</td></tr>
+    </table>
+    <table>
+      <thead><tr><th>Değerlendirme Unsurları</th>${sk.unsurlar.map(u => `<th>${escHtml(u.ad)}</th>`).join("")}<th>Toplam</th></tr></thead>
+      <tbody>
+        <tr><td>Takdir edilen puan</td>${sk.unsurlar.map(u => `<td>${escHtml(String(u.puan))}p</td>`).join("")}<td>${toplamPuan}p</td></tr>
+        <tr><td>Öğrencinin aldığı puan</td>${sk.unsurlar.map(() => `<td></td>`).join("")}<td></td></tr>
+      </tbody>
+    </table>
+    <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:14px;margin-top:30px;text-align:center;font-size:11px;">
+      <div>…………………<div style="margin-top:4px;">Komisyon Üyesi</div></div>
+      <div>…………………<div style="margin-top:4px;">Komisyon Üyesi</div></div>
+      <div>…………………<div style="margin-top:4px;">Komisyon Üyesi</div></div>
+      <div><div style="font-weight:600;">${escHtml(S.kurumBilgileri.mudurAdi)}</div><div style="margin-top:4px;">Komisyon Başkanı</div></div>
+    </div>
+  </div>`).join("") : `<div class="card"><p class="small">Henüz öğrenci yok.</p></div>`;
+  return editor + sayfalar;
+}
 function snEkBelgeGovde(kind, kayitlar, ekAlanlar, baslik) {
   if (activeSnBelge === "tutanak") {
     const t = sinavTutanagiOlusturVeyaGetir(kind, ekAlanlar);
@@ -3888,6 +4160,10 @@ function snEkBelgeGovde(kind, kayitlar, ekAlanlar, baslik) {
     return renderSarfNotCizelgesi(kind, kayitlar, t, baslik);
   }
   if (activeSnBelge === "komisyon-karar" && kind === "bs") return beceriKomisyonKararKarti(ekAlanlar.sinif, ekAlanlar.dal);
+  if (activeSnBelge === "is-dosyasi") return renderIsDosyasiDerecelendirme(kind, kayitlar, baslik);
+  if (activeSnBelge === "aday-gelmedi") return renderAdayGelmediTutanagi(kind, ekAlanlar, DAL_LABELS[ekAlanlar.dal] || ekAlanlar.dal || "");
+  if (activeSnBelge === "not-fisi") return renderNotFisi(kind, kayitlar);
+  if (activeSnBelge === "sinav-kagidi") return renderSinavKagidi(kind, kayitlar, ekAlanlar, baslik, DAL_LABELS[ekAlanlar.dal] || ekAlanlar.dal || "");
   return null;
 }
 

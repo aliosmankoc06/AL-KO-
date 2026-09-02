@@ -140,6 +140,8 @@ function defaultState() {
     performansNotlari: [],
     donemArsivi: [],
     sinavTutanaklari: [],
+    adayGelmediTutanaklari: [],
+    beceriSinavKagitlari: [],
     kurumBilgileri: {
       okulAdi: "Soma Mesleki ve Teknik Anadolu Lisesi",
       sehir: "SOMA",
@@ -187,6 +189,8 @@ function emptyState() {
     performansNotlari: [],
     donemArsivi: [],
     sinavTutanaklari: [],
+    adayGelmediTutanaklari: [],
+    beceriSinavKagitlari: [],
     kurumBilgileri: {
       okulAdi: "Soma Mesleki ve Teknik Anadolu Lisesi",
       sehir: "SOMA",
@@ -336,6 +340,11 @@ function normalizeState(s) {
       ["degerlendirici1", "degerlendirici2", "degerlendirici3"].forEach(f => {
         if (typeof k[f] !== "string" && typeof k[f] !== "number") k[f] = "";
       });
+      if (typeof k.isletmeAdi !== "string") k.isletmeAdi = "";
+      if (typeof k.isletmeTel !== "string") k.isletmeTel = "";
+      if (typeof k.isletmeEmail !== "string") k.isletmeEmail = "";
+      if (typeof k.telafiEgitimPuani !== "string" && typeof k.telafiEgitimPuani !== "number") k.telafiEgitimPuani = "";
+      if (typeof k.beceriYarismaPuani !== "string" && typeof k.beceriYarismaPuani !== "number") k.beceriYarismaPuani = "";
     });
     return liste;
   }
@@ -428,6 +437,27 @@ function normalizeState(s) {
       "komisyonToplanmaSaati", "hazirlikSaati", "sinavBaslamaSaati", "katilmayanSayisi",
       "kullanilanKagitSayisi", "sinavBitisSaati", "degerlendirmeTarihSaati"].forEach(f => {
       if (typeof t[f] !== "string") t[f] = "";
+    });
+  });
+  if (!Array.isArray(s.adayGelmediTutanaklari)) s.adayGelmediTutanaklari = [];
+  s.adayGelmediTutanaklari.forEach(t => {
+    if (!t.id) t.id = uid("agt");
+    ["kind", "tur", "dal", "sinif", "ogretimYili", "sinavDonemi", "sinavTarihi", "dersinAdi",
+      "sinavCesidi", "toplanmaTarihi", "toplanmaGunu", "toplanmaSaati", "beklemeSaati"].forEach(f => {
+      if (typeof t[f] !== "string") t[f] = "";
+    });
+  });
+  if (!Array.isArray(s.beceriSinavKagitlari)) s.beceriSinavKagitlari = [];
+  s.beceriSinavKagitlari.forEach(sk => {
+    if (!sk.id) sk.id = uid("bsk");
+    ["kind", "tur", "dal", "sinif", "soruMetni"].forEach(f => {
+      if (typeof sk[f] !== "string") sk[f] = "";
+    });
+    if (!Array.isArray(sk.unsurlar)) sk.unsurlar = [];
+    sk.unsurlar.forEach(u => {
+      if (!u.id) u.id = uid("bsu");
+      if (typeof u.ad !== "string") u.ad = "";
+      if (typeof u.puan !== "string" && typeof u.puan !== "number") u.puan = "";
     });
   });
   if (!s.kurumBilgileri || typeof s.kurumBilgileri !== "object") s.kurumBilgileri = {};
