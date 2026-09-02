@@ -6028,7 +6028,7 @@ function viewSinif() {
   let detail = `<p class="small">Soldan bir sınıf seçin.</p>`;
   if (cls) {
     const available = S.courses.filter(c => c.id !== KOORD_COURSE_ID && !cls.assignments.some(a => a.courseId === c.id));
-    const dersHavuzuDropdown = sinifDersHavuzuDropdown(cls.id, available);
+    const dersHavuzuDropdown = cls.id === "cl-idari" ? "" : sinifDersHavuzuDropdown(cls.id, available);
 
     const assignedRows = cls.assignments.map(a => {
       const course = courseById(a.courseId);
@@ -6099,7 +6099,7 @@ function viewSinif() {
       </div>` : ``}
       <h2>${cls.name} — Atanmış Dersler</h2>
       ${assignedRows || '<p class="small">Henüz ders atanmadı.</p>'}
-      <div style="margin-top:20px;">${dersHavuzuDropdown}</div>
+      ${dersHavuzuDropdown ? `<div style="margin-top:20px;">${dersHavuzuDropdown}</div>` : ``}
     `;
   }
 
