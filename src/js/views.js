@@ -169,7 +169,7 @@ function renderMain() {
     : activeTab === "koordinatorluk" ? viewKoordinatorluk()
     : activeTab === "programlar" ? viewProgramlar()
     : "";
-  el.innerHTML = dersProgramiArsivBar() + govde;
+  el.innerHTML = govde;
 }
 
 function hasUnsavedWork() {
@@ -233,90 +233,6 @@ function continueCurrentProgram() {
   if (!DERS_PROGRAMI_TABS.some(t => t.id === activeTab)) activeTab = "havuz";
   renderTabbar();
   renderMain();
-}
-
-/* ---- Ders Programı Dönem Arşivi ----
-   Ders Programı (havuz, öğretmenler, sınıflar, koordinatörlük, dağıtım)
-   her öğretim yılı başında sıfırdan hazırlanır. Bu arşiv, o alanları bir
-   isimle (ör. "2025-2026 Eğitim-Öğretim Yılı") anlık görüntü olarak
-   saklamayı, yeni bir döneme sıfırdan başlamayı ve eski bir dönemi geri
-   yükleyip üzerinde çalışarak farklı bir isimle tekrar kaydetmeyi sağlar.
-   Yıllık Plan/Günlük Plan/Toplantı Tutanakları gibi diğer modüller
-   etkilenmez — onlar zaten kendi geçmiş kayıtlarını liste olarak tutar. */
-const DERS_PROGRAMI_ARSIV_ALANLARI = ["rooms", "courses", "teachers", "classes", "schedule", "blockedSlots", "teacherBlockedSlots", "coordAssignments", "isletmeler", "isletmeTeacherAssign"];
-function dersProgramiSnapshotAl() {
-  const veri = {};
-  DERS_PROGRAMI_ARSIV_ALANLARI.forEach(k => { veri[k] = JSON.parse(JSON.stringify(S[k])); });
-  return veri;
-}
-function dersProgramiBosSnapshot() {
-  return { rooms: [], courses: [], teachers: [], classes: [], schedule: {}, blockedSlots: {}, teacherBlockedSlots: {}, coordAssignments: [], isletmeler: [], isletmeTeacherAssign: {} };
-}
-function dersProgramiSnapshotUygula(veri) {
-  DERS_PROGRAMI_ARSIV_ALANLARI.forEach(k => { S[k] = JSON.parse(JSON.stringify(veri[k] !== undefined ? veri[k] : dersProgramiBosSnapshot()[k])); });
-}
-function dersProgramiFarkliKaydet() {
-  const varsayilan = S.akademikTakvim && S.akademikTakvim.ogretimYili ? S.akademikTakvim.ogretimYili + " Eğitim-Öğretim Yılı" : "Ders Programı - " + new Date().toLocaleDateString("tr-TR");
-  promptModal("Şu anki ders programını (havuz, öğretmenler, sınıflar, koordinatörlük, dağıtım) hangi isimle arşivlemek istiyorsunuz?", varsayilan, (etiket) => {
-    if (!etiket || !etiket.trim()) return;
-    if (!S.donemArsivi) S.donemArsivi = [];
-    S.donemArsivi.push({ id: uid("da"), etiket: etiket.trim(), tarih: new Date().toLocaleDateString("tr-TR"), veri: dersProgramiSnapshotAl() });
-    save();
-    renderMain();
-    alert('"' + etiket.trim() + '" adıyla arşivlendi. Arşivden Yükle listesinden istediğiniz zaman geri çağırabilirsiniz.');
-  });
-}
-function dersProgramiArsivdenYukle(id) {
-  const kayit = (S.donemArsivi || []).find(a => a.id === id);
-  if (!kayit) return;
-  if (!confirm('"' + kayit.etiket + '" arşivi şu anki ders programının (havuz, öğretmenler, sınıflar, koordinatörlük, dağıtım) yerine yüklenecek. Şu anki çalışmanızı önce "Farklı Kaydet (Arşivle)" ile kaydetmediyseniz kaybolacak. Devam edilsin mi?')) return;
-  dersProgramiSnapshotUygula(kayit.veri);
-  activeClassId = S.classes[0] ? S.classes[0].id : null;
-  activeTeacherId = S.teachers[0] ? S.teachers[0].id : null;
-  save();
-  renderTabbar();
-  renderMain();
-}
-function dersProgramiArsivSil(id) {
-  if (!confirm("Bu arşiv kalıcı olarak silinsin mi? Bu işlem geri alınamaz.")) return;
-  S.donemArsivi = (S.donemArsivi || []).filter(a => a.id !== id);
-  save();
-  renderMain();
-}
-function dersProgramiSifirla() {
-  if (!confirm("Ders Programı (havuz, öğretmenler, sınıflar, koordinatörlük, dağıtım) sıfırlanacak. Diğer modülleriniz (Yıllık Plan, Zümre, Envanter vb.) etkilenmeyecek. Önce \"Farklı Kaydet (Arşivle)\" ile kaydetmediyseniz şu anki ders programı kaybolacak. Devam edilsin mi?")) return;
-  dersProgramiSnapshotUygula(dersProgramiBosSnapshot());
-  activeClassId = null;
-  activeTeacherId = null;
-  save();
-  renderTabbar();
-  renderMain();
-}
-function dersProgramiArsivDropdown() {
-  const arsiv = S.donemArsivi || [];
-  const items = arsiv.map(a => `
-    <div class="tab-dropdown-item" style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
-      <span onclick="dersProgramiArsivdenYukle('${jsq(a.id)}'); toggleTabDropdown('ders-arsiv');" style="flex:1;cursor:pointer;">${escHtml(a.etiket)}<br><span class="small">${escHtml(a.tarih)}</span></span>
-      <span onclick="event.stopPropagation(); dersProgramiArsivSil('${jsq(a.id)}');" style="cursor:pointer;" title="Arşivden sil">✕</span>
-    </div>`).join("");
-  return `<div class="tab-dropdown no-print">
-    <button class="btn" onclick="toggleTabDropdown('ders-arsiv')">Arşivden Yükle ▾</button>
-    <div id="tabdd-ders-arsiv" class="tab-dropdown-menu">${items || '<div class="tab-dropdown-item small">Henüz arşiv yok</div>'}</div>
-  </div>`;
-}
-function dersProgramiArsivBar() {
-  return `
-  <div class="card no-print">
-    <div class="row" style="flex-wrap:wrap;align-items:center;justify-content:space-between;">
-      <div class="small" style="font-weight:600;">Dönem Arşivi</div>
-      <div class="row" style="flex-wrap:wrap;margin:0;">
-        ${dersProgramiArsivDropdown()}
-        <button class="btn" onclick="dersProgramiFarkliKaydet()">Farklı Kaydet (Arşivle)</button>
-        <button class="btn danger" onclick="dersProgramiSifirla()">Yeni Döneme Başla (Sıfırla)</button>
-      </div>
-    </div>
-    <p class="small" style="margin-top:6px;">Şu anki ders programını bir isimle (ör. "2025-2026 Eğitim-Öğretim Yılı") arşivleyin; sonra yeni döneme sıfırdan başlayın ya da eski bir arşivi geri yükleyip üzerinde çalışıp yeni bir isimle tekrar kaydedin. Diğer modülleriniz (Yıllık Plan, Zümre, Envanter vb.) bundan etkilenmez.</p>
-  </div>`;
 }
 
 function viewDersProgramiChooser() {
@@ -5696,7 +5612,8 @@ function openSavedProgramsModal() {
 function viewHavuz() {
   const rows = S.courses.filter(c => c.id !== KOORD_COURSE_ID).map(c => `
     <tr>
-      <td>${c.code}</td>
+      <td class="no-print"><input type="text" value="${escHtml(c.code)}" style="width:70px;" onchange="updateCourseCode('${c.id}', this.value)"></td>
+      <td class="print-only-cell">${escHtml(c.code)}</td>
       <td>${c.name}</td>
       <td>${DAL_LABELS[c.dal] || c.dal}</td>
       <td>${c.grade}</td>
@@ -5705,11 +5622,6 @@ function viewHavuz() {
       <td class="no-print"><div class="row" style="margin:0;"><button class="btn" onclick="editCourse('${c.id}')">Düzenle</button><button class="btn danger" onclick="deleteCourse('${c.id}')">Sil</button></div></td>
     </tr>`).join("");
   return `
-  <div class="card no-print">
-    <h2>Ders Havuzu</h2>
-    <p class="small">Çerçeve öğretim programından alınan dersler. Yeni ders ekleyebilir veya düzenleyebilirsiniz.</p>
-    ${belgeAracCubugu("Ders Havuzu")}
-  </div>
   <div class="print-area">
     ${belgeYazdirmaBasligi("Ders Havuzu")}
     <div class="card">
@@ -5750,6 +5662,12 @@ function addCourse() {
   if (!name) { alert("Ders adı girin."); return; }
   S.courses.push({ id: uid("c"), code: code || name.slice(0, 3).toUpperCase(), name, dal, grade, hours, blocks });
   save(); renderMain();
+}
+function updateCourseCode(id, value) {
+  const c = courseById(id);
+  if (!c) return;
+  c.code = value.trim();
+  save();
 }
 function deleteCourse(id) {
   if (!confirm("Bu dersi ders havuzundan silmek istiyor musunuz? (Sınıflara yapılmış atamalar da etkilenir)")) return;
