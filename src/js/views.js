@@ -316,11 +316,13 @@ function openSavedProgram(id) {
     const v = versions.find(x => x.id === id);
     if (!v) return;
     S = normalizeState(JSON.parse(JSON.stringify(v.data)));
+    setAktifSurumId(id);
     save();
     activeModule = "ders-programi";
     activeTab = "dagitim";
     renderTabbar();
     renderMain();
+    renderSurumWidget();
   });
 }
 function exportDataFile() {
@@ -356,6 +358,7 @@ function applyImportedPayload(raw) {
         saveVersionsList(payload.versions);
       }
       setModule("ana");
+      renderSurumWidget();
       alert("Yedek başarıyla yüklendi.");
     });
   } catch (err) {
@@ -6546,15 +6549,73 @@ function saveCurrentVersion() {
   const name = prompt("Bu anki hâli hangi isimle kaydedeyim? (ör. '2026-2027 Güz Dönemi')\n\nÇalışma alanınız SİLİNMEZ — sadece bu isimle bir kopya saklanır, siz aynı yerden çalışmaya devam edersiniz.");
   if (!name || !name.trim()) return;
   const versions = loadVersions();
-  versions.push({ id: uid("ver"), name: name.trim(), savedAt: new Date().toISOString(), data: JSON.parse(JSON.stringify(S)) });
+  const yeni = { id: uid("ver"), name: name.trim(), savedAt: new Date().toISOString(), data: JSON.parse(JSON.stringify(S)) };
+  versions.push(yeni);
   saveVersionsList(versions);
+  setAktifSurumId(yeni.id);
   alert(`"${name.trim()}" olarak kaydedildi. Çalışmanıza aynı yerden devam edebilirsiniz.`);
   renderMain();
+  renderSurumWidget();
 }
 function deleteVersion(id) {
   if (!confirm("Bu kayıtlı sürüm kalıcı olarak silinsin mi?")) return;
   saveVersionsList(loadVersions().filter(x => x.id !== id));
+  if (getAktifSurumId() === id) setAktifSurumId(null);
   renderMain();
+  renderSurumWidget();
+}
+
+/* ---- Sol menüdeki "Kaydet" altı sürüm anahtarı ----
+   Kullanıcı "Farklı Kaydet" ile çalışmasının o anki hâlini isimli bir
+   sürüm olarak saklayabilir (ör. "2026-2027 Eğitim-Öğretim Yılı"),
+   sonra sol menüdeki bu açılır listeden istediği sürüme geçip kaldığı
+   yerden devam edebilir ya da geçmiş bir sürümü açabilir. */
+function farkliKaydetSurum() {
+  const varsayilan = S.akademikTakvim && S.akademikTakvim.ogretimYili ? S.akademikTakvim.ogretimYili + " Eğitim-Öğretim Yılı" : "";
+  const name = prompt("Şu anki hâlin tamamını (bütün modülleriyle) hangi isimle kaydedeyim?\n\nÇalışma alanınız silinmez — bu isimle bir kopya saklanır ve bundan sonra \"Kaydet\" dediğinizde bu isimli kayıt güncellenir.", varsayilan);
+  if (!name || !name.trim()) return;
+  const versions = loadVersions();
+  const yeni = { id: uid("ver"), name: name.trim(), savedAt: new Date().toISOString(), data: JSON.parse(JSON.stringify(S)) };
+  versions.push(yeni);
+  saveVersionsList(versions);
+  setAktifSurumId(yeni.id);
+  save();
+  renderSurumWidget();
+}
+function surumaGec(id) {
+  const versions = loadVersions();
+  const v = versions.find(x => x.id === id);
+  if (!v) return;
+  if (getAktifSurumId() === id) { toggleTabDropdown("surum-secici"); return; }
+  confirmDestructive(`"${v.name}" adlı kayıt açılacak. Şu anki çalışmanız zaten kendi kaydına (${getAktifSurumId() ? '"' + (versions.find(x => x.id === getAktifSurumId()) || {}).name + '"' : "kayıtsız çalışma"}) işlenmiş durumda, kaybolmaz. Devam edilsin mi?`, () => {
+    S = normalizeState(JSON.parse(JSON.stringify(v.data)));
+    setAktifSurumId(id);
+    save();
+    renderTabbar();
+    renderMain();
+    renderSurumWidget();
+  });
+}
+function renderSurumWidget() {
+  const el = document.getElementById("surum-widget");
+  if (!el) return;
+  const versions = loadVersions();
+  const aktifId = getAktifSurumId();
+  const aktif = versions.find(x => x.id === aktifId);
+  const items = versions.slice().reverse().map(v => `
+    <div class="tab-dropdown-item ${v.id === aktifId ? 'active' : ''}" style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+      <span onclick="surumaGec('${jsq(v.id)}')" style="flex:1;cursor:pointer;">${v.id === aktifId ? "✓ " : ""}${escHtml(v.name)}</span>
+      <span onclick="event.stopPropagation(); deleteVersion('${jsq(v.id)}');" style="cursor:pointer;" title="Bu kaydı sil">✕</span>
+    </div>`).join("");
+  el.innerHTML = `
+    <div class="tab-dropdown no-print" style="display:block;width:100%;margin-top:6px;">
+      <button class="btn" style="width:100%;font-size:12px;" onclick="toggleTabDropdown('surum-secici')" title="Kaydedilmiş isimli kayıtlar arasında geçiş yapın">
+        📁 ${aktif ? escHtml(aktif.name) : "İsimsiz çalışma"} ▾
+      </button>
+      <div id="tabdd-surum-secici" class="tab-dropdown-menu" style="left:0;right:0;width:auto;">
+        ${items || '<div class="tab-dropdown-item small">Henüz isimli bir kayıt yok</div>'}
+      </div>
+    </div>`;
 }
 function preDistributionChecks() {
   const warnings = [];

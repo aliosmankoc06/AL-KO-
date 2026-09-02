@@ -24,3 +24,4 @@ renderMain();
 renderSidebarBrand();
 applyTheme(currentTheme());
 sonKayitBaslangicDurumunuGoster();
+renderSurumWidget();
