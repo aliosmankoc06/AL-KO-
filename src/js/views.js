@@ -169,6 +169,33 @@ function renderMain() {
 function hasUnsavedWork() {
   return S.classes.length > 0 || S.teachers.length > 0 || Object.keys(S.schedule).length > 0;
 }
+/* Electron'da window.prompt() desteklenmiyor (her zaman null/boş döner,
+   hiçbir pencere göstermez) — bu yüzden isim sormamız gereken her yerde
+   native prompt() yerine bu modal kullanılıyor. */
+function promptModal(message, defaultValue, onSubmit) {
+  const root = document.getElementById("modal-root");
+  window._promptSubmit = () => {
+    const el = document.getElementById("prompt-modal-input");
+    const val = el ? el.value : "";
+    closeModal();
+    onSubmit(val);
+  };
+  root.innerHTML = `
+    <div class="modal-bg" onclick="if(event.target===this) closeModal()">
+      <div class="modal" style="width:400px;">
+        <p class="small" style="white-space:pre-wrap;">${escHtml(message)}</p>
+        <input type="text" id="prompt-modal-input" style="width:100%;margin-top:8px;" value="${escHtml(defaultValue || "")}" onkeydown="if(event.key==='Enter'){window._promptSubmit();}else if(event.key==='Escape'){closeModal();}">
+        <div class="row" style="margin-top:14px;">
+          <button class="btn" onclick="closeModal()">Vazgeç</button>
+          <button class="btn primary" onclick="window._promptSubmit()">Tamam</button>
+        </div>
+      </div>
+    </div>`;
+  setTimeout(() => {
+    const el = document.getElementById("prompt-modal-input");
+    if (el) { el.focus(); el.select(); }
+  }, 30);
+}
 function confirmDestructive(message, onConfirm) {
   if (!hasUnsavedWork()) { onConfirm(); return; }
   window._confirmProceed = () => { closeModal(); onConfirm(); };
@@ -224,13 +251,14 @@ function dersProgramiSnapshotUygula(veri) {
 }
 function dersProgramiFarkliKaydet() {
   const varsayilan = S.akademikTakvim && S.akademikTakvim.ogretimYili ? S.akademikTakvim.ogretimYili + " Eğitim-Öğretim Yılı" : "Ders Programı - " + new Date().toLocaleDateString("tr-TR");
-  const etiket = prompt("Şu anki ders programını (havuz, öğretmenler, sınıflar, koordinatörlük, dağıtım) hangi isimle arşivlemek istiyorsunuz?", varsayilan);
-  if (!etiket || !etiket.trim()) return;
-  if (!S.donemArsivi) S.donemArsivi = [];
-  S.donemArsivi.push({ id: uid("da"), etiket: etiket.trim(), tarih: new Date().toLocaleDateString("tr-TR"), veri: dersProgramiSnapshotAl() });
-  save();
-  renderMain();
-  alert('"' + etiket.trim() + '" adıyla arşivlendi. Arşivden Yükle listesinden istediğiniz zaman geri çağırabilirsiniz.');
+  promptModal("Şu anki ders programını (havuz, öğretmenler, sınıflar, koordinatörlük, dağıtım) hangi isimle arşivlemek istiyorsunuz?", varsayilan, (etiket) => {
+    if (!etiket || !etiket.trim()) return;
+    if (!S.donemArsivi) S.donemArsivi = [];
+    S.donemArsivi.push({ id: uid("da"), etiket: etiket.trim(), tarih: new Date().toLocaleDateString("tr-TR"), veri: dersProgramiSnapshotAl() });
+    save();
+    renderMain();
+    alert('"' + etiket.trim() + '" adıyla arşivlendi. Arşivden Yükle listesinden istediğiniz zaman geri çağırabilirsiniz.');
+  });
 }
 function dersProgramiArsivdenYukle(id) {
   const kayit = (S.donemArsivi || []).find(a => a.id === id);
@@ -2014,21 +2042,22 @@ function toplantiYeniDonemeKopyala(id) {
   const top = toplantiById(id);
   if (!top) return;
   const varsayilan = (S.akademikTakvim && S.akademikTakvim.ogretimYili ? S.akademikTakvim.ogretimYili : "") + " " + (top.baslik || "");
-  const yeniBaslik = prompt('Bu tutanak, içeriği (katılımcılar, gündem maddeleri, kararlar) korunarak yeni bir tutanak olarak kopyalanacak — orijinali silinmeyecek. Yeni tutanağa hangi başlığı vermek istersiniz?', varsayilan.trim());
-  if (!yeniBaslik || !yeniBaslik.trim()) return;
-  const kopya = JSON.parse(JSON.stringify(top));
-  kopya.id = uid("top");
-  kopya.baslik = yeniBaslik.trim();
-  kopya.ogretimYili = S.akademikTakvim && S.akademikTakvim.ogretimYili ? S.akademikTakvim.ogretimYili : top.ogretimYili;
-  kopya.tarih = ""; kopya.yer = ""; kopya.saat = ""; kopya.zumreNo = "";
-  kopya.katilimcilar = kopya.katilimcilar.map(k => Object.assign({}, k, { id: uid("kt") }));
-  kopya.gorevDagilimi = kopya.gorevDagilimi.map(g => Object.assign({}, g, { id: uid("gd") }));
-  kopya.gundemMaddeleri = kopya.gundemMaddeleri.map(g => Object.assign({}, g, { id: uid("gm") }));
-  S.toplantilar.push(kopya);
-  activeToplantiId = kopya.id;
-  save();
-  renderMain();
-  alert('"' + kopya.baslik + '" adıyla yeni bir tutanak olarak kaydedildi. Gündem/katılımcı içeriği kopyalandı, tarih/yer/saat alanlarını güncelleyin. Orijinal tutanak olduğu gibi duruyor.');
+  promptModal('Bu tutanak, içeriği (katılımcılar, gündem maddeleri, kararlar) korunarak yeni bir tutanak olarak kopyalanacak — orijinali silinmeyecek. Yeni tutanağa hangi başlığı vermek istersiniz?', varsayilan.trim(), (yeniBaslik) => {
+    if (!yeniBaslik || !yeniBaslik.trim()) return;
+    const kopya = JSON.parse(JSON.stringify(top));
+    kopya.id = uid("top");
+    kopya.baslik = yeniBaslik.trim();
+    kopya.ogretimYili = S.akademikTakvim && S.akademikTakvim.ogretimYili ? S.akademikTakvim.ogretimYili : top.ogretimYili;
+    kopya.tarih = ""; kopya.yer = ""; kopya.saat = ""; kopya.zumreNo = "";
+    kopya.katilimcilar = kopya.katilimcilar.map(k => Object.assign({}, k, { id: uid("kt") }));
+    kopya.gorevDagilimi = kopya.gorevDagilimi.map(g => Object.assign({}, g, { id: uid("gd") }));
+    kopya.gundemMaddeleri = kopya.gundemMaddeleri.map(g => Object.assign({}, g, { id: uid("gm") }));
+    S.toplantilar.push(kopya);
+    activeToplantiId = kopya.id;
+    save();
+    renderMain();
+    alert('"' + kopya.baslik + '" adıyla yeni bir tutanak olarak kaydedildi. Gündem/katılımcı içeriği kopyalandı, tarih/yer/saat alanlarını güncelleyin. Orijinal tutanak olduğu gibi duruyor.');
+  });
 }
 function addKatilimci(topId) {
   const top = toplantiById(topId);
@@ -6546,16 +6575,17 @@ function resetAll() {
 
 /* ============ KAYDEDİLMİŞ SÜRÜMLER ============ */
 function saveCurrentVersion() {
-  const name = prompt("Bu anki hâli hangi isimle kaydedeyim? (ör. '2026-2027 Güz Dönemi')\n\nÇalışma alanınız SİLİNMEZ — sadece bu isimle bir kopya saklanır, siz aynı yerden çalışmaya devam edersiniz.");
-  if (!name || !name.trim()) return;
-  const versions = loadVersions();
-  const yeni = { id: uid("ver"), name: name.trim(), savedAt: new Date().toISOString(), data: JSON.parse(JSON.stringify(S)) };
-  versions.push(yeni);
-  saveVersionsList(versions);
-  setAktifSurumId(yeni.id);
-  alert(`"${name.trim()}" olarak kaydedildi. Çalışmanıza aynı yerden devam edebilirsiniz.`);
-  renderMain();
-  renderSurumWidget();
+  promptModal("Bu anki hâli hangi isimle kaydedeyim? (ör. '2026-2027 Güz Dönemi')\n\nÇalışma alanınız SİLİNMEZ — sadece bu isimle bir kopya saklanır, siz aynı yerden çalışmaya devam edersiniz.", "", (name) => {
+    if (!name || !name.trim()) return;
+    const versions = loadVersions();
+    const yeni = { id: uid("ver"), name: name.trim(), savedAt: new Date().toISOString(), data: JSON.parse(JSON.stringify(S)) };
+    versions.push(yeni);
+    saveVersionsList(versions);
+    setAktifSurumId(yeni.id);
+    alert(`"${name.trim()}" olarak kaydedildi. Çalışmanıza aynı yerden devam edebilirsiniz.`);
+    renderMain();
+    renderSurumWidget();
+  });
 }
 function deleteVersion(id) {
   if (!confirm("Bu kayıtlı sürüm kalıcı olarak silinsin mi?")) return;
@@ -6572,15 +6602,16 @@ function deleteVersion(id) {
    yerden devam edebilir ya da geçmiş bir sürümü açabilir. */
 function farkliKaydetSurum() {
   const varsayilan = S.akademikTakvim && S.akademikTakvim.ogretimYili ? S.akademikTakvim.ogretimYili + " Eğitim-Öğretim Yılı" : "";
-  const name = prompt("Şu anki hâlin tamamını (bütün modülleriyle) hangi isimle kaydedeyim?\n\nÇalışma alanınız silinmez — bu isimle bir kopya saklanır ve bundan sonra \"Kaydet\" dediğinizde bu isimli kayıt güncellenir.", varsayilan);
-  if (!name || !name.trim()) return;
-  const versions = loadVersions();
-  const yeni = { id: uid("ver"), name: name.trim(), savedAt: new Date().toISOString(), data: JSON.parse(JSON.stringify(S)) };
-  versions.push(yeni);
-  saveVersionsList(versions);
-  setAktifSurumId(yeni.id);
-  save();
-  renderSurumWidget();
+  promptModal("Şu anki hâlin tamamını (bütün modülleriyle) hangi isimle kaydedeyim?\n\nÇalışma alanınız silinmez — bu isimle bir kopya saklanır ve bundan sonra \"Kaydet\" dediğinizde bu isimli kayıt güncellenir.", varsayilan, (name) => {
+    if (!name || !name.trim()) return;
+    const versions = loadVersions();
+    const yeni = { id: uid("ver"), name: name.trim(), savedAt: new Date().toISOString(), data: JSON.parse(JSON.stringify(S)) };
+    versions.push(yeni);
+    saveVersionsList(versions);
+    setAktifSurumId(yeni.id);
+    save();
+    renderSurumWidget();
+  });
 }
 function surumaGec(id) {
   const versions = loadVersions();
