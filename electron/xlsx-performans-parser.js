@@ -8,8 +8,9 @@
    "Toplam Puan" sütunu, altında Sıra No/Okul No/Adı ve Soyadı/
    kriter ağırlıkları başlık satırı, sonra öğrenci satırları.
    İkinci satırdaki "1. Performans..." / "2. Performans..." metni
-   türü (ders içi / ödev) belirler.
-   ============================================================ */
+   türü (ders içi / ödev) belirler. Adı ve Soyadı ile Toplam Puan
+   sütunları arasındaki 8 sütun, her kriterin ayrı ayrı girilen
+   puanıdır (gerçek çizelgede olduğu gibi). */
 
 function cellText(v) {
   if (v === null || v === undefined) return "";
@@ -77,13 +78,17 @@ function parsePerformansWorkbook(filePath, XLSX) {
       const row = rows[r] || [];
       const ad = cellText(row[2]);
       if (!ad) continue;
-      const toplamRaw = row[colToplam];
-      const toplamPuan = typeof toplamRaw === "number" ? toplamRaw : (parseFloat(toplamRaw) || 0);
+      const puanlar = [];
+      for (let c = 3; c < colToplam; c++) {
+        const raw = row[c];
+        puanlar.push(typeof raw === "number" ? raw : (parseFloat(raw) || 0));
+      }
+      while (puanlar.length < 8) puanlar.push(0);
       ogrenciler.push({
         sira: cellText(row[0]),
         okulNo: cellText(row[1]),
         ad,
-        toplamPuan
+        puanlar: puanlar.slice(0, 8)
       });
     }
     if (ogrenciler.length) kayitlar.push({ tur, ders, sinif, donem, ogrenciler });

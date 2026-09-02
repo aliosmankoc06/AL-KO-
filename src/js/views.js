@@ -2748,7 +2748,7 @@ function editPerformansAgirliklari(tur) {
     <div class="modal-bg" onclick="if(event.target===this) closeModal()">
       <div class="modal" style="width:480px;">
         <h3>Kriter Ağırlıklarını Düzenle</h3>
-        <p class="small">Öğrenciye girdiğiniz toplam puan, bu ağırlıklar oranında kriterlere dağıtılır. Öğrencinin daha kolay/başarılı olabileceği kriterlere daha yüksek, zor olanlara daha düşük ağırlık verebilirsiniz — toplam mutlaka 100 olmalı.</p>
+        <p class="small">Her kriterin maksimum puanı burada belirlenir — çizelgede her öğrenciye bu kriterlerin her biri için ayrı ayrı puan girilir, toplam puan bunların toplamıdır (MEB çizelgesindeki gibi). Toplam mutlaka 100 olmalı.</p>
         ${etiketler.map((label, i) => `
           <div class="row" style="align-items:center;gap:8px;margin-top:4px;">
             <label class="small" style="flex:1;">${escHtml(label)}</label>
@@ -2778,23 +2778,10 @@ function savePerformansAgirliklari(tur) {
   }
   if (toplam !== 100) { alert("Ağırlıkların toplamı 100 olmalı (şu an " + toplam + "). Lütfen düzeltin."); return; }
   S.performansAgirliklari[tur] = vals;
+  S.performansKayitlari.filter(k => k.tur === tur).forEach(k => {
+    k.ogrenciler.forEach(o => { o.puanlar = o.puanlar.map((v, i) => Math.min(v, vals[i])); });
+  });
   save(); closeModal(); renderMain();
-}
-/* Öğrenci için girilen TEK bir Toplam Puan (0-100), "en büyük kalan"
-   yöntemiyle kriterlere dağıtılır: önce her kriterin tam orantılı payı
-   hesaplanıp aşağı yuvarlanır, sonra yuvarlamadan kalan puanlar,
-   küsuratı en büyük olan kriterlerden başlanarak birer birer dağıtılır.
-   Böylece hangi kriterin "fazladan" alacağı öğrenciden öğrenciye
-   değişir — tek bir kriter sürekli avantajlı çıkmaz. */
-function performansPuanlariDagit(toplam, weights) {
-  const total = Math.max(0, Math.min(100, Math.round(Number(toplam) || 0)));
-  const totalWeight = weights.reduce((a, b) => a + b, 0) || 1;
-  const exact = weights.map(w => total * w / totalWeight);
-  const result = exact.map(Math.floor);
-  let kalan = total - result.reduce((a, b) => a + b, 0);
-  const siraliIndeksler = weights.map((w, i) => i).sort((a, b) => (exact[b] - result[b]) - (exact[a] - result[a]));
-  for (let i = 0; i < kalan; i++) result[siraliIndeksler[i % siraliIndeksler.length]] += 1;
-  return result;
 }
 function kayitById(id) { return S.performansKayitlari.find(x => x.id === id); }
 function addPerformansKayit(tur) {
@@ -2878,7 +2865,7 @@ function selectPerformansKayit(tur, id) { activePerformansId[tur] = id; renderMa
 function addOgrenci(kayitId) {
   const k = kayitById(kayitId);
   if (!k) return;
-  k.ogrenciler.push({ id: uid("og"), sira: String(k.ogrenciler.length + 1), okulNo: "", ad: "", toplamPuan: 0 });
+  k.ogrenciler.push({ id: uid("og"), sira: String(k.ogrenciler.length + 1), okulNo: "", ad: "", puanlar: new Array(8).fill(0) });
   save(); renderMain();
 }
 function updateOgrenci(kayitId, id, field, value) {
@@ -2887,10 +2874,12 @@ function updateOgrenci(kayitId, id, field, value) {
   if (o) o[field] = value;
   save();
 }
-function updateOgrenciToplam(kayitId, id, value) {
+function updateOgrenciPuan(kayitId, id, kriterIndex, value) {
   const k = kayitById(kayitId);
   const o = k && k.ogrenciler.find(x => x.id === id);
-  if (o) o.toplamPuan = Math.max(0, Math.min(100, Math.round(Number(value) || 0)));
+  if (!o) return;
+  const maxV = performansKriterleri(k.tur)[kriterIndex][1];
+  o.puanlar[kriterIndex] = Math.max(0, Math.min(maxV, Math.round(Number(value) || 0)));
   save(); renderMain();
 }
 function removeOgrenci(kayitId, id) {
@@ -2928,9 +2917,8 @@ function importPerformansFromExcel() {
 }
 function renderPerformansKayitDetay(k) {
   const kriterler = performansKriterleri(k.tur);
-  const weights = kriterler.map(c => c[1]);
   const rows = k.ogrenciler.map((o, i) => {
-    const dagitim = performansPuanlariDagit(o.toplamPuan, weights);
+    const toplam = o.puanlar.reduce((a, b) => a + b, 0);
     return `
     <tr>
       <td>${i + 1}</td>
@@ -2938,9 +2926,8 @@ function renderPerformansKayitDetay(k) {
       <td class="print-only-cell">${escHtml(o.okulNo)}</td>
       <td class="no-print"><input type="text" value="${escHtml(o.ad)}" style="width:160px" onchange="updateOgrenci('${k.id}','${o.id}','ad',this.value)"></td>
       <td class="print-only-cell">${escHtml(o.ad)}</td>
-      ${dagitim.map(v => `<td>${v}</td>`).join("")}
-      <td class="no-print"><input type="number" min="0" max="100" value="${o.toplamPuan}" style="width:60px" onchange="updateOgrenciToplam('${k.id}','${o.id}',this.value)"></td>
-      <td class="print-only-cell">${o.toplamPuan}</td>
+      ${kriterler.map(([, w], ki) => `<td><input class="no-print" type="number" min="0" max="${w}" value="${o.puanlar[ki]}" style="width:44px;text-align:center;" onchange="updateOgrenciPuan('${k.id}','${o.id}',${ki},this.value)"><span class="print-only-inline">${o.puanlar[ki]}</span></td>`).join("")}
+      <td style="font-weight:600;">${toplam}</td>
       <td class="no-print"><button class="btn danger" onclick="removeOgrenci('${k.id}','${o.id}')">Sil</button></td>
     </tr>`;
   }).join("");
@@ -2959,11 +2946,11 @@ function renderPerformansKayitDetay(k) {
     <b>Ders:</b> ${escHtml(k.ders)} · <b>Sınıf/Şube:</b> ${escHtml(k.sinif)} · <b>Dönem:</b> ${escHtml(k.donem || '-')} · <b>Öğretim Yılı:</b> ${escHtml(k.ogretimYili || '-')}
   </div>
   <div class="card">
-    <p class="small">Her öğrenci için TEK bir Toplam Puan (0-100) girin — aşağıdaki kriter kutuları, ağırlıklarına oranlı olarak otomatik hesaplanır.</p>
+    <p class="small">Her öğrenci için her kriteri ayrı ayrı puanlayın (her kriterin yanındaki azami puana kadar) — Toplam Puan bunların toplamıdır.</p>
     <div style="overflow-x:auto;">
     <table><thead><tr>
       <th>S.N</th><th>Okul No</th><th>Adı ve Soyadı</th>
-      ${kriterler.map(([label, w]) => `<th>${escHtml(label)}<br><span class="small">(${w})</span></th>`).join("")}
+      ${kriterler.map(([label, w]) => `<th>${escHtml(label)}<br><span class="small">(Max: ${w})</span></th>`).join("")}
       <th>Toplam Puan<br><span class="small">(100)</span></th><th class="no-print"></th>
     </tr></thead>
     <tbody>${rows || `<tr><td colspan="${5 + kriterler.length}" class="small">Henüz öğrenci eklenmedi.</td></tr>`}</tbody></table>

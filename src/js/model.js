@@ -203,6 +203,20 @@ function emptyState() {
   };
 }
 
+/* Bir kerelik geçiş yardımcısı: eski tek-toplam puanı, "en büyük kalan"
+   yöntemiyle ağırlık oranında kriterlere dağıtır (views.js'teki
+   performansPuanlariDagit ile aynı algoritma). */
+function performansMigrasyonDagit(toplam, weights) {
+  const total = Math.max(0, Math.min(100, Math.round(Number(toplam) || 0)));
+  const totalWeight = weights.reduce((a, b) => a + b, 0) || 1;
+  const exact = weights.map(w => total * w / totalWeight);
+  const result = exact.map(Math.floor);
+  let kalan = total - result.reduce((a, b) => a + b, 0);
+  const siraliIndeksler = weights.map((w, i) => i).sort((a, b) => (exact[b] - result[b]) - (exact[a] - result[a]));
+  for (let i = 0; i < kalan; i++) result[siraliIndeksler[i % siraliIndeksler.length]] += 1;
+  return result;
+}
+
 function normalizeState(s) {
   s.hoursPerDay = 10;
   if (!s.blockedSlots) s.blockedSlots = {};
@@ -269,22 +283,33 @@ function normalizeState(s) {
     if (!Array.isArray(f.satirlar)) f.satirlar = [];
     f.satirlar.forEach(r => { if (!r.id) r.id = uid("dtr"); });
   });
-  if (!Array.isArray(s.performansKayitlari)) s.performansKayitlari = [];
-  s.performansKayitlari.forEach(k => {
-    if (!k.id) k.id = uid("pf");
-    if (k.tur !== "odev") k.tur = "dersici";
-    if (!Array.isArray(k.ogrenciler)) k.ogrenciler = [];
-    k.ogrenciler.forEach(o => {
-      if (!o.id) o.id = uid("og");
-      if (typeof o.toplamPuan !== "number") o.toplamPuan = Number(o.toplamPuan) || 0;
-    });
-  });
   if (!s.performansAgirliklari || typeof s.performansAgirliklari !== "object") s.performansAgirliklari = {};
   ["dersici", "odev"].forEach(tur => {
     const arr = s.performansAgirliklari[tur];
     if (!Array.isArray(arr) || arr.length !== 8 || arr.some(v => typeof v !== "number")) {
       s.performansAgirliklari[tur] = [10, 10, 10, 10, 10, 30, 10, 10];
     }
+  });
+  if (!Array.isArray(s.performansKayitlari)) s.performansKayitlari = [];
+  s.performansKayitlari.forEach(k => {
+    if (!k.id) k.id = uid("pf");
+    if (k.tur !== "odev") k.tur = "dersici";
+    if (!Array.isArray(k.ogrenciler)) k.ogrenciler = [];
+    const weights = s.performansAgirliklari[k.tur];
+    k.ogrenciler.forEach(o => {
+      if (!o.id) o.id = uid("og");
+      /* Eski sürümde tek bir Toplam Puan girilip kriterlere ağırlık
+         oranında otomatik dağıtılıyordu; gerçek MEB çizelgesinde her
+         kriter ayrı ayrı puanlanıyor. Var olan kayıtlar, aynı dağıtım
+         algoritmasıyla bir kerelik kriter puanlarına çevrilir — sonrası
+         için puanlar doğrudan kriter bazında girilir. */
+      if (!Array.isArray(o.puanlar) || o.puanlar.length !== 8) {
+        const eskiToplam = typeof o.toplamPuan === "number" ? o.toplamPuan : (Number(o.toplamPuan) || 0);
+        o.puanlar = eskiToplam > 0 ? performansMigrasyonDagit(eskiToplam, weights) : new Array(8).fill(0);
+      }
+      o.puanlar = o.puanlar.map((v, i) => Math.max(0, Math.min(weights[i], Math.round(Number(v) || 0))));
+      delete o.toplamPuan;
+    });
   });
   if (!s.donemRaporlari || typeof s.donemRaporlari !== "object") s.donemRaporlari = {};
   if (!Array.isArray(s.donemRaporlari.dersKesim)) s.donemRaporlari.dersKesim = [];
