@@ -5667,89 +5667,12 @@ function deleteImzaSirku(id) {
 }
 
 /* ---- Ana Sayfa ---- */
-function systemHealthSummary() {
-  const q = scheduleQualityScore();
-  const hasSchedule = Object.keys(S.schedule).length > 0;
-  let status, color, bg, text;
-  if (!hasSchedule) {
-    status = "Henüz Dağıtılmadı"; color = "var(--ink-soft)"; bg = "var(--panel-2)";
-    text = "Ders Programı → Ders Dağıtım'dan \"Programı Yenile\"ye basarak ilk dağıtımı oluşturun.";
-  } else if (q.unplaced > 0) {
-    status = "Sorunlu"; color = "var(--warn)"; bg = "var(--warn-bg)";
-    text = `${q.unplaced} saatlik ders/işletme henüz yerleştirilemedi. Ders Dağıtım ekranından "Programı Yenile"yi tekrar deneyin ya da uyarıları kontrol edin.`;
-  } else if (q.gaps > 0 || q.spread > 3) {
-    status = "Dikkat Gerekiyor"; color = "var(--accent-ink)"; bg = "var(--accent-bg)";
-    text = `Her ders yerleşti ama ${q.gaps > 0 ? `${q.gaps} saatlik boşluk var` : ''}${q.gaps > 0 && q.spread > 3 ? ' ve ' : ''}${q.spread > 3 ? `öğretmenler arası saat farkı ${q.spread} saat (hedef: 3)` : ''}. "Programı Yenile"yi tekrar çalıştırmak farklı bir kombinasyon bulabilir.`;
-  } else {
-    status = "Mükemmel"; color = "var(--teal-ink)"; bg = "var(--teal-bg)";
-    text = "Tüm dersler yerleşti, boşluk yok, öğretmenler arası saat dengesi hedef içinde (en fazla 3 saat fark).";
-  }
-  return `
-  <div class="card" style="background:${bg};border-color:${color};">
-    <h2 style="color:${color};margin-bottom:6px;">Genel Sağlık Skoru: ${status}</h2>
-    <p class="small" style="margin-bottom:8px;">${text}</p>
-    ${hasSchedule ? `<div class="row small" style="max-width:600px;flex-wrap:wrap;gap:14px;display:flex;">
-      <span>Yerleştirilemeyen: <b>${q.unplaced} saat</b></span>
-      <span>Boşluk: <b>${q.gaps} saat</b></span>
-      <span>Öğretmen saat farkı: <b>${q.spread} saat</b> (hedef ≤3)</span>
-    </div>` : ``}
-  </div>`;
-}
-
-function anaSayfaUyarilari() {
-  const uyarilar = [];
-  const gercekSiniflar = S.classes.filter(c => c.grade > 0);
-  gercekSiniflar.forEach(c => {
-    if (!c.excludeFromDistribution && S.normKadro.ogrenciSayilari[c.id] === undefined) {
-      uyarilar.push({ text: `${c.name} sınıfının Norm Kadro'da öğrenci sayısı girilmemiş`, moduleId: "norm-kadro" });
-    }
-  });
-  const arizaliMakineler = S.envanter.makineler.filter(m => /ar[ıi]z/i.test(m.durum || ""));
-  if (arizaliMakineler.length) {
-    uyarilar.push({ text: `${arizaliMakineler.length} makine "Arızalı" durumda`, moduleId: "atolye-envanter" });
-  }
-  const isletmesizOgrenci = S.students.filter(s => !s.isletme).length;
-  if (isletmesizOgrenci) {
-    uyarilar.push({ text: `${isletmesizOgrenci} öğrencinin staj işletmesi henüz atanmamış`, moduleId: "staj-yerlestirme" });
-  }
-  if (!S.akademikTakvim) {
-    uyarilar.push({ text: `Akademik takvim henüz yüklenmedi (Yıllık Plan'dan Excel yükleyebilirsiniz)`, moduleId: "yillik-plan" });
-  }
-  return uyarilar;
-}
-function anaSayfaIstatistikKarti(deger, etiket, moduleId) {
-  return `<div class="card" style="text-align:center;cursor:pointer;" onclick="setModule('${moduleId}')">
-    <div class="dash-num">${deger}</div>
-    <div class="small">${escHtml(etiket)}</div>
-  </div>`;
-}
 function viewAna() {
   const k = S.kurumBilgileri;
-  const istatistikler = [
-    [S.classes.filter(c => c.grade > 0).length, "Sınıf", "ders-programi"],
-    [S.teachers.length, "Öğretmen", "ders-programi"],
-    [S.envanter.makineler.length, "Atölye Makinesi", "atolye-envanter"],
-    [S.sinavKagitlari.length, "Sınav Kağıdı", "sinav-havuzu"],
-    [S.performansKayitlari.length, "Performans Kaydı", "performans"],
-    [S.students.length, "Staj Öğrencisi", "staj-yerlestirme"]
-  ];
-  const uyarilar = anaSayfaUyarilari();
   return `
   <div class="hero-card">
     <h2>Alan Yönetim Sistemi</h2>
     <p class="small">${escHtml(k.okulAdi)} · ${escHtml(k.alanAdi)}</p>
-    <button class="btn primary" style="margin-top:14px;" onclick="setModule('ders-programi')">Ders Programına Git</button>
-  </div>
-  <div class="grid3" style="margin-top:14px;">
-    ${istatistikler.map(([d, e, m]) => anaSayfaIstatistikKarti(d, e, m)).join("")}
-  </div>
-  ${systemHealthSummary()}
-  <div class="card">
-    <h3 style="margin-top:0;">${uyarilar.length ? "Dikkat Gerektirenler" : "Her Şey Yolunda"}</h3>
-    ${uyarilar.length ? `
-    <ul class="small" style="margin:0;padding-left:18px;">
-      ${uyarilar.map(u => `<li style="margin-bottom:5px;"><a href="#" onclick="setModule('${u.moduleId}');return false;">${escHtml(u.text)}</a></li>`).join("")}
-    </ul>` : `<p class="small" style="margin:0;">Şu an dikkat gerektiren bir eksik görünmüyor.</p>`}
   </div>`;
 }
 function openSavedProgramsModal() {
