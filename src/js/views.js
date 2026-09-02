@@ -3,7 +3,7 @@
    ============================================================ */
 
 const MODULES = [
-  { id: "ana", label: "Ana Sayfa", icon: "home", group: "Genel" },
+  { id: "ana", label: "Ana Sayfa", icon: "home", group: null },
   { id: "ders-programi", label: "Ders Programı", icon: "calendar", group: "Ders Planlama" },
   { id: "yillik-plan", label: "Yıllık Plan", icon: "note", group: "Ders Planlama" },
   { id: "gunluk-plan", label: "Günlük Plan", icon: "book", group: "Ders Planlama" },
@@ -62,7 +62,7 @@ let activePlanEntryId = { yillik: null, gunluk: null };
    seçildiğinde kategorisi otomatik açılır. Alt modülü olan modüller
    (Ders Programı, Staj Yerleştirme, Toplantılar) aktifken alt
    sekmeleri kendi düğmesinin hemen altında satır içi açılır. */
-let expandedGroup = "Genel";
+let expandedGroup = "Ders Planlama";
 function moduleGroupOf(id) {
   const mod = MODULES.find(m => m.id === id) || (id === "ders-programi-secim" ? MODULES.find(m => m.id === "ders-programi") : null);
   return mod ? mod.group : null;
@@ -93,6 +93,11 @@ function renderTabbar() {
   let lastGroup = null;
   const parts = [];
   MODULES.forEach(m => {
+    if (!m.group) {
+      const isActive = m.id === activeModule;
+      parts.push(`<button class="nav-btn ${isActive ? 'active' : ''}" onclick="setModule('${m.id}')">${icon(m.icon)}<span>${m.label}</span></button>`);
+      return;
+    }
     if (m.group !== lastGroup) {
       lastGroup = m.group;
       const open = m.group === expandedGroup;
@@ -114,7 +119,8 @@ function setModule(id) {
   if (id === "ders-programi" && !DERS_PROGRAMI_TABS.some(t => t.id === activeTab)) activeTab = "havuz";
   if (id === "staj-yerlestirme" && !STAJ_TABS.some(t => t.id === activeStajTab)) activeStajTab = "ogrenciler";
   if (id === "toplantilar" && !TOPLANTI_TABS.some(t => t.id === activeToplantiTab)) activeToplantiTab = "okul";
-  expandedGroup = moduleGroupOf(id);
+  const grup = moduleGroupOf(id);
+  if (grup) expandedGroup = grup;
   selectedTeacherCells.clear();
   multiSelectMode = false;
   renderTabbar();
