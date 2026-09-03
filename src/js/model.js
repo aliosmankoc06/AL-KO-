@@ -325,6 +325,9 @@ function normalizeState(s) {
   if (!s.normKadro || typeof s.normKadro !== "object") s.normKadro = {};
   if (!s.normKadro.ogrenciSayilari || typeof s.normKadro.ogrenciSayilari !== "object") s.normKadro.ogrenciSayilari = {};
   if (!Array.isArray(s.normKadro.koordinatorlukSatirlari)) s.normKadro.koordinatorlukSatirlari = [];
+  s.normKadro.koordinatorlukSatirlari.forEach(r => {
+    if (typeof r.grupSayisi !== "number" || r.grupSayisi < 1) r.grupSayisi = 1;
+  });
   if (typeof s.normKadro.normKadroSayisi !== "string") s.normKadro.normKadroSayisi = "";
   if (!Array.isArray(s.toplantilar)) s.toplantilar = [];
   s.toplantilar.forEach(top => {

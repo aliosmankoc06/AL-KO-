@@ -14,6 +14,7 @@ contextBridge.exposeInMainWorld("desktop", {
   exportExcel: (defaultName, sheets) => ipcRenderer.invoke("export:excel", defaultName, sheets),
   exportScheduleExcel: (defaultName, teacherBlocks) => ipcRenderer.invoke("export:schedule-excel", defaultName, teacherBlocks),
   exportYillikPlanExcel: (defaultName, payload) => ipcRenderer.invoke("export:yillik-plan-excel", defaultName, payload),
+  exportNormKadroExcel: (defaultName, payload) => ipcRenderer.invoke("export:norm-kadro-excel", defaultName, payload),
   exportWord: (defaultName, innerHtml, landscape) => ipcRenderer.invoke("export:word", defaultName, innerHtml, landscape),
   openXlsxDialog: () => ipcRenderer.invoke("dialog:open-xlsx"),
   importPlanXlsx: (filePath) => ipcRenderer.invoke("import:plan-xlsx", filePath),

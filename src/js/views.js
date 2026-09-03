@@ -1926,6 +1926,18 @@ function viewOgrenciListesi() {
    noktasıyla (10-A 27 öğr.→3, 11-A 20 öğr.→2, 12-A 21 öğr.→2, 12-B 14
    öğr.→1) birebir örtüşüyor.
    ------------------------------------------------------------ */
+// Okulun resmi Norm Kadro dosyasındaki formülün (=IF(E<=41,1,IF(E<=81,2,...)))
+// birebir JS karşılığı — bir tahmin/yuvarlama DEĞİL, gerçek dosyadan hücre
+// hücre okunarak alındı.
+function normKadroSayisiHesapla(toplamDersYuku) {
+  const E = toplamDersYuku;
+  if (E <= 41) return 1;
+  if (E <= 81) return 2;
+  if (E <= 121) return 3;
+  if (E <= 161) return 4;
+  if (E <= 201) return 5;
+  return 5 + Math.floor((E - 201) / 40) + ((E - 201) % 40 >= 20 ? 1 : 0);
+}
 function normKadroGrupSayisi(grade, ogrenciSayisi) {
   if (!ogrenciSayisi || ogrenciSayisi <= 0) return null;
   if (grade === 9) return ogrenciSayisi <= 20 ? 1 : Math.ceil((ogrenciSayisi - 20) / 10) + 1;
@@ -1944,7 +1956,7 @@ function normKadroOgrenciSayisiniListedenDoldur(classId, sinifAdi) {
   save(); renderMain();
 }
 function addKoordSatir() {
-  S.normKadro.koordinatorlukSatirlari.push({ id: uid("nk"), dal: "", sinif: "", ogrenciSayisi: "", haftalikSaat: 24 });
+  S.normKadro.koordinatorlukSatirlari.push({ id: uid("nk"), dal: "", sinif: "", ogrenciSayisi: "", haftalikSaat: 24, grupSayisi: 1 });
   save(); renderMain();
 }
 function updateKoordSatir(id, field, value) {
@@ -1991,9 +2003,11 @@ function viewNormKadro() {
   let koordToplam = 0;
   const koordRows = S.normKadro.koordinatorlukSatirlari.map(r => {
     siraNo++;
-    const grup = normKadroGrupSayisi(sinifGrade(r.sinif) || 12, r.ogrenciSayisi);
-    const toplam = grup === null ? null : (r.haftalikSaat || 0) * grup;
-    if (toplam !== null) koordToplam += toplam;
+    // Koordinatörlük grup sayısı, sınıfın fiziksel şube/kontenjan bölünmesiyle
+    // ilgili değil (staj/işletme koordinasyonu) — elle girilir, varsayılan 1.
+    const grup = r.grupSayisi || 1;
+    const toplam = (r.haftalikSaat || 0) * grup;
+    koordToplam += toplam;
     return `<tr>
       <td>${siraNo}</td>
       <td class="no-print"><input type="text" value="${escHtml(r.sinif)}" placeholder="örn. 12-A" style="width:60px" onchange="updateKoordSatir('${r.id}','sinif',this.value)"></td>
@@ -2004,7 +2018,8 @@ function viewNormKadro() {
       <td class="print-only-cell">${escHtml(r.dal)}</td>
       <td class="no-print"><input type="number" min="0" value="${r.haftalikSaat}" style="width:56px" onchange="updateKoordSatir('${r.id}','haftalikSaat',this.value)"></td>
       <td class="print-only-cell">${r.haftalikSaat}</td>
-      <td>${grup === null ? '<span class="pill warn">öğr. sayısı girin</span>' : grup}</td>
+      <td class="no-print"><input type="number" min="1" value="${grup}" style="width:50px" onchange="updateKoordSatir('${r.id}','grupSayisi',this.value)"></td>
+      <td class="print-only-cell">${grup}</td>
       <td><b>${toplam === null ? '—' : toplam}</b></td>
       <td class="no-print"><button class="btn danger" onclick="deleteKoordSatir('${r.id}')">Sil</button></td>
     </tr>`;
@@ -2024,18 +2039,17 @@ function viewNormKadro() {
   }).join("");
 
   const genelToplam = ampToplam + koordToplam + seflikToplam;
-  // Norm kadro sayısı, MEB'in resmi kuralına göre otomatik hesaplanıyor:
-  // toplam ders yükü ÷ 40 saat, yukarı yuvarlanır (15-40 saat=1, 41-80=2, ...
-  // 200 saat sonrası da aynı kural — kullanıcının verdiği tablo bununla
-  // birebir örtüşüyor). Elle girmeye gerek yok.
-  const normKadroSayisi = genelToplam > 0 ? Math.ceil(genelToplam / 40) : 0;
+  const normKadroSayisi = normKadroSayisiHesapla(genelToplam);
   const alanSefi = S.teachers.find(t => (idari ? idari.assignments : []).some(a => a.courseId === "pbo-10" && (a.eligibleTeacherIds || []).includes(t.id)));
 
   return `
   <div class="card no-print">
     <h2>Norm Kadro Hesabı</h2>
     <p class="small">Ders Programı'ndaki güncel ders atamalarınızdan otomatik hesaplanır — sınıflara ders/öğretmen ekledikçe/çıkardıkça burası da güncellenir. Öğrenci sayılarını ve koordinatörlük satırlarını elle girin.</p>
-    ${belgeAracCubugu("Norm Kadro " + (S.akademikTakvim ? S.akademikTakvim.ogretimYili : ""))}
+    <div class="row no-print">
+      <button class="btn primary" onclick="printCurrentView(false)">Yazdır</button>
+      <button class="btn" onclick="indirNormKadroExcel('Norm Kadro ${jsq(S.akademikTakvim ? S.akademikTakvim.ogretimYili : "")}')">İndir (Excel)</button>
+    </div>
   </div>
   <div class="print-area">
     ${belgeYazdirmaBasligi("Norm Kadro Hesabı" + (S.akademikTakvim ? " · " + S.akademikTakvim.ogretimYili : ""))}
@@ -2059,10 +2073,78 @@ function viewNormKadro() {
     </div>
     <div class="card" style="text-align:center;">
       <p style="font-weight:700;">NORM KADRO: ${normKadroSayisi}</p>
-      <p class="small no-print">Toplam ders yükü (${genelToplam} saat) ÷ 40 — MEB kuralına göre otomatik hesaplanır, elle girmeye gerek yok.</p>
+      <p class="small no-print">Toplam ders yükü (${genelToplam} saat) üzerinden okulun resmi Norm Kadro formülüyle otomatik hesaplanır, elle girmeye gerek yok.</p>
       <p class="small print-only" style="margin-top:16px;">Makine ve Tasarım Teknolojisi Alan Şefi<br><b>${alanSefi ? escHtml(alanSefi.name) : ''}</b></p>
     </div>
   </div>`;
+}
+// Norm Kadro'nun Excel çıktısı için — okulun kendi resmi
+// MAKİNE_NORM_2026_2027.xlsx dosyasından hücre hücre okunarak alınan
+// sütun genişlikleri/kenar boşlukları/yapıyla birebir eşleşecek şekilde,
+// verileri doğrudan S üzerinden derleyip ana sürece gönderiyoruz.
+function extractNormKadroForExcel() {
+  const kb = S.kurumBilgileri;
+  const relevantClasses = S.classes.filter(c => c.id !== "cl-idari" && c.assignments.length > 0 && !c.id.startsWith("isletme-"));
+  let siraNo = 0;
+  let ampToplam = 0;
+  const siniflar = relevantClasses.map(cls => {
+    const ogrenciSayisi = S.normKadro.ogrenciSayilari[cls.id];
+    const grup = normKadroGrupSayisi(cls.grade, ogrenciSayisi);
+    const dersler = cls.assignments.map(a => {
+      const course = courseById(a.courseId);
+      if (!course) return null;
+      siraNo++;
+      const toplam = grup === null ? 0 : course.hours * grup;
+      ampToplam += toplam;
+      return { no: siraNo, ders: course.name, saat: course.hours, grup: grup === null ? 0 : grup, toplam };
+    }).filter(Boolean);
+    return { sinif: cls.name, ogrenciSayisi: ogrenciSayisi !== undefined ? ogrenciSayisi : null, dersler };
+  });
+
+  let koordToplam = 0;
+  const koordinatorluk = S.normKadro.koordinatorlukSatirlari.map(r => {
+    siraNo++;
+    const grup = r.grupSayisi || 1;
+    const toplam = (r.haftalikSaat || 0) * grup;
+    koordToplam += toplam;
+    return { no: siraNo, sinif: r.sinif || "", ogrenciSayisi: r.ogrenciSayisi || 0, dal: r.dal || "", saat: r.haftalikSaat || 0, grup, toplam };
+  });
+
+  const idari = classById("cl-idari");
+  let seflikToplam = 0;
+  const seflik = (idari ? idari.assignments : []).map(a => {
+    const course = courseById(a.courseId);
+    if (!course) return null;
+    siraNo++;
+    const teacherNames = (a.eligibleTeacherIds || []).map(id => { const t = S.teachers.find(x => x.id === id); return t ? t.name : ""; }).filter(Boolean).join(", ");
+    const grup = a.teacherCount || 1;
+    const toplam = course.hours * grup;
+    seflikToplam += toplam;
+    return { no: siraNo, ders: course.name, saat: course.hours, grup, toplam, aciklama: teacherNames || "" };
+  }).filter(Boolean);
+
+  const genelToplam = ampToplam + koordToplam + seflikToplam;
+  const normKadroSayisi = normKadroSayisiHesapla(genelToplam);
+  const alanSefiEntry = S.yillikPlanImzaListesi.find(e => (e.unvan || "").toLocaleLowerCase("tr-TR").includes("alan şefi"));
+  const idariAlanSefi = S.teachers.find(t => (idari ? idari.assignments : []).some(a => a.courseId === "pbo-10" && (a.eligibleTeacherIds || []).includes(t.id)));
+  const alanSefiAdi = (alanSefiEntry && alanSefiEntry.ad) || (idariAlanSefi && idariAlanSefi.name) || "";
+
+  return {
+    okulAdi: kb.okulAdi || "",
+    alanAdi: kb.alanAdi || "",
+    ogretimYili: S.akademikTakvim ? S.akademikTakvim.ogretimYili : "",
+    siniflar, ampToplam,
+    koordinatorluk, koordToplam,
+    seflik, seflikToplam,
+    genelToplam, normKadroSayisi,
+    alanSefiAdi
+  };
+}
+async function indirNormKadroExcel(dosyaAdi) {
+  if (!window.desktop || !window.desktop.isElectron) { alert("Excel olarak indirme sadece masaüstü uygulamasında çalışır."); return; }
+  const payload = extractNormKadroForExcel();
+  const path = await window.desktop.exportNormKadroExcel(guvenliDosyaAdi(dosyaAdi) + ".xlsx", payload);
+  if (path) alert("Excel olarak kaydedildi:\n" + path);
 }
 
 /* ---- Okul Zümresi (Şube Öğretmenler Kurulu + Zümre Toplantısı) ---- */
