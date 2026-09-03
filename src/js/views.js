@@ -1498,17 +1498,7 @@ function renderCalismaYiliTab() {
   ${renderAkademikTakvimKarti()}`;
 }
 function renderYillikPlanSecTab() {
-  if (S.eskiSistemKaldirildi) activePlanSistem = "maarif";
-  const sistemler = S.eskiSistemKaldirildi ? ["maarif"] : ["maarif", "eski"];
-  const tabs = sistemler.map(id =>
-    `<button class="btn ${activePlanSistem === id ? 'primary' : ''}" onclick="setPlanSistem('${id}')">${CURRICULUM[id].label}</button>`
-  ).join(" ");
-  const eskiSistemButon = (activePlanSistem === "eski" && !S.eskiSistemKaldirildi)
-    ? `<button class="btn danger" style="margin-left:8px;" onclick="removeEskiSistem()">Eski Sistemi Kalıcı Olarak Kaldır</button>`
-    : "";
-
-  const entries = S.yillikPlanlar.filter(p => p.sistem === activePlanSistem)
-    .sort((a, b) => (a.sinif + a.ders).localeCompare(b.sinif + b.ders, "tr"));
+  const entries = S.yillikPlanlar.slice().sort((a, b) => (a.sinif + a.ders).localeCompare(b.sinif + b.ders, "tr"));
   if (entries.length && !entries.some(e => e.id === activePlanEntryId.yillik)) activePlanEntryId.yillik = entries[0].id;
   if (!entries.length) activePlanEntryId.yillik = null;
   const activeEntry = entries.find(e => e.id === activePlanEntryId.yillik) || null;
@@ -1520,37 +1510,15 @@ function renderYillikPlanSecTab() {
       </div>
     </div>`;
 
-  let contentHtml;
-  if (activeEntry) {
-    contentHtml = renderYillikPlanIcerik(activeEntry);
-  } else {
-    const data = CURRICULUM[activePlanSistem];
-    const grades = Object.keys(data.grades).sort((a, b) => a - b);
-    const gradeCards = grades.map(g => {
-      const gr = data.grades[g];
-      const dersHtml = gr.dersler.length === 0
-        ? `<p class="small">${gr.not || "Bu sınıf seviyesi için okulda ayrı ders/öğrenme birimi bulunmuyor."}</p>`
-        : gr.dersler.map(d => `
-          <div style="margin-bottom:10px;">
-            <div class="row" style="justify-content:space-between;">
-              <b>${d.ad}</b><span class="pill info">${d.saat} sa/hafta</span>
-            </div>
-            ${d.ogrenmeBirimleri.length ? `<p class="small" style="margin-top:4px;">${d.ogrenmeBirimleri.join(" · ")}</p>` : ""}
-          </div>`).join("");
-      return `<div class="card"><h3>${g}. Sınıf <span class="small">(${gr.dal})</span></h3>${dersHtml}</div>`;
-    }).join("");
-    contentHtml = gradeCards + `<div class="card small no-print" style="text-align:center;padding:30px 20px;">
-      Bu sistem için henüz yüklenmiş yıllık plan yok — yukarıda öğrenme birimi özetini görüyorsunuz. "Excel Yükle" ile kendi YILLIK_PLANLAR.xlsx dosyanızı yükleyerek tam, düzenlenebilir planı oluşturabilirsiniz, ya da "Yeni Ders Planı Ekle" ile elle başlayabilirsiniz.
+  const contentHtml = activeEntry ? renderYillikPlanIcerik(activeEntry) : `<div class="card small no-print" style="text-align:center;padding:30px 20px;">
+      Henüz yüklenmiş bir yıllık plan yok — "Excel Yükle" ile kendi YILLIK_PLANLAR.xlsx dosyanızı yükleyin.
     </div>`;
-  }
 
   const dosyaAdi = activeEntry ? ("Yıllık Plan - " + activeEntry.sinif + " - " + activeEntry.ders) : "Yıllık Plan";
 
   return `
   <div class="card no-print">
-    <div class="row">${tabs}${eskiSistemButon}</div>
-    <div class="row" style="margin-top:8px;">
-      <button class="btn primary" onclick="addPlanEntry('yillik')">Yeni Ders Planı Ekle</button>
+    <div class="row">
       <button class="btn" onclick="importPlanFromExcel()">Excel Yükle</button>
       ${activeEntry ? `<button class="btn" onclick="planiYeniYilaKopyala('yillik','${activeEntry.id}')">Yeni Öğretim Yılı İçin Kopyala</button><button class="btn danger" onclick="deletePlanEntry('yillik','${activeEntry.id}')">Bu Planı Sil</button>` : ""}
     </div>

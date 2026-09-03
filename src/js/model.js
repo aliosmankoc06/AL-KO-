@@ -273,6 +273,25 @@ function normalizeState(s) {
   if (s.akademikTakvim && !Array.isArray(s.akademikTakvim.haftalar)) s.akademikTakvim.haftalar = [];
   if (!Array.isArray(s.yillikPlanlar)) s.yillikPlanlar = [];
   if (!Array.isArray(s.gunlukPlanlar)) s.gunlukPlanlar = [];
+  // Kullanıcının kendi YILLIK_PLANLAR.xlsx dosyasından bir kez ayrıştırılıp
+  // uygulamaya gömülmüş varsayılan Çalışma Yılı + ders planları — sadece bu
+  // alanlar daha önce hiç doldurulmamışsa (ilk açılışta) otomatik yüklenir;
+  // kullanıcı isterse "Excel Yükle" ile kendi güncel dosyasıyla üzerine yazar.
+  if (!s.seededYillikPlanIcerik) {
+    s.seededYillikPlanIcerik = true;
+    const varsayilan = (typeof YILLIK_PLAN_VARSAYILAN_ICERIK !== "undefined") ? YILLIK_PLAN_VARSAYILAN_ICERIK : null;
+    if (varsayilan) {
+      if (varsayilan.takvim && (!s.akademikTakvim || !s.akademikTakvim.ogretimYili)) {
+        s.akademikTakvim = JSON.parse(JSON.stringify(varsayilan.takvim));
+      }
+      (varsayilan.yillikPlanlar || []).forEach(p => {
+        const varMi = s.yillikPlanlar.some(x =>
+          (x.ders || "").toLocaleLowerCase("tr-TR") === p.ders.toLocaleLowerCase("tr-TR") &&
+          (x.sinif || "").toLocaleLowerCase("tr-TR") === p.sinif.toLocaleLowerCase("tr-TR"));
+        if (!varMi) s.yillikPlanlar.push(Object.assign({ id: uid("yp") }, JSON.parse(JSON.stringify(p))));
+      });
+    }
+  }
   s.yillikPlanlar.forEach(p => {
     if (!p.id) p.id = uid("yp");
     // Eski sürümde her yıllık plan kendi "haftalar" dizisini (tarihi de içeren,
