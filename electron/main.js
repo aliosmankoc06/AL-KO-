@@ -401,7 +401,7 @@ ipcMain.handle("export:yillik-plan-excel", async (evt, defaultName, payload) => 
 
   const wb = new ExcelJS.Workbook();
   const ws = wb.addWorksheet("Yıllık Plan");
-  const COLS = 11; // A..K — işgünü takvimi (1 etiket + 10 ay) en geniş tablo
+  const COLS = 20; // A..T
   ws.properties.defaultColWidth = 16;
   const thin = { style: "thin", color: { argb: "FF999999" } };
   const border = { top: thin, bottom: thin, left: thin, right: thin };
@@ -420,14 +420,15 @@ ipcMain.handle("export:yillik-plan-excel", async (evt, defaultName, payload) => 
     return cell;
   }
   function labelValueRow(r, pairs, rowHeight) {
-    // pairs: [[label,value], [label,value]] -> her çift 1 etiket + 4 değer
-    // sütunu kullanır (uzun alan/dal metinleri tek satıra sığsın diye geniş
-    // tutuluyor); iki çift toplam 10 sütun kaplar, 11. sütun boş kalır.
+    // pairs: [[label,value], [label,value]] -> her çift 3 etiket + 7 değer
+    // sütunu kullanır (uzun etiketler — "Atatürk'ü Anma Günü ve Atatürk
+    // Haftası" gibi — ve uzun alan/dal metinleri tek satıra sığsın diye
+    // geniş tutuluyor); iki çift toplam COLS (20) sütunu kaplar.
     let c = 1;
     pairs.forEach(([label, value]) => {
-      mergeSet(r, c, r, c, label, { font: { bold: true } });
-      mergeSet(r, c + 1, r, c + 4, value || "-");
-      c += 5;
+      mergeSet(r, c, r, c + 2, label, { font: { bold: true } });
+      mergeSet(r, c + 3, r, c + 9, value || "-");
+      c += 10;
     });
     ws.getRow(r).height = rowHeight || 20;
   }
@@ -464,16 +465,16 @@ ipcMain.handle("export:yillik-plan-excel", async (evt, defaultName, payload) => 
 
   // Sınav tarihleri
   const sinav = payload.sinav || {};
-  mergeSet(r, 1, r, 5, "1.DÖNEM SINAV TARİHLERİ", { font: { bold: true }, alignment: { horizontal: "center" }, fill: headerFill });
-  mergeSet(r, 6, r, 10, "2.DÖNEM SINAV TARİHLERİ", { font: { bold: true }, alignment: { horizontal: "center" }, fill: headerFill });
+  mergeSet(r, 1, r, 10, "1.DÖNEM SINAV TARİHLERİ", { font: { bold: true }, alignment: { horizontal: "center" }, fill: headerFill });
+  mergeSet(r, 11, r, 20, "2.DÖNEM SINAV TARİHLERİ", { font: { bold: true }, alignment: { horizontal: "center" }, fill: headerFill });
   r += 1;
   labelValueRow(r++, [["1.Dönem 1.Sınav Tarihi", sinav.d1s1], ["2.Dönem 1.Sınav Tarihi", sinav.d2s1]]);
   labelValueRow(r++, [["1.Dönem 2.Sınav Tarihi", sinav.d1s2], ["2.Dönem 2.Sınav Tarihi", sinav.d2s2]]);
   r += 1;
 
   // Önemli gün ve haftalar
-  mergeSet(r, 1, r, 5, "1.DÖNEM ÖNEMLİ GÜN VE HAFTALAR", { font: { bold: true }, alignment: { horizontal: "center" }, fill: headerFill });
-  mergeSet(r, 6, r, 10, "2.DÖNEM ÖNEMLİ GÜN VE HAFTALAR", { font: { bold: true }, alignment: { horizontal: "center" }, fill: headerFill });
+  mergeSet(r, 1, r, 10, "1.DÖNEM ÖNEMLİ GÜN VE HAFTALAR", { font: { bold: true }, alignment: { horizontal: "center" }, fill: headerFill });
+  mergeSet(r, 11, r, 20, "2.DÖNEM ÖNEMLİ GÜN VE HAFTALAR", { font: { bold: true }, alignment: { horizontal: "center" }, fill: headerFill });
   r += 1;
   const d1 = (payload.onemliGunler && payload.onemliGunler.d1) || [];
   const d2 = (payload.onemliGunler && payload.onemliGunler.d2) || [];
@@ -500,38 +501,43 @@ ipcMain.handle("export:yillik-plan-excel", async (evt, defaultName, payload) => 
     r += 1;
   }
 
-  // Haftalık plan tablosu
+  // Haftalık plan tablosu — TARİH(2) + KAZANIMLAR(4) + KONULAR(4) +
+  // YÖNTEM(4) + ARAÇ(4) + DEĞERLENDİRME(2) = 20 sütun.
+  const haftaColSpans = [["TARİH", 2], ["KAZANIMLAR", 4], ["KONULAR", 4],
+    ["ÖĞRENME-ÖĞRETME YÖNTEM VE TEKNİKLERİ", 4], ["KULLANILAN EĞİTİM TEKNOLOJİLERİ, ARAÇ VE GEREÇLER", 4], ["DEĞERLENDİRME", 2]];
   const headerRow = r;
-  ["TARİH", "KAZANIMLAR", "KONULAR", "ÖĞRENME-ÖĞRETME YÖNTEM VE TEKNİKLERİ", "KULLANILAN EĞİTİM TEKNOLOJİLERİ, ARAÇ VE GEREÇLER", "DEĞERLENDİRME"].forEach((h, i) => {
-    mergeSet(headerRow, 1 + i, headerRow, 1 + i, h, { font: { bold: true }, alignment: { horizontal: "center" }, fill: headerFill });
+  let hc = 1;
+  const haftaColStarts = [];
+  haftaColSpans.forEach(([h, span]) => {
+    haftaColStarts.push(hc);
+    mergeSet(headerRow, hc, headerRow, hc + span - 1, h, { font: { bold: true }, alignment: { horizontal: "center" }, fill: headerFill });
+    hc += span;
   });
   r += 1;
+  const haftaFields = ["tarihAraligi", "kazanimlar", "konular", "yontem", "arac", "degerlendirme"];
   (payload.haftalar || []).forEach(h => {
     if (h.tatilMi) {
-      mergeSet(r, 1, r, 1, h.tarihAraligi);
-      mergeSet(r, 2, r, 6, h.tatilAdi, { font: { bold: true }, alignment: { horizontal: "center" }, fill: tatilFill });
+      mergeSet(r, haftaColStarts[0], r, haftaColStarts[0] + haftaColSpans[0][1] - 1, h.tarihAraligi);
+      mergeSet(r, haftaColStarts[1], r, COLS, h.tatilAdi, { font: { bold: true }, alignment: { horizontal: "center" }, fill: tatilFill });
     } else {
-      mergeSet(r, 1, r, 1, h.tarihAraligi);
-      mergeSet(r, 2, r, 2, h.kazanimlar);
-      mergeSet(r, 3, r, 3, h.konular);
-      mergeSet(r, 4, r, 4, h.yontem);
-      mergeSet(r, 5, r, 5, h.arac);
-      mergeSet(r, 6, r, 6, h.degerlendirme);
+      haftaColSpans.forEach(([, span], i) => {
+        mergeSet(r, haftaColStarts[i], r, haftaColStarts[i] + span - 1, h[haftaFields[i]]);
+      });
     }
     ws.getRow(r).height = 60;
     r += 1;
   });
   r += 1;
 
-  // İmza bloğu
+  // İmza bloğu — 3 kişi/satır, her biri 6 sütun (1 sütun boşluk bırakılır)
   const teachers = payload.teachers || [];
   for (let i = 0; i < teachers.length; i += 3) {
     const grup = teachers.slice(i, i + 3);
     grup.forEach((t, gi) => {
-      const c = 1 + gi * 3;
-      mergeSet(r, c, r, c + 2, t.ad, { font: { bold: true }, alignment: { horizontal: "center" }, border: false });
-      mergeSet(r + 1, c, r + 1, c + 2, t.brans, { alignment: { horizontal: "center" }, border: false });
-      mergeSet(r + 2, c, r + 2, c + 2, t.unvan, { alignment: { horizontal: "center" }, border: false });
+      const c = 1 + gi * 7;
+      mergeSet(r, c, r, c + 5, t.ad, { font: { bold: true }, alignment: { horizontal: "center" }, border: false });
+      mergeSet(r + 1, c, r + 1, c + 5, t.brans, { alignment: { horizontal: "center" }, border: false });
+      mergeSet(r + 2, c, r + 2, c + 5, t.unvan, { alignment: { horizontal: "center" }, border: false });
     });
     r += 4;
   }
