@@ -399,6 +399,40 @@ ipcMain.handle("export:yillik-plan-excel", async (evt, defaultName, payload) => 
   });
   if (result.canceled || !result.filePath) return null;
 
+  // Öncelik: kullanıcının kendi orijinal YILLIK_PLANLAR.xlsx dosyasını
+  // şablon olarak kullan — biçimlendirmeye hiç dokunmadan sadece değişen
+  // hücreleri (takvim, ders bilgileri, haftalık içerik, imza) güncelle.
+  // Böylece indirilen dosya, orijinaliyle piksel piksel aynı kalır.
+  const templatePath = path.join(__dirname, "templates", "YILLIK_PLANLAR.xlsx");
+  if (payload.kaynakSayfaAdi && fs.existsSync(templatePath)) {
+    try {
+      const twb = new ExcelJS.Workbook();
+      await twb.xlsx.readFile(templatePath);
+      const takvimWs = twb.getWorksheet("TAKVİM");
+      const dersWs = twb.getWorksheet(payload.kaynakSayfaAdi);
+      if (takvimWs && dersWs) {
+        twb.calcProperties.fullCalcOnLoad = true;
+        twb.worksheets.slice().forEach(sh => {
+          if (sh !== takvimWs && sh !== dersWs) twb.removeWorksheet(sh.id);
+        });
+        fillYillikPlanTakvimSayfasi(takvimWs, payload);
+        fillYillikPlanDersSayfasi(dersWs, payload);
+        await twb.xlsx.writeFile(result.filePath);
+        return result.filePath;
+      }
+    } catch (e) {
+      console.error("Şablon tabanlı Yıllık Plan exportu başarısız, sıfırdan üretime düşülüyor:", e);
+    }
+  }
+
+  return buildYillikPlanFromScratch(result.filePath, payload);
+});
+
+// Şablon dosyasında bu ders için sayfa bulunamazsa (ör. sonradan elle
+// eklenmiş, orijinal 19 sayfada olmayan bir ders) devreye giren yedek:
+// biçimlendirmeyi sıfırdan, hücre hücre çiziyor — eskiden tek yöntem
+// buydu, artık sadece kurtarma senaryosu.
+async function buildYillikPlanFromScratch(filePath, payload) {
   const wb = new ExcelJS.Workbook();
   const ws = wb.addWorksheet("Yıllık Plan");
   // Kullanıcının kendi YILLIK_PLANLAR.xlsx dosyasıyla BİREBİR aynı sütun
@@ -596,9 +630,94 @@ ipcMain.handle("export:yillik-plan-excel", async (evt, defaultName, payload) => 
   r += 1;
   mergeSet(r, 1, r, COLS, "OKUL MÜDÜRÜ", { alignment: { horizontal: "center" }, border: false });
 
-  await wb.xlsx.writeFile(result.filePath);
-  return result.filePath;
-});
+  await wb.xlsx.writeFile(filePath);
+  return filePath;
+}
+
+// TAKVİM sayfasında sadece elle girilen/hesaplanan hücreleri günceller —
+// geri kalan her şey (İşgünü Takvimi ızgarası dahil) sayfanın kendi
+// formülleriyle ($E$3'e bağlı) Excel'de açılınca otomatik yeniden hesaplanır.
+function fillYillikPlanTakvimSayfasi(ws, payload) {
+  const meta = payload.meta || {};
+  const sinav = payload.sinav || {};
+  ws.getCell("E3").value = meta.ogretimYili || "";
+  ws.getCell("B7").value = sinav.d1s1 || "";
+  ws.getCell("B8").value = sinav.d1s2 || "";
+  ws.getCell("B9").value = sinav.d2s1 || "";
+  ws.getCell("B10").value = sinav.d2s2 || "";
+
+  const d1 = (payload.onemliGunler && payload.onemliGunler.d1) || [];
+  const d2 = (payload.onemliGunler && payload.onemliGunler.d2) || [];
+  // TAKVİM satırı -> [dönem dizisi, dizideki index] eşleşmesi, dosyadan
+  // hücre hücre okunarak çıkarıldı (dönemler satırlarda iç içe geçiyor).
+  const ONEMLI_GUN_SATIR_ESLESME = [
+    [13, d1, 0], [14, d2, 0], [15, d1, 1], [16, d1, 3], [17, d1, 2], [18, d2, 2],
+    [19, d2, 1], [20, d2, 3], [21, d1, 4], [22, d2, 4], [23, d1, 5], [24, d2, 5]
+  ];
+  ONEMLI_GUN_SATIR_ESLESME.forEach(([row, dizi, idx]) => {
+    ws.getCell("B" + row).value = (dizi[idx] && dizi[idx].value) || "";
+  });
+
+  (payload.haftalar || []).forEach((h, i) => {
+    const row = 29 + i; // TAKVİM'de 40 haftalık tablo 29. satırdan başlıyor
+    ws.getCell("B" + row).value = h.tarihAraligi || "";
+    ws.getCell("C" + row).value = h.tatilMi ? "EVET" : "HAYIR";
+    ws.getCell("D" + row).value = h.tatilMi ? (h.tatilAdi || "") : "";
+  });
+}
+
+// Ders sayfasında: bilgi tablosu (ders saati/alan-dal/sınıf), haftalık
+// içerik (kazanım/konu/yöntem/araç/değerlendirme ya da tatil ise tek
+// birleşik hücre) ve imza bloğu güncellenir. Satır/sütun numaraları
+// orijinal dosyadan hücre hücre okunarak çıkarıldı.
+function fillYillikPlanDersSayfasi(ws, payload) {
+  const meta = payload.meta || {};
+  ws.getCell("G4").value = ": " + (meta.ders || "");
+  ws.getCell("U4").value = ": " + (meta.alanDal || "");
+  ws.getCell("G5").value = ": " + (meta.dersSaati || "");
+  ws.getCell("U5").value = ": " + (meta.sinif || "");
+
+  function resetWeekRowMerges(row) {
+    [[row, 4, row, 31], [row, 4, row, 11], [row, 12, row, 17], [row, 18, row, 22], [row, 23, row, 29], [row, 30, row, 31]]
+      .forEach(([r1, c1, r2, c2]) => { try { ws.unMergeCells(r1, c1, r2, c2); } catch (e) { /* zaten o şekilde değildi */ } });
+  }
+  (payload.haftalar || []).forEach((h, i) => {
+    const row = 38 + i; // haftalık tablo 38. satırdan başlıyor (37+haftaNo)
+    // A:C sütunu (tarih aralığı) =TAKVİM!$B$(28+haftaNo) formülüyle zaten
+    // bağlı — dokunmuyoruz, TAKVİM güncellenince kendisi değişiyor.
+    resetWeekRowMerges(row);
+    if (h.tatilMi) {
+      ws.mergeCells(row, 4, row, 31);
+      const cell = ws.getCell(row, 4);
+      cell.value = h.tatilAdi || "TATİL";
+      cell.alignment = { horizontal: "center", vertical: "center", wrapText: true };
+    } else {
+      ws.mergeCells(row, 4, row, 11);
+      ws.getCell(row, 4).value = h.kazanimlar || "";
+      ws.mergeCells(row, 12, row, 17);
+      ws.getCell(row, 12).value = h.konular || "";
+      ws.mergeCells(row, 18, row, 22);
+      ws.getCell(row, 18).value = h.yontem || "";
+      ws.mergeCells(row, 23, row, 29);
+      ws.getCell(row, 23).value = h.arac || "";
+      ws.mergeCells(row, 30, row, 31);
+      ws.getCell(row, 30).value = h.degerlendirme || "";
+    }
+  });
+
+  // İmza bloğu: A81/L81/V81 (1-3. kişi), A85/L85/V85 (4-6. kişi) — her
+  // kişi için ad(satır0)/branş(satır1)/ünvan(satır2). Fazlası varsa
+  // şablonda yer olmadığı için ilk 6 kişi gösterilir.
+  const IMZA_HUCRELERI = [[81, 1], [81, 12], [81, 22], [85, 1], [85, 12], [85, 22]];
+  const teachers = payload.teachers || [];
+  IMZA_HUCRELERI.forEach(([row, col], i) => {
+    const t = teachers[i];
+    ws.getCell(row, col).value = t ? t.ad : "";
+    ws.getCell(row + 1, col).value = t ? t.brans : "";
+    ws.getCell(row + 2, col).value = t ? t.unvan : "";
+  });
+  ws.getCell("A92").value = payload.mudurAdi || "";
+}
 
 // Norm Kadro Excel çıktısı — okulun kendi resmi MAKİNE NORM 2026_2027.xlsx
 // dosyası ham XML'den hücre hücre okunarak birebir eşleştirildi: sütun

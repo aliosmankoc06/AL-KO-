@@ -320,6 +320,18 @@ function normalizeState(s) {
       }
     }
     delete p.haftalar;
+    // Excel İndir artık kullanıcının orijinal YILLIK_PLANLAR.xlsx dosyasını
+    // şablon olarak kullanıp sadece değişen hücreleri güncelliyor — bunun
+    // için hangi sayfadan geldiğini bilmesi gerekiyor. Daha önce (bu alan
+    // eklenmeden önce) içe aktarılmış planlarda eksikse, gömülü varsayılan
+    // içerikten ders+sınıf eşleşmesiyle geriye dönük tamamlanıyor.
+    if (typeof p.kaynakSayfaAdi !== "string") {
+      const varsayilan = (typeof YILLIK_PLAN_VARSAYILAN_ICERIK !== "undefined") ? YILLIK_PLAN_VARSAYILAN_ICERIK : null;
+      const eslesen = varsayilan && (varsayilan.yillikPlanlar || []).find(v =>
+        (v.ders || "").toLocaleLowerCase("tr-TR") === (p.ders || "").toLocaleLowerCase("tr-TR") &&
+        (v.sinif || "").toLocaleLowerCase("tr-TR") === (p.sinif || "").toLocaleLowerCase("tr-TR"));
+      p.kaynakSayfaAdi = (eslesen && eslesen.kaynakSayfaAdi) || "";
+    }
   });
   s.gunlukPlanlar.forEach(p => { if (!p.id) p.id = uid("gp"); });
   if (!s.normKadro || typeof s.normKadro !== "object") s.normKadro = {};

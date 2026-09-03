@@ -1434,6 +1434,7 @@ function extractYillikPlanForExcel(p) {
     };
   });
   return {
+    kaynakSayfaAdi: p.kaynakSayfaAdi || "",
     meta: { ogretimYili, okulAdi: kb.okulAdi, ders: p.ders, sinif: p.sinif, alanDal: p.alanDal || "", dersSaati: p.dersSaati || "" },
     logos: { meb: kb.mebLogo || null, okul: kb.logo || null },
     sinav: { d1s1: st.d1s1 || "", d1s2: st.d1s2 || "", d2s1: st.d2s1 || "", d2s2: st.d2s2 || "" },

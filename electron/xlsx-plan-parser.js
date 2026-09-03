@@ -188,7 +188,7 @@ const ARAC_BASLIK = "KULLANILAN EĞİTİM TEKNOLOJİLERİ,\nARAÇ VE GEREÇLER";
    göre saklıyor (bkz. views.js renderYillikHaftaTablosu). Tatil haftaları
    hiç içe aktarılmaz; onların adı zaten S.akademikTakvim.haftalar'dan
    canlı okunuyor. */
-function parseYillikSheet(ws, XLSX, takvimHaftalar) {
+function parseYillikSheet(ws, XLSX, takvimHaftalar, sheetName) {
   const rows = XLSX.utils.sheet_to_json(ws, { header: 1, raw: false });
   const meta = sheetMeta(rows);
   const header = findHeaderRow(rows, ["TARİH", "KAZANIMLAR", "KONULAR"]);
@@ -218,7 +218,7 @@ function parseYillikSheet(ws, XLSX, takvimHaftalar) {
   }
   if (!Object.keys(haftaIcerik).length) return null;
   return { ders: meta.ders, sinif: meta.sinif || "", alanDal: meta.alanDal || "", dersSaati: meta.dersSaati || "",
-    sistem: sistemFromSinif(meta.sinif), haftaIcerik };
+    sistem: sistemFromSinif(meta.sinif), haftaIcerik, kaynakSayfaAdi: sheetName || "" };
 }
 
 function parsePlanWorkbook(filePath, XLSX) {
@@ -235,7 +235,7 @@ function parsePlanWorkbook(filePath, XLSX) {
     const ws = wb.Sheets[sn];
     const g = parseGunlukSheet(ws, XLSX);
     if (g) { result.gunlukPlanlar.push(g); continue; }
-    const y = parseYillikSheet(ws, XLSX, takvimHaftalar);
+    const y = parseYillikSheet(ws, XLSX, takvimHaftalar, sn);
     if (y) { result.yillikPlanlar.push(y); continue; }
   }
   return result;
