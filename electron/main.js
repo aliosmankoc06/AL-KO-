@@ -508,21 +508,38 @@ ipcMain.handle("export:yillik-plan-excel", async (evt, defaultName, payload) => 
   }
   r += 1;
 
-  // İşgünü takvimi (sadeleştirilmiş: ay başına tek sütun, gün numaraları virgülle)
+  // İşgünü takvimi — orijinal dosyada her ay 6 ayrı sütun (o ayda o güne denk
+  // gelen tarihler tek tek, virgülle değil ayrı hücrelerde), 5 ay bir satırda,
+  // 10 ay 2 satıra bölünmüş — TAM sayfa genişliği kullanılıyor. Önceki
+  // sürümde her ay tek dar sütundu, bu da sayfanın sağ yarısını boş
+  // bırakıyordu (kullanıcı ekran görüntüsüyle gösterdi).
   const takvim = payload.isguluTakvimi;
   if (takvim) {
     mergeSet(r, 1, r, COLS, (meta.ogretimYili || "") + " EĞİTİM-ÖĞRETİM YILI İŞGÜNÜ TAKVİMİ", { font: { bold: true }, alignment: { horizontal: "center" }, fill: headerFill });
     r += 1;
-    mergeSet(r, 1, r, 1, "Günler", { font: { bold: true }, fill: headerFill });
-    takvim.aylar.forEach((a, i) => mergeSet(r, 2 + i, r, 2 + i, a.ad + " " + a.yil, { font: { bold: true }, alignment: { horizontal: "center" }, fill: headerFill }));
-    r += 1;
-    takvim.gunler.forEach((gun, gunIdx) => {
-      mergeSet(r, 1, r, 1, gun, { font: { bold: true } });
-      takvim.aylar.forEach((a, ayIdx) => {
-        mergeSet(r, 2 + ayIdx, r, 2 + ayIdx, (takvim.grid[gunIdx][ayIdx] || []).join(", "), { alignment: { horizontal: "center", wrapText: true } });
+    const AYLAR_PER_ROW = 5;
+    const AY_COL_SPAN = 6;
+    for (let grup = 0; grup < takvim.aylar.length; grup += AYLAR_PER_ROW) {
+      const ayGrubu = takvim.aylar.slice(grup, grup + AYLAR_PER_ROW);
+      mergeSet(r, 1, r, 1, "Günler", { font: { bold: true }, fill: headerFill });
+      ayGrubu.forEach((a, i) => {
+        const c1 = 2 + i * AY_COL_SPAN;
+        mergeSet(r, c1, r, c1 + AY_COL_SPAN - 1, a.ad + " " + a.yil, { font: { bold: true }, alignment: { horizontal: "center" }, fill: headerFill });
       });
       r += 1;
-    });
+      takvim.gunler.forEach((gun, gunIdx) => {
+        mergeSet(r, 1, r, 1, gun, { font: { bold: true } });
+        ayGrubu.forEach((a, i) => {
+          const ayIdx = grup + i;
+          const gunNumaralari = takvim.grid[gunIdx][ayIdx] || [];
+          const c1 = 2 + i * AY_COL_SPAN;
+          for (let k = 0; k < AY_COL_SPAN; k++) {
+            mergeSet(r, c1 + k, r, c1 + k, gunNumaralari[k] || "", { alignment: { horizontal: "center" } });
+          }
+        });
+        r += 1;
+      });
+    }
     r += 1;
   }
 
