@@ -401,8 +401,12 @@ ipcMain.handle("export:yillik-plan-excel", async (evt, defaultName, payload) => 
 
   const wb = new ExcelJS.Workbook();
   const ws = wb.addWorksheet("Yıllık Plan");
-  const COLS = 20; // A..T
-  ws.properties.defaultColWidth = 16;
+  // Kullanıcının kendi YILLIK_PLANLAR.xlsx dosyasıyla BİREBİR aynı sütun
+  // sayısı ve aynı birleştirme (merge) sınırları — A'dan AE'ye (31 sütun).
+  // Aşağıdaki bütün sütun aralıkları o dosyadan hücre hücre okunarak
+  // belirlendi, tahmini/orantılı bir bölüştürme DEĞİL.
+  const COLS = 31; // A..AE
+  ws.properties.defaultColWidth = 8.43; // Excel varsayılanı — orijinal dosyada da özel genişlik yok
   const thin = { style: "thin", color: { argb: "FF999999" } };
   const border = { top: thin, bottom: thin, left: thin, right: thin };
   const headerFill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFF4F6FA" } };
@@ -419,22 +423,22 @@ ipcMain.handle("export:yillik-plan-excel", async (evt, defaultName, payload) => 
     if (opts.fill) cell.fill = opts.fill;
     return cell;
   }
+  // Bilgi tablosu / sınav tarihleri / önemli gün ve haftalar satırları —
+  // orijinal dosyadaki A:F(etiket) G:O(değer) P:T(etiket) U:AE(değer)
+  // birleştirmesiyle birebir aynı.
   function labelValueRow(r, pairs, rowHeight) {
-    // pairs: [[label,value], [label,value]] -> her çift 3 etiket + 7 değer
-    // sütunu kullanır (uzun etiketler — "Atatürk'ü Anma Günü ve Atatürk
-    // Haftası" gibi — ve uzun alan/dal metinleri tek satıra sığsın diye
-    // geniş tutuluyor); iki çift toplam COLS (20) sütunu kaplar.
-    let c = 1;
-    pairs.forEach(([label, value]) => {
-      mergeSet(r, c, r, c + 2, label, { font: { bold: true } });
-      mergeSet(r, c + 3, r, c + 9, value || "-");
-      c += 10;
-    });
+    mergeSet(r, 1, r, 6, pairs[0][0], { font: { bold: true } });
+    mergeSet(r, 7, r, 15, pairs[0][1] || "-");
+    if (pairs[1]) {
+      mergeSet(r, 16, r, 20, pairs[1][0], { font: { bold: true } });
+      mergeSet(r, 21, r, 31, pairs[1][1] || "-");
+    }
     ws.getRow(r).height = rowHeight || 20;
   }
 
   let r = 1;
-  // Logolar + başlık
+  // Logolar + başlık — orijinal dosyada MEB logosu A sütununda, okul
+  // logosu AC sütunu civarında (0-indeksli ~28) yer alıyor.
   const titleRowSpan = 4;
   if (payload.logos && payload.logos.meb) {
     const m = /^data:image\/(\w+);base64,/.exec(payload.logos.meb);
@@ -447,10 +451,10 @@ ipcMain.handle("export:yillik-plan-excel", async (evt, defaultName, payload) => 
     const m = /^data:image\/(\w+);base64,/.exec(payload.logos.okul);
     if (m) {
       const imgId = wb.addImage({ base64: payload.logos.okul, extension: m[1] === "jpeg" ? "jpeg" : m[1] });
-      ws.addImage(imgId, { tl: { col: COLS - 1, row: r - 1 }, ext: { width: 70, height: 70 } });
+      ws.addImage(imgId, { tl: { col: 28, row: r - 1 }, ext: { width: 70, height: 70 } });
     }
   }
-  mergeSet(r, 2, r + titleRowSpan - 1, COLS - 1, "YILLIK DERS PLANI", {
+  mergeSet(r, 3, r + titleRowSpan - 1, 27, "YILLIK DERS PLANI", {
     font: { bold: true, size: 16 }, alignment: { vertical: "middle", horizontal: "center" }, border: false
   });
   for (let i = 0; i < titleRowSpan; i++) ws.getRow(r + i).height = 18;
@@ -458,28 +462,28 @@ ipcMain.handle("export:yillik-plan-excel", async (evt, defaultName, payload) => 
 
   // Bilgi tablosu
   const meta = payload.meta || {};
-  labelValueRow(r++, [["EĞİTİM-ÖĞRETİM YILI", meta.ogretimYili], ["OKUL", meta.okulAdi]], 26);
-  labelValueRow(r++, [["DERS", meta.ders], ["ALAN/DAL", meta.alanDal]], 26);
-  labelValueRow(r++, [["DERS SAATİ", meta.dersSaati], ["SINIF", meta.sinif]], 26);
+  labelValueRow(r++, [["EĞİTİM-ÖĞRETİM YILI", meta.ogretimYili], ["OKUL", meta.okulAdi]], 20);
+  labelValueRow(r++, [["DERS", meta.ders], ["ALAN/DAL", meta.alanDal]], 20);
+  labelValueRow(r++, [["DERS SAATİ", meta.dersSaati], ["SINIF", meta.sinif]], 20);
   r += 1;
 
   // Sınav tarihleri
   const sinav = payload.sinav || {};
-  mergeSet(r, 1, r, 10, "1.DÖNEM SINAV TARİHLERİ", { font: { bold: true }, alignment: { horizontal: "center" }, fill: headerFill });
-  mergeSet(r, 11, r, 20, "2.DÖNEM SINAV TARİHLERİ", { font: { bold: true }, alignment: { horizontal: "center" }, fill: headerFill });
+  mergeSet(r, 1, r, 15, "1.DÖNEM SINAV TARİHLERİ", { font: { bold: true }, alignment: { horizontal: "center" }, fill: headerFill });
+  mergeSet(r, 16, r, 31, "2.DÖNEM SINAV TARİHLERİ", { font: { bold: true }, alignment: { horizontal: "center" }, fill: headerFill });
   r += 1;
   labelValueRow(r++, [["1.Dönem 1.Sınav Tarihi", sinav.d1s1], ["2.Dönem 1.Sınav Tarihi", sinav.d2s1]]);
   labelValueRow(r++, [["1.Dönem 2.Sınav Tarihi", sinav.d1s2], ["2.Dönem 2.Sınav Tarihi", sinav.d2s2]]);
   r += 1;
 
   // Önemli gün ve haftalar
-  mergeSet(r, 1, r, 10, "1.DÖNEM ÖNEMLİ GÜN VE HAFTALAR", { font: { bold: true }, alignment: { horizontal: "center" }, fill: headerFill });
-  mergeSet(r, 11, r, 20, "2.DÖNEM ÖNEMLİ GÜN VE HAFTALAR", { font: { bold: true }, alignment: { horizontal: "center" }, fill: headerFill });
+  mergeSet(r, 1, r, 15, "1.DÖNEM ÖNEMLİ GÜN VE HAFTALAR", { font: { bold: true }, alignment: { horizontal: "center" }, fill: headerFill });
+  mergeSet(r, 16, r, 31, "2.DÖNEM ÖNEMLİ GÜN VE HAFTALAR", { font: { bold: true }, alignment: { horizontal: "center" }, fill: headerFill });
   r += 1;
   const d1 = (payload.onemliGunler && payload.onemliGunler.d1) || [];
   const d2 = (payload.onemliGunler && payload.onemliGunler.d2) || [];
   for (let i = 0; i < 6; i++) {
-    labelValueRow(r++, [[(d1[i] || {}).label || "", (d1[i] || {}).value || ""], [(d2[i] || {}).label || "", (d2[i] || {}).value || ""]]);
+    labelValueRow(r++, [[(d1[i] || {}).label || "", (d1[i] || {}).value || ""], [(d2[i] || {}).label || "", (d2[i] || {}).value || ""]], 20);
   }
   r += 1;
 
@@ -501,10 +505,11 @@ ipcMain.handle("export:yillik-plan-excel", async (evt, defaultName, payload) => 
     r += 1;
   }
 
-  // Haftalık plan tablosu — TARİH(2) + KAZANIMLAR(4) + KONULAR(4) +
-  // YÖNTEM(4) + ARAÇ(4) + DEĞERLENDİRME(2) = 20 sütun.
-  const haftaColSpans = [["TARİH", 2], ["KAZANIMLAR", 4], ["KONULAR", 4],
-    ["ÖĞRENME-ÖĞRETME YÖNTEM VE TEKNİKLERİ", 4], ["KULLANILAN EĞİTİM TEKNOLOJİLERİ, ARAÇ VE GEREÇLER", 4], ["DEĞERLENDİRME", 2]];
+  // Haftalık plan tablosu — orijinal dosyayla birebir aynı sütun genişliği:
+  // TARİH(A:C,3) + KAZANIMLAR(D:K,8) + KONULAR(L:Q,6) + YÖNTEM(R:V,5) +
+  // ARAÇ(W:AC,7) + DEĞERLENDİRME(AD:AE,2) = 31 sütun.
+  const haftaColSpans = [["TARİH", 3], ["KAZANIMLAR", 8], ["KONULAR", 6],
+    ["ÖĞRENME-ÖĞRETME YÖNTEM VE TEKNİKLERİ", 5], ["KULLANILAN EĞİTİM TEKNOLOJİLERİ, ARAÇ VE GEREÇLER", 7], ["DEĞERLENDİRME", 2]];
   const headerRow = r;
   let hc = 1;
   const haftaColStarts = [];
@@ -529,15 +534,17 @@ ipcMain.handle("export:yillik-plan-excel", async (evt, defaultName, payload) => 
   });
   r += 1;
 
-  // İmza bloğu — 3 kişi/satır, her biri 6 sütun (1 sütun boşluk bırakılır)
+  // İmza bloğu — orijinal dosyayla aynı: A:J(10) / L:T(9, K boşluk) /
+  // V:AE(10, U boşluk) — 3 kişi/satır.
+  const imzaKolonlari = [[1, 10], [12, 20], [22, 31]];
   const teachers = payload.teachers || [];
   for (let i = 0; i < teachers.length; i += 3) {
     const grup = teachers.slice(i, i + 3);
     grup.forEach((t, gi) => {
-      const c = 1 + gi * 7;
-      mergeSet(r, c, r, c + 5, t.ad, { font: { bold: true }, alignment: { horizontal: "center" }, border: false });
-      mergeSet(r + 1, c, r + 1, c + 5, t.brans, { alignment: { horizontal: "center" }, border: false });
-      mergeSet(r + 2, c, r + 2, c + 5, t.unvan, { alignment: { horizontal: "center" }, border: false });
+      const [c1, c2] = imzaKolonlari[gi];
+      mergeSet(r, c1, r, c2, t.ad, { font: { bold: true }, alignment: { horizontal: "center" }, border: false });
+      mergeSet(r + 1, c1, r + 1, c2, t.brans, { alignment: { horizontal: "center" }, border: false });
+      mergeSet(r + 2, c1, r + 2, c2, t.unvan, { alignment: { horizontal: "center" }, border: false });
     });
     r += 4;
   }

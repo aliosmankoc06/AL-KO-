@@ -1297,6 +1297,33 @@ function renderYillikHaftaTablosu(p) {
 // gruplar halinde ad/branş/ünvan olarak listeler, altına okul müdürü onayı
 // eklenir. İsim ve ünvanlar Öğretmenler ekranından, müdür adı Ayarlar'dan
 // değiştirilebilir — buraya elle bir şey yazmaya gerek yok.
+function editYillikImzaModal() {
+  const kb = S.kurumBilgileri;
+  const root = document.getElementById("modal-root");
+  const rows = S.teachers.map(t => `
+    <div class="row" style="gap:8px;margin-bottom:6px;align-items:center;">
+      <input type="text" value="${escHtml(t.name)}" placeholder="Ad Soyad" style="flex:1;" onchange="renameTeacherInline('${t.id}',this.value)">
+      <input type="text" value="${escHtml(t.unvan || '')}" placeholder="Ünvan (ör. Alan Şefi)" style="flex:1;" onchange="setTeacherUnvan('${t.id}',this.value)">
+    </div>`).join("");
+  root.innerHTML = `
+    <div class="modal-bg" onclick="if(event.target===this){ closeModal(); renderMain(); }">
+      <div class="modal" style="width:520px;">
+        <h3>İmza Bilgilerini Düzenle</h3>
+        <p class="small">Ad Soyad ve ünvan — Yıllık Plan'ın imza bloğunda bu sırayla görünür, Öğretmenler ekranıyla ortak.</p>
+        ${rows || `<p class="small">Henüz öğretmen eklenmemiş.</p>`}
+        <label class="small" style="margin-top:10px;">Okul Müdürü</label>
+        <input type="text" value="${escHtml(kb.mudurAdi || '')}" style="width:100%" onchange="updateKurumBilgi('mudurAdi',this.value)">
+        <div class="row" style="margin-top:12px;"><button class="btn" onclick="closeModal(); renderMain();">Kapat</button></div>
+      </div>
+    </div>`;
+}
+function renameTeacherInline(teacherId, value) {
+  const t = teacherById(teacherId);
+  const v = value.trim();
+  if (!v) { alert("Ad Soyad boş olamaz."); editYillikImzaModal(); return; }
+  t.name = v;
+  save(); renderMain();
+}
 function renderYillikImzaBlogu() {
   const kb = S.kurumBilgileri;
   const gruplar = [];
@@ -1311,6 +1338,9 @@ function renderYillikImzaBlogu() {
         </div>`).join("")}
     </div>`).join("");
   return `<div class="card">
+    <div class="row no-print" style="justify-content:flex-end;">
+      <button class="btn" onclick="editYillikImzaModal()">İmza Bilgilerini Düzenle</button>
+    </div>
     ${grupHtml || `<p class="small">Henüz öğretmen eklenmemiş.</p>`}
     <div style="text-align:center;margin-top:28px;">
       <div>…../…../..........</div>
@@ -1370,6 +1400,12 @@ function renderYillikPlanIcerik(p) {
 // exceljs ile kullanıcının orijinal YILLIK_PLANLAR.xlsx'ine yakın, gerçek
 // biçimlendirmeli (kalın/renkli/çerçeveli, iki logo gömülü) bir sayfa
 // üretiliyor (bkz. electron/main.js export:yillik-plan-excel).
+const YILLIK_PLAN_IMZA_SIRASI = ["t5", "t2", "t3", "t4", "t1", "t6"];
+function yillikPlanImzaSirasi() {
+  const siraliOlanlar = YILLIK_PLAN_IMZA_SIRASI.map(id => S.teachers.find(tc => tc.id === id)).filter(Boolean);
+  const digerleri = S.teachers.filter(tc => !YILLIK_PLAN_IMZA_SIRASI.includes(tc.id));
+  return siraliOlanlar.concat(digerleri);
+}
 function extractYillikPlanForExcel(p) {
   const kb = S.kurumBilgileri;
   const t = S.akademikTakvim || {};
@@ -1395,7 +1431,7 @@ function extractYillikPlanForExcel(p) {
     },
     isguluTakvimi: isguluTakvimiOlustur(ogretimYili),
     haftalar,
-    teachers: S.teachers.map(tc => ({ ad: tc.name, brans: kb.alanAdi || "", unvan: tc.unvan || "" })),
+    teachers: yillikPlanImzaSirasi().map(tc => ({ ad: tc.name, brans: kb.alanAdi || "", unvan: tc.unvan || "" })),
     mudurAdi: kb.mudurAdi || ""
   };
 }
@@ -5599,6 +5635,23 @@ function haftalariOlustur(baslangicStr, sayi) {
   }
   return haftalar;
 }
+// Öğretim yılının ilk haftasının Pazartesi'si — MEB'in her yıl okulları
+// 14 Eylül'e en yakın Pazartesi günü açması geleneğine göre (kullanıcının
+// kendi Excel şablonundaki =DATE(yıl,9,14)-(WEEKDAY(...)-1) formülüyle
+// birebir aynı kural). Bu SADECE takvim matematiği — hangi tarihin hangi
+// güne denk geldiği — yıldan yıla değişmez, o yüzden elle girilmesine
+// gerek yok; "Öğretim Yılı" yazılır yazılmaz otomatik hesaplanır.
+function ogretimYiliBaslangicPazartesi(ogretimYili) {
+  const m = /^(\d{4})/.exec(ogretimYili || "");
+  if (!m) return null;
+  const yil = Number(m[1]);
+  const eylul14 = new Date(yil, 8, 14);
+  const jsGun = eylul14.getDay(); // 0=Pazar..6=Cumartesi
+  const isoGun = jsGun === 0 ? 7 : jsGun; // 1=Pazartesi..7=Pazar
+  const pzt = new Date(eylul14);
+  pzt.setDate(eylul14.getDate() - (isoGun - 1));
+  return pzt;
+}
 const ONEMLI_GUNLER_D1_ETIKETLERI = ["1.Yarıyıl Başlangıcı", "Cumhuriyet Bayramı", "Atatürk'ü Anma Günü ve Atatürk Haftası", "Ara Tatil", "Yılbaşı Tatili", "Yarıyıl Tatili"];
 const ONEMLI_GUNLER_D2_ETIKETLERI = ["2.Yarıyıl Başlangıcı", "Ara Tatil", "23 Nisan Ulusal Egemenlik ve Çocuk Bayramı", "Atatürk'ü Anma Gençlik ve Spor Bayramı", "Ramazan Bayramı", "Eğitim-Öğretim yılının sonu"];
 function ensureAkademikTakvim() {
@@ -5611,8 +5664,27 @@ function ensureAkademikTakvim() {
   return S.akademikTakvim;
 }
 function updateTakvimYili(value) {
-  ensureAkademikTakvim().ogretimYili = value.trim();
+  const t = ensureAkademikTakvim();
+  t.ogretimYili = value.trim();
+  // Haftalık ders takvimi (hangi tarih aralığının hangi hafta numarasına
+  // denk geldiği) sadece öğretim yılından hesaplanabilen, değişmeyen bir
+  // bilgi — bu yüzden elle girilmiyor, yıl yazılır yazılmaz otomatik
+  // yeniden kuruluyor. Daha önce tatil olarak işaretlenmiş haftalar varsa
+  // (aynı hafta numarasında), o işaretler yeni tarihlere de taşınır —
+  // sadece tatil OLUP OLMADIĞI ve adı hâlâ elle girilen bilgiler, çünkü
+  // MEB o tarihleri her yıl ayrı duyuruyor.
+  const pzt0 = ogretimYiliBaslangicPazartesi(t.ogretimYili);
+  if (pzt0) {
+    const yeniHaftalar = haftalariOlustur(formatTrTarih(pzt0), 40);
+    if (yeniHaftalar) {
+      const eskiTatiller = {};
+      (t.haftalar || []).forEach(h => { if (h.tatilMi) eskiTatiller[h.no] = { tatilMi: true, tatilAdi: h.tatilAdi || "" }; });
+      yeniHaftalar.forEach(h => { if (eskiTatiller[h.no]) Object.assign(h, eskiTatiller[h.no]); });
+      t.haftalar = yeniHaftalar;
+    }
+  }
   save();
+  renderMain();
 }
 function updateSinavTarihi(key, value) {
   ensureAkademikTakvim().sinavTarihleri[key] = value.trim();
@@ -5623,51 +5695,12 @@ function updateOnemliGun(donem, idx, value) {
   t.onemliGunler[donem][idx] = value.trim();
   save();
 }
-function updateTakvimHafta(idx, field, value) {
+function updateTakvimHaftaTatil(idx, field, value) {
   const t = ensureAkademikTakvim();
   if (!t.haftalar[idx]) return;
-  t.haftalar[idx][field] = field === "no" ? (Number(value) || 0) : value;
+  t.haftalar[idx][field] = value;
   save();
-}
-function addTakvimHafta() {
-  const t = ensureAkademikTakvim();
-  const no = t.haftalar.length ? Math.max(...t.haftalar.map(h => h.no || 0)) + 1 : 1;
-  t.haftalar.push({ no, pazartesi: "", tarihAraligi: "", tatilMi: false, tatilAdi: "" });
-  save(); renderMain();
-}
-function removeTakvimHafta(idx) {
-  if (!confirm("Bu hafta akademik takvimden silinsin mi?")) return;
-  const t = ensureAkademikTakvim();
-  t.haftalar.splice(idx, 1);
-  save(); renderMain();
-}
-function olusturTakvimHaftalari() {
-  const root = document.getElementById("modal-root");
-  root.innerHTML = `
-    <div class="modal-bg" onclick="if(event.target===this) closeModal()">
-      <div class="modal" style="width:380px;">
-        <h3>Haftaları Otomatik Oluştur</h3>
-        <p class="small">1. haftanın Pazartesi tarihini girin, hafta sayısını belirtin — 37-40 haftalık ders takvimi otomatik oluşturulsun. Ardından tatil haftalarını işaretleyip tarih aralıklarını gerektiği gibi düzeltebilirsiniz.</p>
-        <label class="small">1. Hafta Pazartesi Tarihi (gg.aa.yyyy)</label>
-        <input type="text" id="tk-baslangic" placeholder="14.09.2026" style="width:100%">
-        <label class="small">Hafta Sayısı</label>
-        <input type="number" id="tk-sayi" value="40" style="width:100%">
-        <div class="row">
-          <button class="btn primary" onclick="uygulaTakvimOlustur()">Oluştur</button>
-          <button class="btn" onclick="closeModal()">İptal</button>
-        </div>
-      </div>
-    </div>`;
-}
-function uygulaTakvimOlustur() {
-  const baslangic = document.getElementById("tk-baslangic").value.trim();
-  const sayi = Number(document.getElementById("tk-sayi").value) || 40;
-  const haftalar = haftalariOlustur(baslangic, sayi);
-  if (!haftalar) { alert("Tarih biçimi gg.aa.yyyy olmalı, örn. 14.09.2026"); return; }
-  const t = ensureAkademikTakvim();
-  if (t.haftalar.length && !confirm("Mevcut haftalar bu yeni listeyle değiştirilecek. Devam edilsin mi?")) return;
-  t.haftalar = haftalar;
-  save(); closeModal(); renderMain();
+  renderMain();
 }
 function renderAkademikTakvimKarti() {
   const t = S.akademikTakvim;
@@ -5675,16 +5708,15 @@ function renderAkademikTakvimKarti() {
   const onemliGunler = (t && t.onemliGunler) || { d1: [], d2: [] };
   const haftaRows = ((t && t.haftalar) || []).map((h, i) => `
     <tr>
-      <td><input type="text" value="${escHtml(String(h.no || ""))}" style="width:44px" onchange="updateTakvimHafta(${i},'no',this.value)"></td>
-      <td><input type="text" value="${escHtml(h.tarihAraligi)}" style="width:130px" onchange="updateTakvimHafta(${i},'tarihAraligi',this.value)"></td>
-      <td style="text-align:center;"><input type="checkbox" ${h.tatilMi ? "checked" : ""} onchange="updateTakvimHafta(${i},'tatilMi',this.checked)"></td>
-      <td><input type="text" value="${escHtml(h.tatilAdi)}" placeholder="örn. Yarıyıl Tatili" style="width:100%" onchange="updateTakvimHafta(${i},'tatilAdi',this.value)"></td>
-      <td><button class="btn danger" onclick="removeTakvimHafta(${i})">Sil</button></td>
+      <td style="text-align:center;">${escHtml(String(h.no || ""))}</td>
+      <td>${escHtml(h.tarihAraligi)}</td>
+      <td style="text-align:center;"><input type="checkbox" ${h.tatilMi ? "checked" : ""} onchange="updateTakvimHaftaTatil(${i},'tatilMi',this.checked)"></td>
+      <td><input type="text" value="${escHtml(h.tatilAdi)}" placeholder="örn. Yarıyıl Tatili" style="width:100%" onchange="updateTakvimHaftaTatil(${i},'tatilAdi',this.value)" ${h.tatilMi ? "" : "disabled"}></td>
     </tr>`).join("");
   return `
   <div class="card">
     <h2>Akademik Takvim</h2>
-    <p class="small">Her öğretim yılı başında burayı güncelleyin — Yıllık Plan, Günlük Plan, Norm Kadro, Ders Kesim/Yazılı Teslim ve diğer belgeler bu bilgiyi otomatik kullanır. Excel'den yükleyerek da doldurabilirsiniz (bkz. Yıllık Plan / Günlük Plan sayfası), ama Excel dosyası hazırlamak zorunda değilsiniz — aşağıdan doğrudan da düzenleyebilirsiniz.</p>
+    <p class="small">Her öğretim yılı başında sadece <b>Öğretim Yılı</b>'nı yazın — hangi tarih aralığının hangi haftaya denk geldiği (aşağıdaki tablo) otomatik hesaplanır, elle girmenize gerek yok. Sınav tarihleri, tatiller ve önemli gün/haftalar ise her yıl MEB tarafından ayrıca duyurulduğu için elle girilir. Excel'den yükleyerek de doldurabilirsiniz (bkz. Yıllık Plan sayfası).</p>
     <div class="row" style="flex-wrap:wrap;gap:14px;">
       <div>
         <label class="small">Öğretim Yılı</label>
@@ -5716,13 +5748,9 @@ function renderAkademikTakvimKarti() {
         </div>`).join("")}
       </div>
     </div>
-    <div class="row" style="margin-top:10px;">
-      <button class="btn primary" onclick="olusturTakvimHaftalari()">Haftaları Otomatik Oluştur</button>
-      <button class="btn" onclick="addTakvimHafta()">Tek Hafta Ekle</button>
-    </div>
-    <div style="overflow-x:auto;margin-top:10px;">
-      <table><thead><tr><th style="width:50px;">No</th><th>Tarih Aralığı</th><th>Tatil mi?</th><th>Tatil / Not Adı</th><th></th></tr></thead>
-      <tbody>${haftaRows || `<tr><td colspan="5" class="small">Henüz hafta eklenmedi. "Haftaları Otomatik Oluştur" ile hızlıca 37-40 haftalık takvim kurabilirsiniz.</td></tr>`}</tbody></table>
+    <div style="overflow-x:auto;margin-top:16px;">
+      <table><thead><tr><th style="width:50px;">No</th><th>Tarih Aralığı</th><th>Tatil mi?</th><th>Tatil / Not Adı</th></tr></thead>
+      <tbody>${haftaRows || `<tr><td colspan="4" class="small">Yukarıdan Öğretim Yılı'nı yazın — 40 haftalık takvim otomatik oluşsun.</td></tr>`}</tbody></table>
     </div>
   </div>`;
 }
