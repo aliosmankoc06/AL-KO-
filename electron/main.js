@@ -406,7 +406,25 @@ ipcMain.handle("export:yillik-plan-excel", async (evt, defaultName, payload) => 
   // Aşağıdaki bütün sütun aralıkları o dosyadan hücre hücre okunarak
   // belirlendi, tahmini/orantılı bir bölüştürme DEĞİL.
   const COLS = 31; // A..AE
-  ws.properties.defaultColWidth = 8.43; // Excel varsayılanı — orijinal dosyada da özel genişlik yok
+  // Orijinal dosyanın <cols> tanımı ham XML'den okundu: A sütunu (1) width=9,
+  // B'den AE'ye (2-31) HEPSİ width=4.3 — "geri kalanı varsayılan genişlikte"
+  // sanmak yanlıştı, bütün dosyada bu iki grup dışında sütun yok.
+  // NOT: exceljs'in kendi iç sabiti DEFAULT_COLUMN_WIDTH=9 olduğu için, tam
+  // 9.0 yazılırsa "özel genişlik değil" sanıp satırı sessizce siliyor
+  // (bilinen exceljs hatası) — görsel olarak fark etmeyecek kadar küçük bir
+  // ofsetle bu hatayı atlatıyoruz.
+  ws.getColumn(1).width = 9.001; // orijinal dosyada A sütunu (9.0)
+  for (let c = 2; c <= COLS; c++) ws.getColumn(c).width = 4.3; // orijinal dosyada B..AE
+  // Orijinal dosyanın kenar boşlukları (Sayfa Düzeni > Kenar Boşlukları) ve
+  // yatay/tek sayfaya sığdır ayarı — inç cinsinden, dosyadan birebir okundu.
+  ws.pageSetup = {
+    orientation: "landscape",
+    fitToPage: true,
+    fitToWidth: 1,
+    fitToHeight: 0,
+    scale: 96,
+    margins: { left: 0.3, right: 0.3, top: 0.4, bottom: 0.4, header: 0.511811023622047, footer: 0.511811023622047 }
+  };
   const thin = { style: "thin", color: { argb: "FF999999" } };
   const border = { top: thin, bottom: thin, left: thin, right: thin };
   const headerFill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFF4F6FA" } };
@@ -433,38 +451,41 @@ ipcMain.handle("export:yillik-plan-excel", async (evt, defaultName, payload) => 
       mergeSet(r, 16, r, 20, pairs[1][0], { font: { bold: true } });
       mergeSet(r, 21, r, 31, pairs[1][1] || "-");
     }
-    ws.getRow(r).height = rowHeight || 20;
+    ws.getRow(r).height = rowHeight || 15;
   }
 
   let r = 1;
-  // Logolar + başlık — orijinal dosyada MEB logosu A sütununda, okul
-  // logosu AC sütunu civarında (0-indeksli ~28) yer alıyor.
-  const titleRowSpan = 4;
+  // Logolar + başlık — orijinal dosyada tek satır (row 1, yükseklik 75),
+  // MEB logosu A sütununda (col 0), okul logosu AC sütununda (col 28),
+  // başlık H1:X1 birleşimi. Sonra bir boş satır (row 2, yükseklik 15),
+  // bilgi tablosu 3. satırdan başlıyor — birebir orijinal dosyadan.
   if (payload.logos && payload.logos.meb) {
     const m = /^data:image\/(\w+);base64,/.exec(payload.logos.meb);
     if (m) {
       const imgId = wb.addImage({ base64: payload.logos.meb, extension: m[1] === "jpeg" ? "jpeg" : m[1] });
-      ws.addImage(imgId, { tl: { col: 0, row: r - 1 }, ext: { width: 70, height: 70 } });
+      ws.addImage(imgId, { tl: { col: 0, row: r - 1 }, ext: { width: 85, height: 85 } });
     }
   }
   if (payload.logos && payload.logos.okul) {
     const m = /^data:image\/(\w+);base64,/.exec(payload.logos.okul);
     if (m) {
       const imgId = wb.addImage({ base64: payload.logos.okul, extension: m[1] === "jpeg" ? "jpeg" : m[1] });
-      ws.addImage(imgId, { tl: { col: 28, row: r - 1 }, ext: { width: 70, height: 70 } });
+      ws.addImage(imgId, { tl: { col: 28, row: r - 1 }, ext: { width: 85, height: 85 } });
     }
   }
-  mergeSet(r, 3, r + titleRowSpan - 1, 27, "YILLIK DERS PLANI", {
+  mergeSet(r, 8, r, 24, "YILLIK DERS PLANI", {
     font: { bold: true, size: 16 }, alignment: { vertical: "middle", horizontal: "center" }, border: false
   });
-  for (let i = 0; i < titleRowSpan; i++) ws.getRow(r + i).height = 18;
-  r += titleRowSpan + 1;
+  ws.getRow(r).height = 75;
+  r += 1;
+  ws.getRow(r).height = 15;
+  r += 1;
 
   // Bilgi tablosu
   const meta = payload.meta || {};
-  labelValueRow(r++, [["EĞİTİM-ÖĞRETİM YILI", meta.ogretimYili], ["OKUL", meta.okulAdi]], 20);
-  labelValueRow(r++, [["DERS", meta.ders], ["ALAN/DAL", meta.alanDal]], 20);
-  labelValueRow(r++, [["DERS SAATİ", meta.dersSaati], ["SINIF", meta.sinif]], 20);
+  labelValueRow(r++, [["EĞİTİM-ÖĞRETİM YILI", meta.ogretimYili], ["OKUL", meta.okulAdi]]);
+  labelValueRow(r++, [["DERS", meta.ders], ["ALAN/DAL", meta.alanDal]]);
+  labelValueRow(r++, [["DERS SAATİ", meta.dersSaati], ["SINIF", meta.sinif]]);
   r += 1;
 
   // Sınav tarihleri
@@ -483,7 +504,7 @@ ipcMain.handle("export:yillik-plan-excel", async (evt, defaultName, payload) => 
   const d1 = (payload.onemliGunler && payload.onemliGunler.d1) || [];
   const d2 = (payload.onemliGunler && payload.onemliGunler.d2) || [];
   for (let i = 0; i < 6; i++) {
-    labelValueRow(r++, [[(d1[i] || {}).label || "", (d1[i] || {}).value || ""], [(d2[i] || {}).label || "", (d2[i] || {}).value || ""]], 20);
+    labelValueRow(r++, [[(d1[i] || {}).label || "", (d1[i] || {}).value || ""], [(d2[i] || {}).label || "", (d2[i] || {}).value || ""]]);
   }
   r += 1;
 
@@ -529,7 +550,8 @@ ipcMain.handle("export:yillik-plan-excel", async (evt, defaultName, payload) => 
         mergeSet(r, haftaColStarts[i], r, haftaColStarts[i] + span - 1, h[haftaFields[i]]);
       });
     }
-    ws.getRow(r).height = 60;
+    // Yükseklik özellikle sabitlenmiyor — orijinal dosyada olduğu gibi Excel,
+    // metin uzunluğuna göre satırı kendisi otomatik sığdırıyor (wrapText açık).
     r += 1;
   });
   r += 1;
