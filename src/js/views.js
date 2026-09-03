@@ -1602,18 +1602,19 @@ function renderYillikPlanSecTab() {
     </div>`;
 
   const contentHtml = activeEntry ? renderYillikPlanIcerik(activeEntry) : `<div class="card small no-print" style="text-align:center;padding:30px 20px;">
-      Henüz yüklenmiş bir yıllık plan yok — "Excel Yükle" ile kendi YILLIK_PLANLAR.xlsx dosyanızı yükleyin.
+      Henüz yüklenmiş bir yıllık plan yok.
     </div>`;
 
   const dosyaAdi = activeEntry ? ("Yıllık Plan - " + activeEntry.sinif + " - " + activeEntry.ders) : "Yıllık Plan";
 
   return `
+  ${activeEntry ? `
   <div class="card no-print">
-    ${activeEntry ? `
     <div class="row no-print">
       <button class="btn primary" onclick="indirYillikPlanExcel('${jsq(dosyaAdi)}')">İndir (Excel)</button>
-    </div>` : `<div class="row"><button class="btn" onclick="importPlanFromExcel()">Excel Yükle</button></div>`}
-  </div>
+      <button class="btn danger" onclick="deletePlanEntry('yillik','${activeEntry.id}')">Bu Planı Sil</button>
+    </div>
+  </div>` : ""}
   ${listHtml}
   <div class="print-area">
     ${contentHtml}
