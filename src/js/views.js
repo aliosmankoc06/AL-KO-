@@ -1225,14 +1225,26 @@ function isguluTakvimiOlustur(ogretimYili) {
     { ad: "MAYIS", yil: baslangicYili + 1, ay: 5 }, { ad: "HAZİRAN", yil: baslangicYili + 1, ay: 6 }
   ];
   const gunler = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"];
+  // Orijinal dosyanın kendi formülüyle (TAKVİM sayfası) birebir aynı mantık:
+  // her ayın 1'inin içinde bulunduğu haftanın Pazartesi'sinden başlayarak
+  // 6 haftalık bir ızgara kurulur, sütun = hafta sırası (0-5), satır = gün.
+  // Böylece aynı hafta her zaman aynı sütuna denk gelir — bir önceki
+  // sürüm sayıları art arda sıkıştırıyordu (sıralı liste), bu da mesela
+  // Salı'nın 1. haftası ile Pazartesi'nin 1. haftasının aynı sütunda
+  // görünmemesine (haftaların hizasının kaymasına) yol açıyordu.
   const grid = gunler.map(() => aylar.map(() => []));
   aylar.forEach((ayInfo, ayIdx) => {
-    const gunSayisi = new Date(ayInfo.yil, ayInfo.ay, 0).getDate();
-    for (let gun = 1; gun <= gunSayisi; gun++) {
-      const tarih = new Date(ayInfo.yil, ayInfo.ay - 1, gun);
-      const jsGun = tarih.getDay();
-      const gunIdx = jsGun === 0 ? 6 : jsGun - 1;
-      grid[gunIdx][ayIdx].push(gun);
+    const ilkGun = new Date(ayInfo.yil, ayInfo.ay - 1, 1);
+    const ilkGunHaftaGunu = ilkGun.getDay();
+    const isoGun = ilkGunHaftaGunu === 0 ? 6 : ilkGunHaftaGunu - 1; // 0=Pazartesi..6=Pazar
+    const haftaBaslangici = new Date(ayInfo.yil, ayInfo.ay - 1, 1 - isoGun);
+    for (let k = 0; k < 6; k++) {
+      for (let r = 0; r < 7; r++) {
+        const tarih = new Date(haftaBaslangici.getFullYear(), haftaBaslangici.getMonth(), haftaBaslangici.getDate() + k * 7 + r);
+        if (tarih.getMonth() === ayInfo.ay - 1 && tarih.getFullYear() === ayInfo.yil) {
+          grid[r][ayIdx][k] = tarih.getDate();
+        }
+      }
     }
   });
   return { aylar, gunler, grid };
@@ -1240,13 +1252,36 @@ function isguluTakvimiOlustur(ogretimYili) {
 function renderIsguluTakvimi(ogretimYili) {
   const takvim = isguluTakvimiOlustur(ogretimYili);
   if (!takvim) return "";
+  // Her ay/gün için tarihler ayrı hücrelere dağıtılıyor (virgülle sıkıştırılmış
+  // tek hücre yerine) — hangi haftanın hangi günü neye denk geldiği daha net
+  // görünsün diye. 6 sütun: bir ay en fazla 6 takvim haftasına yayılabilir.
+  const SLOTS = 6;
+  const AYLAR_PER_ROW = 5;
+  const gruplar = [];
+  for (let i = 0; i < takvim.aylar.length; i += AYLAR_PER_ROW) gruplar.push(takvim.aylar.slice(i, i + AYLAR_PER_ROW));
+  const gruplarHtml = gruplar.map(ayGrubu => {
+    const baslikSatiri = `<tr><th>Günler</th>${ayGrubu.map(a => `<th colspan="${SLOTS}">${escHtml(a.ad)} ${a.yil}</th>`).join("")}</tr>`;
+    const gunSatirlari = takvim.gunler.map((gun, gunIdx) => {
+      // Pazar (hafta tatili) kırmızı, diğer günler laciverdimsi mavi —
+      // hangi günün hafta sonu olduğu bir bakışta ayırt edilsin diye.
+      const renk = gun === "Pazar" ? "#C0392B" : "#1B4F8C";
+      const hucreler = ayGrubu.map(a => {
+        const ayIdx = takvim.aylar.indexOf(a);
+        const gunler = takvim.grid[gunIdx][ayIdx] || [];
+        let out = "";
+        for (let k = 0; k < SLOTS; k++) out += `<td style="text-align:center;color:${gunler[k] ? renk : 'inherit'};font-weight:${gunler[k] ? '600' : '400'};">${gunler[k] || ""}</td>`;
+        return out;
+      }).join("");
+      return `<tr><td style="font-weight:600;white-space:nowrap;">${escHtml(gun)}</td>${hucreler}</tr>`;
+    }).join("");
+    return baslikSatiri + gunSatirlari;
+  }).join(`<tr><td colspan="${1 + AYLAR_PER_ROW * SLOTS}" style="border:none;height:6px;"></td></tr>`);
   return `
   <div class="card" style="overflow-x:auto;">
     <h3 class="print-only" style="text-align:center;">${escHtml(ogretimYili)} EĞİTİM-ÖĞRETİM YILI İŞGÜNÜ TAKVİMİ</h3>
     <h3 class="no-print">İşgünü Takvimi</h3>
     <table style="font-size:9.5px;">
-      <thead><tr><th>Günler</th>${takvim.aylar.map(a => `<th>${a.ad} / ${a.yil}</th>`).join("")}</tr></thead>
-      <tbody>${takvim.gunler.map((gun, gunIdx) => `<tr><td style="font-weight:600;white-space:nowrap;">${gun}</td>${takvim.aylar.map((a, ayIdx) => `<td>${takvim.grid[gunIdx][ayIdx].join(", ")}</td>`).join("")}</tr>`).join("")}</tbody>
+      <tbody>${gruplarHtml}</tbody>
     </table>
   </div>`;
 }
