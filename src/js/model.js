@@ -51,12 +51,12 @@ function defaultState() {
       { id: "r4", name: "Derslik" }
     ],
     teachers: [
-      { id: "t1", name: "Ali Osman Koç", timeOff: {}, hoursMode: "min", hoursTarget: 20 },
-      { id: "t2", name: "Arzu Kırıcı", timeOff: {}, hoursMode: "min", hoursTarget: 20 },
-      { id: "t3", name: "Gökhan Arslan", timeOff: {}, hoursMode: "min", hoursTarget: 20 },
-      { id: "t4", name: "Şerif Yetim", timeOff: {}, hoursMode: "min", hoursTarget: 20 },
-      { id: "t5", name: "Seyit Ömer Şeker", timeOff: {}, hoursMode: "min", hoursTarget: 20 },
-      { id: "t6", name: "Levent Ergin", timeOff: {}, hoursMode: "exact", hoursTarget: 6, coordEligible: false }
+      { id: "t1", name: "Ali Osman Koç", timeOff: {}, hoursMode: "min", hoursTarget: 20, unvan: "Alan Şefi" },
+      { id: "t2", name: "Arzu Kırıcı", timeOff: {}, hoursMode: "min", hoursTarget: 20, unvan: "Laboratuvar Şefi" },
+      { id: "t3", name: "Gökhan Arslan", timeOff: {}, hoursMode: "min", hoursTarget: 20, unvan: "İmalat Yöntemleri Atölye Şefi" },
+      { id: "t4", name: "Şerif Yetim", timeOff: {}, hoursMode: "min", hoursTarget: 20, unvan: "İmalat İşlemleri Atölye Şefi" },
+      { id: "t5", name: "Seyit Ömer Şeker", timeOff: {}, hoursMode: "min", hoursTarget: 20, unvan: "Alan Öğretmeni" },
+      { id: "t6", name: "Levent Ergin", timeOff: {}, hoursMode: "exact", hoursTarget: 6, coordEligible: false, unvan: "Teknik Müdür Yardımcısı" }
     ],
     courses: [
       { id: "c9-1", code: "MGA", name: "Mesleki Gelişim Atölyesi", dal: "ORTAK9", grade: 9, hours: 2, blocks: [2] },
@@ -148,7 +148,8 @@ function defaultState() {
       mudurAdi: "Ahmet Açar",
       alanSefiAdi: "Ali Osman Koç",
       alanSefiUnvani: "Makine Teknolojisi Alan Şefi",
-      logo: null
+      logo: YILLIK_PLAN_OKUL_LOGO_VARSAYILAN,
+      mebLogo: YILLIK_PLAN_MEB_LOGO_VARSAYILAN
     }
   };
 }
@@ -197,7 +198,8 @@ function emptyState() {
       mudurAdi: "Ahmet Açar",
       alanSefiAdi: "Ali Osman Koç",
       alanSefiUnvani: "Makine Teknolojisi Alan Şefi",
-      logo: null
+      logo: YILLIK_PLAN_OKUL_LOGO_VARSAYILAN,
+      mebLogo: YILLIK_PLAN_MEB_LOGO_VARSAYILAN
     }
   };
 }
@@ -273,12 +275,32 @@ function normalizeState(s) {
   if (!Array.isArray(s.gunlukPlanlar)) s.gunlukPlanlar = [];
   s.yillikPlanlar.forEach(p => {
     if (!p.id) p.id = uid("yp");
-    if (!Array.isArray(p.haftalar)) p.haftalar = [];
-    p.haftalar.forEach(h => {
-      if (typeof h.yontem !== "string") h.yontem = "";
-      if (typeof h.arac !== "string") h.arac = "";
-      if (typeof h.degerlendirme !== "string") h.degerlendirme = "";
-    });
+    // Eski sürümde her yıllık plan kendi "haftalar" dizisini (tarihi de içeren,
+    // bağımsız bir kopya) tutuyordu. Artık tarih/tatil bilgisi HER ZAMAN
+    // S.akademikTakvim.haftalar'dan canlı okunuyor (Çalışma Yılı'nda bir
+    // tarih değişince bütün ders sayfaları otomatik güncellensin diye);
+    // her plan sadece o haftanın içeriğini (kazanım/konu/yöntem/araç/
+    // değerlendirme) hafta NUMARASINA göre saklıyor. Eski verideki tarihi,
+    // akademik takvimdeki aynı tarih aralığına sahip haftanın numarasıyla
+    // eşleştirip içeriği oraya taşıyoruz; eşleşme bulunamazsa sıradaki
+    // numarayı kullanırız — içerik hiçbir durumda kaybolmaz.
+    if (!p.haftaIcerik || typeof p.haftaIcerik !== "object") {
+      p.haftaIcerik = {};
+      if (Array.isArray(p.haftalar)) {
+        const takvimHaftalari = (s.akademikTakvim && Array.isArray(s.akademikTakvim.haftalar)) ? s.akademikTakvim.haftalar : [];
+        p.haftalar.forEach((h, i) => {
+          const hasContent = h.kazanimlar || h.konular || h.yontem || h.arac || h.degerlendirme;
+          if (!hasContent) return;
+          const eslesen = takvimHaftalari.find(tk => tk.tarihAraligi && tk.tarihAraligi === h.tarih);
+          const no = eslesen ? eslesen.no : (i + 1);
+          p.haftaIcerik[no] = {
+            kazanimlar: h.kazanimlar || "", konular: h.konular || "",
+            yontem: h.yontem || "", arac: h.arac || "", degerlendirme: h.degerlendirme || ""
+          };
+        });
+      }
+    }
+    delete p.haftalar;
   });
   s.gunlukPlanlar.forEach(p => { if (!p.id) p.id = uid("gp"); });
   if (!s.normKadro || typeof s.normKadro !== "object") s.normKadro = {};
@@ -523,6 +545,12 @@ function normalizeState(s) {
     if (typeof kb.alanSefiAdi !== "string") kb.alanSefiAdi = "";
     if (typeof kb.alanSefiUnvani !== "string") kb.alanSefiUnvani = "";
     if (typeof kb.logo !== "string") kb.logo = null;
+    if (typeof kb.mebLogo !== "string") kb.mebLogo = null;
+  }
+  if (!s.seededYillikPlanLogolari) {
+    s.seededYillikPlanLogolari = true;
+    if (!s.kurumBilgileri.logo) s.kurumBilgileri.logo = YILLIK_PLAN_OKUL_LOGO_VARSAYILAN;
+    if (!s.kurumBilgileri.mebLogo) s.kurumBilgileri.mebLogo = YILLIK_PLAN_MEB_LOGO_VARSAYILAN;
   }
   if (!s.seededIsletmeler2026) {
     s.seededIsletmeler2026 = true;
@@ -606,6 +634,7 @@ function normalizeState(s) {
       else { t.hoursMode = "min"; t.hoursTarget = 20; }
     }
     if (typeof t.coordEligible !== "boolean") t.coordEligible = true;
+    if (typeof t.unvan !== "string") t.unvan = "";
   });
   s.classes.forEach(cl => {
     cl.assignments.forEach(a => {

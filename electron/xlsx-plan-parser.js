@@ -7,7 +7,11 @@
    ilk birkaç satır meta bilgi (DERS/SINIF/ÖĞRETMEN/ALAN-DAL/DERS
    SAATİ), sonra TARİH ile başlayan bir başlık satırı ve altında
    veri satırları var. TAKVİM sayfası "Hafta No" ile başlayan 37-40
-   haftalık resmî çalışma takvimini içeriyor.
+   haftalık resmî çalışma takvimini, sınav tarihlerini ve önemli
+   gün/hafta listesini içeriyor — bütün ders sayfaları tarihlerini
+   formülle (=TAKVİM!$B$xx) bu sayfadan çeker; biz de aynı mantıkla
+   TAKVİM'i önce ayrıştırıp diğer sayfaların içeriğini ona göre
+   (hafta NUMARASINA göre) eşliyoruz.
    ============================================================ */
 
 const AY_REGEX = /Ocak|Şubat|Mart|Nisan|Mayıs|Haziran|Temmuz|Ağustos|Eylül|Ekim|Kasım|Aralık/;
@@ -62,11 +66,40 @@ function sistemFromSinif(sinif) {
 const SINAV_TARIHI_REGEX = /(\d)\.\s*Dönem\s*(\d)\.\s*Sınav\s*Tarihi/i;
 const SINAV_TARIHI_KEY = { "1-1": "d1s1", "1-2": "d1s2", "2-1": "d2s1", "2-2": "d2s2" };
 
+/* "ÖNEMLİ GÜN VE HAFTALAR" satırlarını, uygulamanın zaten kullandığı
+   sabit 6+6'lık d1/d2 yuvalarına (bkz. views.js ONEMLI_GUNLER_D1/D2_
+   ETIKETLERI) eşler. Tam metin eşleşmesi aramıyoruz — okul her yıl bu
+   etiketleri hafifçe farklı yazabiliyor (ör. "1.Dönem Ara Tatil" / "1.
+   Dönem Ara Tatili") — anahtar kelimelerle sağlam bir eşleme yapıyoruz. */
+function siniflandirOnemliGun(label) {
+  const l = (label || "").toLocaleLowerCase("tr-TR");
+  if (!l) return null;
+  // "1.Yarıyıl Başlangıcı (elle değiştirilebilir)" gibi açıklama notu içeren
+  // yardımcı etiketler (TAKVİM sayfasının üst kısmında, asıl ÖNEMLİ GÜN VE
+  // HAFTALAR listesinden önce geçebiliyor) — bunları atlayıp asıl listedeki
+  // temiz etikete bekliyoruz.
+  if (/değiştir/.test(l)) return null;
+  if (/1\.?\s*yarıyıl/.test(l) && /başlan/.test(l)) return ["d1", 0];
+  if (/2\.?\s*yarıyıl/.test(l) && /başlan/.test(l)) return ["d2", 0];
+  if (/cumhuriyet/.test(l)) return ["d1", 1];
+  if (/1\.?\s*dönem/.test(l) && /ara\s*tatil/.test(l)) return ["d1", 3];
+  if (/2\.?\s*dönem/.test(l) && /ara\s*tatil/.test(l)) return ["d2", 1];
+  if (/atatürk/.test(l) && /gençlik/.test(l)) return ["d2", 3];
+  if (/atatürk/.test(l)) return ["d1", 2];
+  if (/23\s*nisan/.test(l) || /egemenlik/.test(l)) return ["d2", 2];
+  if (/yılbaşı/.test(l)) return ["d1", 4];
+  if (/ramazan/.test(l)) return ["d2", 4];
+  if (/yarıyıl\s*tatili/.test(l)) return ["d1", 5];
+  if (/sonu/.test(l) && /(eğitim|öğretim)/.test(l)) return ["d2", 5];
+  return null;
+}
+
 function parseTakvimSheet(ws, XLSX) {
   const rows = XLSX.utils.sheet_to_json(ws, { header: 1, raw: false });
   const haftalar = [];
   let ogretimYili = "";
   const sinavTarihleri = { d1s1: "", d1s2: "", d2s1: "", d2s2: "" };
+  const onemliGunler = { d1: ["", "", "", "", "", ""], d2: ["", "", "", "", "", ""] };
   for (const row of rows) {
     if (!row || !row.length) continue;
     for (let c = 0; c < row.length; c++) {
@@ -85,6 +118,13 @@ function parseTakvimSheet(ws, XLSX) {
             const val = cellText(row[c2]).replace(/^:\s*/, "").trim();
             if (val) { sinavTarihleri[key] = val; break; }
           }
+        }
+      }
+      const sinif = siniflandirOnemliGun(label);
+      if (sinif && !onemliGunler[sinif[0]][sinif[1]]) {
+        for (let c2 = c + 1; c2 < row.length; c2++) {
+          const val = cellText(row[c2]).replace(/^:\s*/, "").trim();
+          if (val) { onemliGunler[sinif[0]][sinif[1]] = val; break; }
         }
       }
     }
@@ -106,7 +146,7 @@ function parseTakvimSheet(ws, XLSX) {
       }
     }
   }
-  return haftalar.length ? { ogretimYili, haftalar, sinavTarihleri } : null;
+  return haftalar.length ? { ogretimYili, haftalar, sinavTarihleri, onemliGunler } : null;
 }
 
 function parseGunlukSheet(ws, XLSX) {
@@ -140,7 +180,15 @@ function parseGunlukSheet(ws, XLSX) {
 const YONTEM_BASLIK = "ÖĞRENME-ÖĞRETME\nYÖNTEM VE TEKNİKLERİ";
 const ARAC_BASLIK = "KULLANILAN EĞİTİM TEKNOLOJİLERİ,\nARAÇ VE GEREÇLER";
 
-function parseYillikSheet(ws, XLSX) {
+/* takvimHaftalar: TAKVİM sayfasından ayrıştırılmış {no,tarihAraligi,tatilMi}
+   listesi (yoksa null). Her ders sayfasındaki TARİH hücresi, formülle zaten
+   TAKVİM'deki aynı metni gösterdiği için, buradaki tarih metnini
+   takvimHaftalar'daki tarihAraligi ile eşleştirip doğru hafta NUMARASINI
+   buluyoruz — uygulama artık içeriği tarihe göre değil hafta numarasına
+   göre saklıyor (bkz. views.js renderYillikHaftaTablosu). Tatil haftaları
+   hiç içe aktarılmaz; onların adı zaten S.akademikTakvim.haftalar'dan
+   canlı okunuyor. */
+function parseYillikSheet(ws, XLSX, takvimHaftalar) {
   const rows = XLSX.utils.sheet_to_json(ws, { header: 1, raw: false });
   const meta = sheetMeta(rows);
   const header = findHeaderRow(rows, ["TARİH", "KAZANIMLAR", "KONULAR"]);
@@ -150,34 +198,44 @@ function parseYillikSheet(ws, XLSX) {
     tarih: colIndex("TARİH"), kazanimlar: colIndex("KAZANIMLAR"), konular: colIndex("KONULAR"),
     yontem: colIndex(YONTEM_BASLIK), arac: colIndex(ARAC_BASLIK), degerlendirme: colIndex("DEĞERLENDİRME")
   };
-  const haftalar = [];
+  const haftaIcerik = {};
+  let siradakiNo = 1;
   for (let r = header.rowIndex + 1; r < rows.length; r++) {
     const row = rows[r] || [];
     const tarih = cellText(row[idx.tarih]);
     if (!tarih || !AY_REGEX.test(tarih)) continue;
-    haftalar.push({
-      tarih, kazanimlar: cellText(row[idx.kazanimlar]), konular: cellText(row[idx.konular]),
-      yontem: cellText(row[idx.yontem]), arac: cellText(row[idx.arac]), degerlendirme: cellText(row[idx.degerlendirme])
-    });
+    const eslesen = (takvimHaftalar || []).find(tk => tk.tarihAraligi && tk.tarihAraligi === tarih);
+    if (eslesen && eslesen.tatilMi) continue; // tatil haftası — içerik yok, atla
+    const kazanimlar = cellText(row[idx.kazanimlar]);
+    const konular = cellText(row[idx.konular]);
+    const yontem = cellText(row[idx.yontem]);
+    const arac = cellText(row[idx.arac]);
+    const degerlendirme = cellText(row[idx.degerlendirme]);
+    if (!kazanimlar && !konular && !yontem && !arac && !degerlendirme) continue;
+    const no = eslesen ? eslesen.no : siradakiNo;
+    haftaIcerik[no] = { kazanimlar, konular, yontem, arac, degerlendirme };
+    siradakiNo = no + 1;
   }
-  if (!haftalar.length) return null;
+  if (!Object.keys(haftaIcerik).length) return null;
   return { ders: meta.ders, sinif: meta.sinif || "", alanDal: meta.alanDal || "", dersSaati: meta.dersSaati || "",
-    sistem: sistemFromSinif(meta.sinif), haftalar };
+    sistem: sistemFromSinif(meta.sinif), haftaIcerik };
 }
 
 function parsePlanWorkbook(filePath, XLSX) {
   const wb = XLSX.readFile(filePath);
   const result = { takvim: null, yillikPlanlar: [], gunlukPlanlar: [] };
+  const takvimSheetName = wb.SheetNames.find(sn => /TAKVİM/i.test(sn));
+  if (takvimSheetName) {
+    const t = parseTakvimSheet(wb.Sheets[takvimSheetName], XLSX);
+    if (t) result.takvim = t;
+  }
+  const takvimHaftalar = result.takvim ? result.takvim.haftalar : null;
   for (const sn of wb.SheetNames) {
+    if (sn === takvimSheetName) continue;
     const ws = wb.Sheets[sn];
-    if (/TAKVİM/i.test(sn)) {
-      const t = parseTakvimSheet(ws, XLSX);
-      if (t) result.takvim = t;
-      continue;
-    }
     const g = parseGunlukSheet(ws, XLSX);
     if (g) { result.gunlukPlanlar.push(g); continue; }
-    const y = parseYillikSheet(ws, XLSX);
+    const y = parseYillikSheet(ws, XLSX, takvimHaftalar);
     if (y) { result.yillikPlanlar.push(y); continue; }
   }
   return result;
