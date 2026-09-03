@@ -1931,10 +1931,6 @@ function normKadroGrupSayisi(grade, ogrenciSayisi) {
   if (grade === 9) return ogrenciSayisi <= 20 ? 1 : Math.ceil((ogrenciSayisi - 20) / 10) + 1;
   return ogrenciSayisi <= 16 ? 1 : Math.ceil((ogrenciSayisi - 16) / 8) + 1;
 }
-function setNormKadroSayisi(value) {
-  S.normKadro.normKadroSayisi = value;
-  save(); renderMain();
-}
 function setNormKadroOgrenciSayisi(classId, value) {
   const n = parseInt(value);
   if (Number.isFinite(n) && n >= 0) S.normKadro.ogrenciSayilari[classId] = n;
@@ -2028,6 +2024,11 @@ function viewNormKadro() {
   }).join("");
 
   const genelToplam = ampToplam + koordToplam + seflikToplam;
+  // Norm kadro sayısı, MEB'in resmi kuralına göre otomatik hesaplanıyor:
+  // toplam ders yükü ÷ 40 saat, yukarı yuvarlanır (15-40 saat=1, 41-80=2, ...
+  // 200 saat sonrası da aynı kural — kullanıcının verdiği tablo bununla
+  // birebir örtüşüyor). Elle girmeye gerek yok.
+  const normKadroSayisi = genelToplam > 0 ? Math.ceil(genelToplam / 40) : 0;
   const alanSefi = S.teachers.find(t => (idari ? idari.assignments : []).some(a => a.courseId === "pbo-10" && (a.eligibleTeacherIds || []).includes(t.id)));
 
   return `
@@ -2057,8 +2058,8 @@ function viewNormKadro() {
       <div class="row no-print" style="margin-top:10px;"><button class="btn" onclick="addKoordSatir()">Koordinatörlük Satırı Ekle</button></div>
     </div>
     <div class="card" style="text-align:center;">
-      <div class="no-print"><label class="small">NORM KADRO: <input type="text" value="${escHtml(S.normKadro.normKadroSayisi)}" style="width:60px;text-align:center;" onchange="setNormKadroSayisi(this.value)"></label></div>
-      ${S.normKadro.normKadroSayisi ? `<p class="print-only" style="font-weight:700;">NORM KADRO: ${escHtml(S.normKadro.normKadroSayisi)}</p>` : ""}
+      <p style="font-weight:700;">NORM KADRO: ${normKadroSayisi}</p>
+      <p class="small no-print">Toplam ders yükü (${genelToplam} saat) ÷ 40 — MEB kuralına göre otomatik hesaplanır, elle girmeye gerek yok.</p>
       <p class="small print-only" style="margin-top:16px;">Makine ve Tasarım Teknolojisi Alan Şefi<br><b>${alanSefi ? escHtml(alanSefi.name) : ''}</b></p>
     </div>
   </div>`;
