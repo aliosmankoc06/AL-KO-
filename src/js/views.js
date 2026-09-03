@@ -1611,8 +1611,7 @@ function renderYillikPlanSecTab() {
   <div class="card no-print">
     ${activeEntry ? `
     <div class="row no-print">
-      <button class="btn primary" onclick="printCurrentView(false)">Yazdır</button>
-      <button class="btn" onclick="indirYillikPlanExcel('${jsq(dosyaAdi)}')">İndir (Excel)</button>
+      <button class="btn primary" onclick="indirYillikPlanExcel('${jsq(dosyaAdi)}')">İndir (Excel)</button>
     </div>` : `<div class="row"><button class="btn" onclick="importPlanFromExcel()">Excel Yükle</button></div>`}
   </div>
   ${listHtml}
