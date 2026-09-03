@@ -1293,24 +1293,26 @@ function renderYillikHaftaTablosu(p) {
     <tbody>${rows}</tbody></table>
   </div>`;
 }
-// İmza bloğu — bütün öğretmenleri (Öğretmenler ekranındaki sırayla) 3'erli
-// gruplar halinde ad/branş/ünvan olarak listeler, altına okul müdürü onayı
-// eklenir. İsim ve ünvanlar Öğretmenler ekranından, müdür adı Ayarlar'dan
-// değiştirilebilir — buraya elle bir şey yazmaya gerek yok.
+// İmza bloğu — S.teachers'dan (ders programı öğretmen listesi) BAĞIMSIZ,
+// kendi listesi (S.yillikPlanImzaListesi): alandaki öğretmen sayısı
+// zamanla artıp azalsa da, imza sirkülerini (kurumun onay/imza
+// yetkilileri) elle ekleyip çıkararak ayrı yönetebilmek için.
 function editYillikImzaModal() {
   const kb = S.kurumBilgileri;
   const root = document.getElementById("modal-root");
-  const rows = S.teachers.map(t => `
+  const rows = S.yillikPlanImzaListesi.map(e => `
     <div class="row" style="gap:8px;margin-bottom:6px;align-items:center;">
-      <input type="text" value="${escHtml(t.name)}" placeholder="Ad Soyad" style="flex:1;" onchange="renameTeacherInline('${t.id}',this.value)">
-      <input type="text" value="${escHtml(t.unvan || '')}" placeholder="Ünvan (ör. Alan Şefi)" style="flex:1;" onchange="setTeacherUnvan('${t.id}',this.value)">
+      <input type="text" value="${escHtml(e.ad)}" placeholder="Ad Soyad" style="flex:1;" onchange="imzaKisiAdGuncelle('${e.id}',this.value)">
+      <input type="text" value="${escHtml(e.unvan)}" placeholder="Ünvan (ör. Alan Şefi)" style="flex:1;" onchange="imzaKisiUnvanGuncelle('${e.id}',this.value)">
+      <button class="btn danger" style="padding:4px 9px;" onclick="imzaKisiSil('${e.id}')">Kaldır</button>
     </div>`).join("");
   root.innerHTML = `
     <div class="modal-bg" onclick="if(event.target===this){ closeModal(); renderMain(); }">
-      <div class="modal" style="width:520px;">
+      <div class="modal" style="width:560px;">
         <h3>İmza Bilgilerini Düzenle</h3>
-        <p class="small">Ad Soyad ve ünvan — Yıllık Plan'ın imza bloğunda bu sırayla görünür, Öğretmenler ekranıyla ortak.</p>
-        ${rows || `<p class="small">Henüz öğretmen eklenmemiş.</p>`}
+        <p class="small">Yıllık Plan'ın imza bloğunda kimlerin imzası olacağını burada elle yönetirsiniz — Öğretmenler listesindeki sayıdan bağımsızdır, alandaki öğretmen sayısı değişse de bu liste kendiliğinden değişmez.</p>
+        ${rows || `<p class="small">Henüz imza ekli değil.</p>`}
+        <div class="row" style="margin-top:6px;"><button class="btn" onclick="imzaKisiEkle()">+ Yeni İmza Ekle</button></div>
         <label class="small" style="margin-top:10px;">Alan Adı (her imzanın altında görünür)</label>
         <input type="text" value="${escHtml(kb.alanAdi || '')}" style="width:100%" onchange="updateKurumBilgi('alanAdi',this.value)">
         <label class="small" style="margin-top:10px;">Okul Müdürü</label>
@@ -1319,31 +1321,45 @@ function editYillikImzaModal() {
       </div>
     </div>`;
 }
-function renameTeacherInline(teacherId, value) {
-  const t = teacherById(teacherId);
-  const v = value.trim();
-  if (!v) { alert("Ad Soyad boş olamaz."); editYillikImzaModal(); return; }
-  t.name = v;
-  save(); renderMain();
+function imzaKisiAdGuncelle(id, value) {
+  const e = S.yillikPlanImzaListesi.find(x => x.id === id);
+  if (!e) return;
+  e.ad = value.trim();
+  save(); renderMain(); editYillikImzaModal();
+}
+function imzaKisiUnvanGuncelle(id, value) {
+  const e = S.yillikPlanImzaListesi.find(x => x.id === id);
+  if (!e) return;
+  e.unvan = value.trim();
+  save(); renderMain(); editYillikImzaModal();
+}
+function imzaKisiSil(id) {
+  S.yillikPlanImzaListesi = S.yillikPlanImzaListesi.filter(x => x.id !== id);
+  save(); renderMain(); editYillikImzaModal();
+}
+function imzaKisiEkle() {
+  S.yillikPlanImzaListesi.push({ id: uid("imza"), ad: "", unvan: "" });
+  save(); renderMain(); editYillikImzaModal();
 }
 function renderYillikImzaBlogu() {
   const kb = S.kurumBilgileri;
+  const liste = S.yillikPlanImzaListesi;
   const gruplar = [];
-  for (let i = 0; i < S.teachers.length; i += 3) gruplar.push(S.teachers.slice(i, i + 3));
+  for (let i = 0; i < liste.length; i += 3) gruplar.push(liste.slice(i, i + 3));
   const grupHtml = gruplar.map(grup => `
     <div style="display:flex;justify-content:space-around;flex-wrap:wrap;gap:16px;margin-top:22px;">
-      ${grup.map(t => `
+      ${grup.map(e => `
         <div style="text-align:center;min-width:160px;">
-          <div style="font-weight:700;">${escHtml(t.name)}</div>
+          <div style="font-weight:700;">${escHtml(e.ad)}</div>
           <div style="font-size:11px;">${escHtml(kb.alanAdi || "")}</div>
-          <div style="font-size:11px;">${escHtml(t.unvan || "—")}</div>
+          <div style="font-size:11px;">${escHtml(e.unvan || "—")}</div>
         </div>`).join("")}
     </div>`).join("");
   return `<div class="card">
     <div class="row no-print" style="justify-content:flex-end;">
       <button class="btn" onclick="editYillikImzaModal()">İmza Bilgilerini Düzenle</button>
     </div>
-    ${grupHtml || `<p class="small">Henüz öğretmen eklenmemiş.</p>`}
+    ${grupHtml || `<p class="small">Henüz imza ekli değil.</p>`}
     <div style="text-align:center;margin-top:28px;">
       <div>…../…../..........</div>
       <div style="margin-top:10px;font-weight:700;">UYGUNDUR</div>
@@ -1402,12 +1418,6 @@ function renderYillikPlanIcerik(p) {
 // exceljs ile kullanıcının orijinal YILLIK_PLANLAR.xlsx'ine yakın, gerçek
 // biçimlendirmeli (kalın/renkli/çerçeveli, iki logo gömülü) bir sayfa
 // üretiliyor (bkz. electron/main.js export:yillik-plan-excel).
-const YILLIK_PLAN_IMZA_SIRASI = ["t5", "t2", "t3", "t4", "t1", "t6"];
-function yillikPlanImzaSirasi() {
-  const siraliOlanlar = YILLIK_PLAN_IMZA_SIRASI.map(id => S.teachers.find(tc => tc.id === id)).filter(Boolean);
-  const digerleri = S.teachers.filter(tc => !YILLIK_PLAN_IMZA_SIRASI.includes(tc.id));
-  return siraliOlanlar.concat(digerleri);
-}
 function extractYillikPlanForExcel(p) {
   const kb = S.kurumBilgileri;
   const t = S.akademikTakvim || {};
@@ -1433,7 +1443,7 @@ function extractYillikPlanForExcel(p) {
     },
     isguluTakvimi: isguluTakvimiOlustur(ogretimYili),
     haftalar,
-    teachers: yillikPlanImzaSirasi().map(tc => ({ ad: tc.name, brans: kb.alanAdi || "", unvan: tc.unvan || "" })),
+    teachers: S.yillikPlanImzaListesi.map(e => ({ ad: e.ad, brans: kb.alanAdi || "", unvan: e.unvan || "" })),
     mudurAdi: kb.mudurAdi || ""
   };
 }

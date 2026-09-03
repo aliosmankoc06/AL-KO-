@@ -655,6 +655,24 @@ function normalizeState(s) {
     if (typeof t.coordEligible !== "boolean") t.coordEligible = true;
     if (typeof t.unvan !== "string") t.unvan = "";
   });
+  // Yıllık Plan imza bloğu — S.teachers'dan (ders programı öğretmen listesi)
+  // BAĞIMSIZ ayrı bir liste: alandaki öğretmen sayısı zamanla artıp
+  // azalabiliyor ama imza sirkülerini (kurumun onay/imza yetkilileri)
+  // bundan ayrı, elle yönetilebilir tutmak gerekiyor.
+  if (!Array.isArray(s.yillikPlanImzaListesi)) s.yillikPlanImzaListesi = [];
+  if (!s.seededYillikPlanImzaListesi) {
+    s.seededYillikPlanImzaListesi = true;
+    if (s.yillikPlanImzaListesi.length === 0) {
+      const varsayilanSira = ["t5", "t2", "t3", "t4", "t1", "t6"];
+      s.yillikPlanImzaListesi = varsayilanSira.map(id => s.teachers.find(t => t.id === id)).filter(Boolean)
+        .map(t => ({ id: uid("imza"), ad: t.name, unvan: t.unvan || "" }));
+    }
+  }
+  s.yillikPlanImzaListesi.forEach(e => {
+    if (!e.id) e.id = uid("imza");
+    if (typeof e.ad !== "string") e.ad = "";
+    if (typeof e.unvan !== "string") e.unvan = "";
+  });
   s.classes.forEach(cl => {
     cl.assignments.forEach(a => {
       if (!Array.isArray(a.eligibleTeacherIds)) a.eligibleTeacherIds = [];
