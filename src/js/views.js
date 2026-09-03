@@ -1311,6 +1311,8 @@ function editYillikImzaModal() {
         <h3>İmza Bilgilerini Düzenle</h3>
         <p class="small">Ad Soyad ve ünvan — Yıllık Plan'ın imza bloğunda bu sırayla görünür, Öğretmenler ekranıyla ortak.</p>
         ${rows || `<p class="small">Henüz öğretmen eklenmemiş.</p>`}
+        <label class="small" style="margin-top:10px;">Alan Adı (her imzanın altında görünür)</label>
+        <input type="text" value="${escHtml(kb.alanAdi || '')}" style="width:100%" onchange="updateKurumBilgi('alanAdi',this.value)">
         <label class="small" style="margin-top:10px;">Okul Müdürü</label>
         <input type="text" value="${escHtml(kb.mudurAdi || '')}" style="width:100%" onchange="updateKurumBilgi('mudurAdi',this.value)">
         <div class="row" style="margin-top:12px;"><button class="btn" onclick="closeModal(); renderMain();">Kapat</button></div>
@@ -1597,15 +1599,11 @@ function renderYillikPlanSecTab() {
 
   return `
   <div class="card no-print">
-    <div class="row">
-      <button class="btn" onclick="importPlanFromExcel()">Excel Yükle</button>
-      ${activeEntry ? `<button class="btn" onclick="planiYeniYilaKopyala('yillik','${activeEntry.id}')">Yeni Öğretim Yılı İçin Kopyala</button><button class="btn danger" onclick="deletePlanEntry('yillik','${activeEntry.id}')">Bu Planı Sil</button>` : ""}
-    </div>
     ${activeEntry ? `
-    <div class="row no-print" style="margin-top:10px;">
+    <div class="row no-print">
       <button class="btn primary" onclick="printCurrentView(false)">Yazdır</button>
       <button class="btn" onclick="indirYillikPlanExcel('${jsq(dosyaAdi)}')">İndir (Excel)</button>
-    </div>` : ""}
+    </div>` : `<div class="row"><button class="btn" onclick="importPlanFromExcel()">Excel Yükle</button></div>`}
   </div>
   ${listHtml}
   <div class="print-area">
