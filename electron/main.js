@@ -385,6 +385,166 @@ ipcMain.handle("export:schedule-excel", async (evt, defaultName, teacherBlocks) 
   return result.filePath;
 });
 
+/* Yıllık Plan'ın Excel çıktısı — kullanıcının kendi YILLIK_PLANLAR.xlsx
+   dosyasındaki görünüme (iki logo, başlık, bilgi tablosu, sınav tarihleri,
+   önemli gün ve haftalar, işgünü takvimi, hafta hafta kazanım/konu/yöntem/
+   araç/değerlendirme, imza bloğu) yakın, gerçek biçimlendirmeli tek sayfa
+   üretir. Veri (payload) tarayıcı tarafında S üzerinden derlenip buraya
+   gönderiliyor (bkz. views.js extractYillikPlanForExcel). */
+ipcMain.handle("export:yillik-plan-excel", async (evt, defaultName, payload) => {
+  const result = await dialog.showSaveDialog(mainWindow, {
+    title: "Excel Olarak Kaydet",
+    defaultPath: defaultName,
+    filters: [{ name: "Excel Dosyası", extensions: ["xlsx"] }]
+  });
+  if (result.canceled || !result.filePath) return null;
+
+  const wb = new ExcelJS.Workbook();
+  const ws = wb.addWorksheet("Yıllık Plan");
+  const COLS = 11; // A..K — işgünü takvimi (1 etiket + 10 ay) en geniş tablo
+  ws.properties.defaultColWidth = 16;
+  const thin = { style: "thin", color: { argb: "FF999999" } };
+  const border = { top: thin, bottom: thin, left: thin, right: thin };
+  const headerFill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFF4F6FA" } };
+  const tatilFill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFEDE3F5" } };
+
+  function mergeSet(r1, c1, r2, c2, value, opts) {
+    opts = opts || {};
+    if (r1 !== r2 || c1 !== c2) ws.mergeCells(r1, c1, r2, c2);
+    const cell = ws.getCell(r1, c1);
+    cell.value = value === undefined ? "" : value;
+    cell.font = Object.assign({ size: 10 }, opts.font || {});
+    cell.alignment = Object.assign({ vertical: "middle", horizontal: "left", wrapText: true }, opts.alignment || {});
+    if (opts.border !== false) cell.border = border;
+    if (opts.fill) cell.fill = opts.fill;
+    return cell;
+  }
+  function labelValueRow(r, pairs) {
+    // pairs: [[label,value], [label,value]] -> A:B, C:D (etiket/değer), gerekirse E:K boş bırakılır
+    let c = 1;
+    pairs.forEach(([label, value]) => {
+      mergeSet(r, c, r, c, label, { font: { bold: true } });
+      mergeSet(r, c + 1, r, c + 2, value || "-");
+      c += 3;
+    });
+  }
+
+  let r = 1;
+  // Logolar + başlık
+  const titleRowSpan = 4;
+  if (payload.logos && payload.logos.meb) {
+    const m = /^data:image\/(\w+);base64,/.exec(payload.logos.meb);
+    if (m) {
+      const imgId = wb.addImage({ base64: payload.logos.meb, extension: m[1] === "jpeg" ? "jpeg" : m[1] });
+      ws.addImage(imgId, { tl: { col: 0, row: r - 1 }, ext: { width: 70, height: 70 } });
+    }
+  }
+  if (payload.logos && payload.logos.okul) {
+    const m = /^data:image\/(\w+);base64,/.exec(payload.logos.okul);
+    if (m) {
+      const imgId = wb.addImage({ base64: payload.logos.okul, extension: m[1] === "jpeg" ? "jpeg" : m[1] });
+      ws.addImage(imgId, { tl: { col: COLS - 1, row: r - 1 }, ext: { width: 70, height: 70 } });
+    }
+  }
+  mergeSet(r, 2, r + titleRowSpan - 1, COLS - 1, "YILLIK DERS PLANI", {
+    font: { bold: true, size: 16 }, alignment: { vertical: "middle", horizontal: "center" }, border: false
+  });
+  for (let i = 0; i < titleRowSpan; i++) ws.getRow(r + i).height = 18;
+  r += titleRowSpan + 1;
+
+  // Bilgi tablosu
+  const meta = payload.meta || {};
+  labelValueRow(r++, [["EĞİTİM-ÖĞRETİM YILI", meta.ogretimYili], ["OKUL", meta.okulAdi]]);
+  labelValueRow(r++, [["DERS", meta.ders], ["ALAN/DAL", meta.alanDal]]);
+  labelValueRow(r++, [["DERS SAATİ", meta.dersSaati], ["SINIF", meta.sinif]]);
+  r += 1;
+
+  // Sınav tarihleri
+  const sinav = payload.sinav || {};
+  mergeSet(r, 1, r, 5, "1.DÖNEM SINAV TARİHLERİ", { font: { bold: true }, alignment: { horizontal: "center" }, fill: headerFill });
+  mergeSet(r, 7, r, 11, "2.DÖNEM SINAV TARİHLERİ", { font: { bold: true }, alignment: { horizontal: "center" }, fill: headerFill });
+  r += 1;
+  labelValueRow(r++, [["1.Dönem 1.Sınav Tarihi", sinav.d1s1], ["2.Dönem 1.Sınav Tarihi", sinav.d2s1]]);
+  labelValueRow(r++, [["1.Dönem 2.Sınav Tarihi", sinav.d1s2], ["2.Dönem 2.Sınav Tarihi", sinav.d2s2]]);
+  r += 1;
+
+  // Önemli gün ve haftalar
+  mergeSet(r, 1, r, 5, "1.DÖNEM ÖNEMLİ GÜN VE HAFTALAR", { font: { bold: true }, alignment: { horizontal: "center" }, fill: headerFill });
+  mergeSet(r, 7, r, 11, "2.DÖNEM ÖNEMLİ GÜN VE HAFTALAR", { font: { bold: true }, alignment: { horizontal: "center" }, fill: headerFill });
+  r += 1;
+  const d1 = (payload.onemliGunler && payload.onemliGunler.d1) || [];
+  const d2 = (payload.onemliGunler && payload.onemliGunler.d2) || [];
+  for (let i = 0; i < 6; i++) {
+    labelValueRow(r++, [[(d1[i] || {}).label || "", (d1[i] || {}).value || ""], [(d2[i] || {}).label || "", (d2[i] || {}).value || ""]]);
+  }
+  r += 1;
+
+  // İşgünü takvimi (sadeleştirilmiş: ay başına tek sütun, gün numaraları virgülle)
+  const takvim = payload.isguluTakvimi;
+  if (takvim) {
+    mergeSet(r, 1, r, COLS, (meta.ogretimYili || "") + " EĞİTİM-ÖĞRETİM YILI İŞGÜNÜ TAKVİMİ", { font: { bold: true }, alignment: { horizontal: "center" }, fill: headerFill });
+    r += 1;
+    mergeSet(r, 1, r, 1, "Günler", { font: { bold: true }, fill: headerFill });
+    takvim.aylar.forEach((a, i) => mergeSet(r, 2 + i, r, 2 + i, a.ad + " " + a.yil, { font: { bold: true }, alignment: { horizontal: "center" }, fill: headerFill }));
+    r += 1;
+    takvim.gunler.forEach((gun, gunIdx) => {
+      mergeSet(r, 1, r, 1, gun, { font: { bold: true } });
+      takvim.aylar.forEach((a, ayIdx) => {
+        mergeSet(r, 2 + ayIdx, r, 2 + ayIdx, (takvim.grid[gunIdx][ayIdx] || []).join(", "), { alignment: { horizontal: "center", wrapText: true } });
+      });
+      r += 1;
+    });
+    r += 1;
+  }
+
+  // Haftalık plan tablosu
+  const headerRow = r;
+  ["TARİH", "KAZANIMLAR", "KONULAR", "ÖĞRENME-ÖĞRETME YÖNTEM VE TEKNİKLERİ", "KULLANILAN EĞİTİM TEKNOLOJİLERİ, ARAÇ VE GEREÇLER", "DEĞERLENDİRME"].forEach((h, i) => {
+    mergeSet(headerRow, 1 + i, headerRow, 1 + i, h, { font: { bold: true }, alignment: { horizontal: "center" }, fill: headerFill });
+  });
+  r += 1;
+  (payload.haftalar || []).forEach(h => {
+    if (h.tatilMi) {
+      mergeSet(r, 1, r, 1, h.tarihAraligi);
+      mergeSet(r, 2, r, 6, h.tatilAdi, { font: { bold: true }, alignment: { horizontal: "center" }, fill: tatilFill });
+    } else {
+      mergeSet(r, 1, r, 1, h.tarihAraligi);
+      mergeSet(r, 2, r, 2, h.kazanimlar);
+      mergeSet(r, 3, r, 3, h.konular);
+      mergeSet(r, 4, r, 4, h.yontem);
+      mergeSet(r, 5, r, 5, h.arac);
+      mergeSet(r, 6, r, 6, h.degerlendirme);
+    }
+    ws.getRow(r).height = 60;
+    r += 1;
+  });
+  r += 1;
+
+  // İmza bloğu
+  const teachers = payload.teachers || [];
+  for (let i = 0; i < teachers.length; i += 3) {
+    const grup = teachers.slice(i, i + 3);
+    grup.forEach((t, gi) => {
+      const c = 1 + gi * 3;
+      mergeSet(r, c, r, c + 2, t.ad, { font: { bold: true }, alignment: { horizontal: "center" }, border: false });
+      mergeSet(r + 1, c, r + 1, c + 2, t.brans, { alignment: { horizontal: "center" }, border: false });
+      mergeSet(r + 2, c, r + 2, c + 2, t.unvan, { alignment: { horizontal: "center" }, border: false });
+    });
+    r += 4;
+  }
+  r += 1;
+  mergeSet(r, 1, r, COLS, "…../…../..........", { alignment: { horizontal: "center" }, border: false });
+  r += 1;
+  mergeSet(r, 1, r, COLS, "UYGUNDUR", { font: { bold: true }, alignment: { horizontal: "center" }, border: false });
+  r += 1;
+  mergeSet(r, 1, r, COLS, payload.mudurAdi || "", { font: { bold: true }, alignment: { horizontal: "center" }, border: false });
+  r += 1;
+  mergeSet(r, 1, r, COLS, "OKUL MÜDÜRÜ", { alignment: { horizontal: "center" }, border: false });
+
+  await wb.xlsx.writeFile(result.filePath);
+  return result.filePath;
+});
+
 function buildWordHtml(innerHtml, landscape) {
   const pageSize = landscape ? "29.7cm 21cm" : "21cm 29.7cm";
   return `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">

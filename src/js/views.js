@@ -1364,6 +1364,49 @@ function renderYillikPlanIcerik(p) {
   ${renderYillikHaftaTablosu(p)}
   ${renderYillikImzaBlogu()}`;
 }
+// Yıllık Plan'ın Excel çıktısı için, HTML'i düz metne çevirmek yerine
+// (renkler/birleştirilmiş hücreler/logolar kaybolurdu) ekrandaki aynı
+// verileri doğrudan S üzerinden derleyip ana sürece gönderiyoruz — orada
+// exceljs ile kullanıcının orijinal YILLIK_PLANLAR.xlsx'ine yakın, gerçek
+// biçimlendirmeli (kalın/renkli/çerçeveli, iki logo gömülü) bir sayfa
+// üretiliyor (bkz. electron/main.js export:yillik-plan-excel).
+function extractYillikPlanForExcel(p) {
+  const kb = S.kurumBilgileri;
+  const t = S.akademikTakvim || {};
+  const ogretimYili = t.ogretimYili || "";
+  const st = t.sinavTarihleri || {};
+  const og = t.onemliGunler || { d1: [], d2: [] };
+  const haftalar = (Array.isArray(t.haftalar) ? t.haftalar : []).map(h => {
+    if (h.tatilMi) return { tarihAraligi: h.tarihAraligi, tatilMi: true, tatilAdi: h.tatilAdi || "TATİL" };
+    const ic = p.haftaIcerik[h.no] || {};
+    return {
+      tarihAraligi: h.tarihAraligi, tatilMi: false,
+      kazanimlar: ic.kazanimlar || "", konular: ic.konular || "",
+      yontem: ic.yontem || "", arac: ic.arac || "", degerlendirme: ic.degerlendirme || ""
+    };
+  });
+  return {
+    meta: { ogretimYili, okulAdi: kb.okulAdi, ders: p.ders, sinif: p.sinif, alanDal: p.alanDal || "", dersSaati: p.dersSaati || "" },
+    logos: { meb: kb.mebLogo || null, okul: kb.logo || null },
+    sinav: { d1s1: st.d1s1 || "", d1s2: st.d1s2 || "", d2s1: st.d2s1 || "", d2s2: st.d2s2 || "" },
+    onemliGunler: {
+      d1: ONEMLI_GUNLER_D1_ETIKETLERI.map((label, i) => ({ label, value: (og.d1 || [])[i] || "" })),
+      d2: ONEMLI_GUNLER_D2_ETIKETLERI.map((label, i) => ({ label, value: (og.d2 || [])[i] || "" }))
+    },
+    isguluTakvimi: isguluTakvimiOlustur(ogretimYili),
+    haftalar,
+    teachers: S.teachers.map(tc => ({ ad: tc.name, brans: kb.alanAdi || "", unvan: tc.unvan || "" })),
+    mudurAdi: kb.mudurAdi || ""
+  };
+}
+async function indirYillikPlanExcel(dosyaAdi) {
+  if (!window.desktop || !window.desktop.isElectron) { alert("Excel olarak indirme sadece masaüstü uygulamasında çalışır."); return; }
+  const p = S.yillikPlanlar.find(x => x.id === activePlanEntryId.yillik);
+  if (!p) { alert("Önce bir ders seçin."); return; }
+  const payload = extractYillikPlanForExcel(p);
+  const path = await window.desktop.exportYillikPlanExcel(guvenliDosyaAdi(dosyaAdi) + ".xlsx", payload);
+  if (path) alert("Excel olarak kaydedildi:\n" + path);
+}
 function renderGunlukPlanTable(p) {
   const alanlar = [
     ["konu", "Konu"], ["kazanim", "Kazanım"], ["giris", "Giriş"], ["gelisme", "Gelişme"],
@@ -1522,7 +1565,11 @@ function renderYillikPlanSecTab() {
       <button class="btn" onclick="importPlanFromExcel()">Excel Yükle</button>
       ${activeEntry ? `<button class="btn" onclick="planiYeniYilaKopyala('yillik','${activeEntry.id}')">Yeni Öğretim Yılı İçin Kopyala</button><button class="btn danger" onclick="deletePlanEntry('yillik','${activeEntry.id}')">Bu Planı Sil</button>` : ""}
     </div>
-    ${belgeAracCubugu(dosyaAdi)}
+    ${activeEntry ? `
+    <div class="row no-print" style="margin-top:10px;">
+      <button class="btn primary" onclick="printCurrentView(false)">Yazdır</button>
+      <button class="btn" onclick="indirYillikPlanExcel('${jsq(dosyaAdi)}')">İndir (Excel)</button>
+    </div>` : ""}
   </div>
   ${listHtml}
   <div class="print-area">
