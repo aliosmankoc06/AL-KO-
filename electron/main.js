@@ -419,14 +419,17 @@ ipcMain.handle("export:yillik-plan-excel", async (evt, defaultName, payload) => 
     if (opts.fill) cell.fill = opts.fill;
     return cell;
   }
-  function labelValueRow(r, pairs) {
-    // pairs: [[label,value], [label,value]] -> A:B, C:D (etiket/değer), gerekirse E:K boş bırakılır
+  function labelValueRow(r, pairs, rowHeight) {
+    // pairs: [[label,value], [label,value]] -> her çift 1 etiket + 4 değer
+    // sütunu kullanır (uzun alan/dal metinleri tek satıra sığsın diye geniş
+    // tutuluyor); iki çift toplam 10 sütun kaplar, 11. sütun boş kalır.
     let c = 1;
     pairs.forEach(([label, value]) => {
       mergeSet(r, c, r, c, label, { font: { bold: true } });
-      mergeSet(r, c + 1, r, c + 2, value || "-");
-      c += 3;
+      mergeSet(r, c + 1, r, c + 4, value || "-");
+      c += 5;
     });
+    ws.getRow(r).height = rowHeight || 20;
   }
 
   let r = 1;
@@ -454,15 +457,15 @@ ipcMain.handle("export:yillik-plan-excel", async (evt, defaultName, payload) => 
 
   // Bilgi tablosu
   const meta = payload.meta || {};
-  labelValueRow(r++, [["EĞİTİM-ÖĞRETİM YILI", meta.ogretimYili], ["OKUL", meta.okulAdi]]);
-  labelValueRow(r++, [["DERS", meta.ders], ["ALAN/DAL", meta.alanDal]]);
-  labelValueRow(r++, [["DERS SAATİ", meta.dersSaati], ["SINIF", meta.sinif]]);
+  labelValueRow(r++, [["EĞİTİM-ÖĞRETİM YILI", meta.ogretimYili], ["OKUL", meta.okulAdi]], 26);
+  labelValueRow(r++, [["DERS", meta.ders], ["ALAN/DAL", meta.alanDal]], 26);
+  labelValueRow(r++, [["DERS SAATİ", meta.dersSaati], ["SINIF", meta.sinif]], 26);
   r += 1;
 
   // Sınav tarihleri
   const sinav = payload.sinav || {};
   mergeSet(r, 1, r, 5, "1.DÖNEM SINAV TARİHLERİ", { font: { bold: true }, alignment: { horizontal: "center" }, fill: headerFill });
-  mergeSet(r, 7, r, 11, "2.DÖNEM SINAV TARİHLERİ", { font: { bold: true }, alignment: { horizontal: "center" }, fill: headerFill });
+  mergeSet(r, 6, r, 10, "2.DÖNEM SINAV TARİHLERİ", { font: { bold: true }, alignment: { horizontal: "center" }, fill: headerFill });
   r += 1;
   labelValueRow(r++, [["1.Dönem 1.Sınav Tarihi", sinav.d1s1], ["2.Dönem 1.Sınav Tarihi", sinav.d2s1]]);
   labelValueRow(r++, [["1.Dönem 2.Sınav Tarihi", sinav.d1s2], ["2.Dönem 2.Sınav Tarihi", sinav.d2s2]]);
@@ -470,7 +473,7 @@ ipcMain.handle("export:yillik-plan-excel", async (evt, defaultName, payload) => 
 
   // Önemli gün ve haftalar
   mergeSet(r, 1, r, 5, "1.DÖNEM ÖNEMLİ GÜN VE HAFTALAR", { font: { bold: true }, alignment: { horizontal: "center" }, fill: headerFill });
-  mergeSet(r, 7, r, 11, "2.DÖNEM ÖNEMLİ GÜN VE HAFTALAR", { font: { bold: true }, alignment: { horizontal: "center" }, fill: headerFill });
+  mergeSet(r, 6, r, 10, "2.DÖNEM ÖNEMLİ GÜN VE HAFTALAR", { font: { bold: true }, alignment: { horizontal: "center" }, fill: headerFill });
   r += 1;
   const d1 = (payload.onemliGunler && payload.onemliGunler.d1) || [];
   const d2 = (payload.onemliGunler && payload.onemliGunler.d2) || [];
