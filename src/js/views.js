@@ -1496,7 +1496,7 @@ function extractGunlukPlanForExcel(p) {
     kaynakSayfaAdi: p.kaynakSayfaAdi || "",
     meta: {
       ogretimYili, ders: p.ders, sinif: p.sinif, ogretmen: p.ogretmen || "",
-      alanDal: p.alanDal || "", dersSaati: p.dersSaati || "", dersGunu: p.dersGunu || ""
+      alanDal: p.alanDal || "", dersSaati: p.dersSaati || "", dersGunu: efektifDersGunu(p)
     },
     haftalar,
     mudurAdi: S.kurumBilgileri.mudurAdi || ""
@@ -1506,7 +1506,7 @@ async function indirGunlukPlanExcel(dosyaAdi) {
   if (!window.desktop || !window.desktop.isElectron) { alert("Excel olarak indirme sadece masaüstü uygulamasında çalışır."); return; }
   const p = S.gunlukPlanlar.find(x => x.id === activePlanEntryId.gunluk);
   if (!p) { alert("Önce bir ders seçin."); return; }
-  if (!p.dersGunu) { alert("Önce 'Bilgileri Düzenle' ile bu dersin haftada hangi gün işlendiğini seçin."); return; }
+  if (!efektifDersGunu(p)) { alert("Önce 'Bilgileri Düzenle' ile bu dersin haftada hangi gün işlendiğini seçin (ya da Ders Programı'na işleyin)."); return; }
   const payload = extractGunlukPlanForExcel(p);
   try {
     const path = await window.desktop.exportGunlukPlanExcel(guvenliDosyaAdi(dosyaAdi) + ".xlsx", payload);
@@ -1533,6 +1533,30 @@ function gunlukTarihHesapla(pazartesiStr, dersGunu) {
   d.setDate(d.getDate() + idx);
   return formatTrTarih(d) + " (" + dersGunu + ")";
 }
+// Ders Günü artık mümkünse elle seçilmiyor — Ders Programı'nda (S.schedule)
+// aynı sınıf+ders eşleşmesi bulunursa oradaki gün otomatik kullanılır, o
+// sayfa değiştiğinde burası da kendiliğinden güncellenir. Ders Programı'na
+// henüz işlenmemiş (ya da birden fazla farklı günde yerleşmiş) bir ders
+// için eşleşme bulunamaz, o durumda "Bilgileri Düzenle"den elle seçilen
+// p.dersGunu'na geri düşülür.
+function dersGunuDersProgramindan(sinif, ders) {
+  if (!Array.isArray(S.classes) || !Array.isArray(S.courses)) return null;
+  const sinifNorm = (sinif || "").toLocaleLowerCase("tr-TR").trim();
+  const dersNorm = (ders || "").toLocaleLowerCase("tr-TR").trim();
+  if (!sinifNorm || !dersNorm) return null;
+  const cls = S.classes.find(c => (c.name || "").toLocaleLowerCase("tr-TR").trim() === sinifNorm);
+  const course = S.courses.find(c => (c.name || "").toLocaleLowerCase("tr-TR").trim() === dersNorm);
+  if (!cls || !course) return null;
+  const gunler = new Set();
+  Object.values(S.schedule).forEach(cell => {
+    if (cell.classId === cls.id && cell.courseId === course.id) gunler.add(cell.day);
+  });
+  if (gunler.size !== 1) return null;
+  return GUNLUK_GUNLER_SIRASI[[...gunler][0]] || null;
+}
+function efektifDersGunu(p) {
+  return dersGunuDersProgramindan(p.sinif, p.ders) || p.dersGunu || "";
+}
 function renderGunlukHaftaTablosu(p) {
   const haftalar = (S.akademikTakvim && Array.isArray(S.akademikTakvim.haftalar)) ? S.akademikTakvim.haftalar : [];
   if (!haftalar.length) {
@@ -1556,7 +1580,7 @@ function renderGunlukHaftaTablosu(p) {
       </tr>`;
     }
     return `<tr>
-      <td style="white-space:nowrap;">${escHtml(gunlukTarihHesapla(h.pazartesi, p.dersGunu))}</td>
+      <td style="white-space:nowrap;">${escHtml(gunlukTarihHesapla(h.pazartesi, efektifDersGunu(p)))}</td>
       ${alanlar.map(([field]) => alan(h, field)).join("")}
     </tr>`;
   }).join("");
@@ -1566,16 +1590,21 @@ function renderGunlukHaftaTablosu(p) {
   </div>`;
 }
 function renderGunlukPlanTable(p) {
-  if (!p.dersGunu) {
+  const otomatikGun = dersGunuDersProgramindan(p.sinif, p.ders);
+  const dersGunu = otomatikGun || p.dersGunu || "";
+  if (!dersGunu) {
     return `<div class="card no-print">
       <div class="row small" style="flex-wrap:wrap;gap:14px;align-items:center;">
         <span><b>Ders:</b> ${escHtml(p.ders)}</span>
         <span><b>Sınıf:</b> ${escHtml(p.sinif)}</span>
         <button class="btn" onclick="editPlanEntryMeta('gunluk','${p.id}')">Bilgileri Düzenle</button>
       </div>
-      <p class="small" style="margin-top:10px;">Önce bu dersin haftada hangi gün işlendiğini seçin ("Bilgileri Düzenle") — tarihler ondan sonra otomatik hesaplanacak.</p>
+      <p class="small" style="margin-top:10px;">Bu ders Ders Programı'nda henüz yerleşmemiş. Ya Ders Programı'na işleyin, ya da "Bilgileri Düzenle" ile haftada hangi gün işlendiğini elle seçin — tarihler ondan sonra otomatik hesaplanacak.</p>
     </div>`;
   }
+  const dersGunuHtml = otomatikGun
+    ? escHtml(otomatikGun)
+    : gunlukDersGunuSecici("gp-dersgunu-" + p.id, p.dersGunu, `setGunlukDersGunu('${jsq(p.id)}',this.value)`);
   return `
   <div class="card no-print">
     <div class="row small" style="flex-wrap:wrap;gap:14px;align-items:center;">
@@ -1584,12 +1613,12 @@ function renderGunlukPlanTable(p) {
       <span><b>Sınıf:</b> ${escHtml(p.sinif)}</span>
       <span><b>Öğretmen:</b> ${escHtml(p.ogretmen || "-")}</span>
       <span><b>Ders Saati:</b> ${escHtml(p.dersSaati || "-")}</span>
-      <span><b>Ders Günü:</b> ${gunlukDersGunuSecici("gp-dersgunu-" + p.id, p.dersGunu, `setGunlukDersGunu('${jsq(p.id)}',this.value)`)}</span>
+      <span><b>Ders Günü:</b> ${dersGunuHtml}</span>
       <button class="btn" onclick="editPlanEntryMeta('gunluk','${p.id}')">Bilgileri Düzenle</button>
     </div>
   </div>
   <div class="print-only" style="margin-bottom:10px;">
-    <b>Ders:</b> ${escHtml(p.ders)} · <b>Alan/Dal:</b> ${escHtml(p.alanDal || "-")} · <b>Sınıf:</b> ${escHtml(p.sinif)} · <b>Öğretmen:</b> ${escHtml(p.ogretmen || "-")} · <b>Ders Saati:</b> ${escHtml(p.dersSaati || "-")} · <b>Ders Günü:</b> ${escHtml(p.dersGunu || "-")}
+    <b>Ders:</b> ${escHtml(p.ders)} · <b>Alan/Dal:</b> ${escHtml(p.alanDal || "-")} · <b>Sınıf:</b> ${escHtml(p.sinif)} · <b>Öğretmen:</b> ${escHtml(p.ogretmen || "-")} · <b>Ders Saati:</b> ${escHtml(p.dersSaati || "-")} · <b>Ders Günü:</b> ${escHtml(dersGunu || "-")}
   </div>
   ${renderGunlukHaftaTablosu(p)}
   <div class="card">
