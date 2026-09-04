@@ -1,0 +1,33 @@
+name: Windows Build
+
+on:
+  push:
+    branches:
+      - "claude/**"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - run: npm install
+
+      - run: npm run dist
+
+      - name: Publish release with the built .exe
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: build-${{ github.run_number }}
+          name: "Alan Yönetim Sistemi - Otomatik Derleme #${{ github.run_number }}"
+          body: "Bu, ${{ github.sha }} commit'inden otomatik olarak derlenmiş programdır. Aşağıdaki .exe dosyasını indirip çalıştırabilirsiniz."
+          files: dist/*.exe
+          make_latest: true
