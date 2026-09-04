@@ -398,6 +398,16 @@ function normalizeState(s) {
       });
     }
   }
+  // MEB reformu kademeli: 9. sınıflar "Maarif Model" sanılıp otomatik o
+  // sisteme atanıyordu, ama bu henüz gerçek yeni müfredat içeriği değil —
+  // mevcut/eski plan verisiydi. Bir kereliğine bütün planları "Eski
+  // Sistem"e geri alıyoruz; kullanıcı gerçek Maarif Model planlarını
+  // hazırladığında ilgili sekmedeyken elle ekleyip/yükleyecek.
+  if (!s.eskiSistemeYenidenSiniflandirildi) {
+    s.eskiSistemeYenidenSiniflandirildi = true;
+    s.yillikPlanlar.forEach(p => { if (p.sistem === "maarif") p.sistem = "eski"; });
+    s.gunlukPlanlar.forEach(p => { if (p.sistem === "maarif") p.sistem = "eski"; });
+  }
   if (!s.normKadro || typeof s.normKadro !== "object") s.normKadro = {};
   if (!s.normKadro.ogrenciSayilari || typeof s.normKadro.ogrenciSayilari !== "object") s.normKadro.ogrenciSayilari = {};
   if (!Array.isArray(s.normKadro.koordinatorlukSatirlari)) s.normKadro.koordinatorlukSatirlari = [];
