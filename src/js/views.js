@@ -51,7 +51,6 @@ let activeTeacherId = S.teachers[0] ? S.teachers[0].id : null;
 let multiSelectMode = false;
 let selectedTeacherCells = new Set();
 let activeOffTeacherId = null;
-let activePlanSistem = "maarif";
 let activePlanEntryId = { yillik: null, gunluk: null };
 
 /* ---- Sol Menü: kategori akordeonu ----
@@ -1035,14 +1034,6 @@ function escHtml(s) { return String(s || "").replace(/&/g, "&amp;").replace(/</g
 function nlToBr(s) { return escHtml(s).replace(/\n/g, "<br>"); }
 function sinifGrade(sinif) { const m = /(\d{1,2})/.exec(sinif || ""); return m ? Number(m[1]) : null; }
 
-function setPlanSistem(id) { activePlanSistem = id; renderMain(); }
-function removeEskiSistem() {
-  if (!confirm("Eski Sistem sekmesi Yıllık Plan ve Günlük Plan'dan kalıcı olarak kaldırılacak, sadece Maarif Model kalacak. Devam etmeden önce Dosya menüsünden yedek almanızı öneririz. Devam edilsin mi?")) return;
-  S.eskiSistemKaldirildi = true;
-  activePlanSistem = "maarif";
-  save();
-  renderMain();
-}
 function selectPlanEntry(kind, id) { activePlanEntryId[kind] = id; renderMain(); }
 function updateYillikHaftaIcerik(id, haftaNo, field, value) {
   const p = S.yillikPlanlar.find(x => x.id === id);
@@ -1107,7 +1098,6 @@ function saveNewPlanEntry(kind) {
     S.gunlukPlanlar.push(p);
     activePlanEntryId.gunluk = p.id;
   }
-  activePlanSistem = sistem;
   save(); closeModal(); renderMain();
 }
 function editPlanEntryMeta(kind, id) {
@@ -1146,7 +1136,6 @@ function saveEditedPlanEntry(kind, id) {
     p.ogretmen = document.getElementById("ap-ogretmen").value.trim();
     p.dersGunu = document.getElementById("ap-dersgunu").value.trim();
   }
-  activePlanSistem = p.sistem;
   save(); closeModal(); renderMain();
 }
 function planiYeniYilaKopyala(kind, id) {
@@ -1618,17 +1607,8 @@ function viewPlanModule() {
   const kind = "gunluk";
   const title = "Günlük Plan";
   const aciklama = "Her dersin konu/kazanım/giriş-gelişme-sonuç/yöntem/ölçme-değerlendirme detayları. Kendi Excel dosyanızı yükleyerek veya elle düzenleyerek doldurabilirsiniz.";
-  if (S.eskiSistemKaldirildi) activePlanSistem = "maarif";
-  const sistemler = S.eskiSistemKaldirildi ? ["maarif"] : ["maarif", "eski"];
-  const tabs = sistemler.map(id =>
-    `<button class="btn ${activePlanSistem === id ? 'primary' : ''}" onclick="setPlanSistem('${id}')">${CURRICULUM[id].label}</button>`
-  ).join(" ");
-  const eskiSistemButon = (activePlanSistem === "eski" && !S.eskiSistemKaldirildi)
-    ? `<button class="btn danger" style="margin-left:8px;" onclick="removeEskiSistem()">Eski Sistemi Kalıcı Olarak Kaldır</button>`
-    : "";
 
-  const entries = S.gunlukPlanlar.filter(p => p.sistem === activePlanSistem)
-    .sort((a, b) => (a.sinif + a.ders).localeCompare(b.sinif + b.ders, "tr"));
+  const entries = S.gunlukPlanlar.slice().sort((a, b) => (a.sinif + a.ders).localeCompare(b.sinif + b.ders, "tr"));
   if (entries.length && !entries.some(e => e.id === activePlanEntryId[kind])) activePlanEntryId[kind] = entries[0].id;
   if (!entries.length) activePlanEntryId[kind] = null;
   const activeEntry = entries.find(e => e.id === activePlanEntryId[kind]) || null;
@@ -1640,29 +1620,9 @@ function viewPlanModule() {
       </div>
     </div>`;
 
-  let contentHtml;
-  if (activeEntry) {
-    contentHtml = renderGunlukPlanTable(activeEntry);
-  } else {
-    const data = CURRICULUM[activePlanSistem];
-    const grades = Object.keys(data.grades).sort((a, b) => a - b);
-    const gradeCards = grades.map(g => {
-      const gr = data.grades[g];
-      const dersHtml = gr.dersler.length === 0
-        ? `<p class="small">${gr.not || "Bu sınıf seviyesi için okulda ayrı ders/öğrenme birimi bulunmuyor."}</p>`
-        : gr.dersler.map(d => `
-          <div style="margin-bottom:10px;">
-            <div class="row" style="justify-content:space-between;">
-              <b>${d.ad}</b><span class="pill info">${d.saat} sa/hafta</span>
-            </div>
-            ${d.ogrenmeBirimleri.length ? `<p class="small" style="margin-top:4px;">${d.ogrenmeBirimleri.join(" · ")}</p>` : ""}
-          </div>`).join("");
-      return `<div class="card"><h3>${g}. Sınıf <span class="small">(${gr.dal})</span></h3>${dersHtml}</div>`;
-    }).join("");
-    contentHtml = gradeCards + `<div class="card small no-print" style="text-align:center;padding:30px 20px;">
-      Bu sistem için henüz yüklenmiş ${title.toLowerCase()} yok — yukarıda öğrenme birimi özetini görüyorsunuz. "Excel Yükle" ile kendi GÜNLÜK_PLANLAR.xlsx dosyanızı yükleyerek tam, düzenlenebilir planı oluşturabilirsiniz.
+  const contentHtml = activeEntry ? renderGunlukPlanTable(activeEntry) : `<div class="card small no-print" style="text-align:center;padding:30px 20px;">
+      Henüz yüklenmiş bir günlük plan yok.
     </div>`;
-  }
 
   const dosyaAdi = activeEntry ? (title + " - " + activeEntry.sinif + " - " + activeEntry.ders) : title;
 
@@ -1670,14 +1630,12 @@ function viewPlanModule() {
   <div class="card no-print">
     <h2>${title}</h2>
     <p class="small">${aciklama}</p>
-    <p class="small">MEB müfredat reformu kademeli işliyor: 2025-2026'da sadece 9. sınıf Maarif Model'e geçti, 10-12. sınıflar hâlâ eski çerçeve programa tabi. Bütün sınıflar Maarif Model'e geçtiğinde "Eski Sistem" sekmesini kalıcı olarak kaldırabilirsiniz.</p>
-    <div class="row" style="margin-top:10px;">${tabs}${eskiSistemButon}</div>
     <div class="row" style="margin-top:8px;">
       <button class="btn primary" onclick="addPlanEntry('${kind}')">Yeni Ders Planı Ekle</button>
       <button class="btn" onclick="importPlanFromExcel()">Excel Yükle</button>
       ${activeEntry ? `<button class="btn" onclick="planiYeniYilaKopyala('${kind}','${activeEntry.id}')">Yeni Öğretim Yılı İçin Kopyala</button><button class="btn danger" onclick="deletePlanEntry('${kind}','${activeEntry.id}')">Bu Planı Sil</button>` : ""}
     </div>
-    ${kind === "gunluk" && activeEntry
+    ${activeEntry
       ? `<div class="row no-print" style="margin-top:8px;"><button class="btn primary" onclick="printCurrentView(true)">Yazdır</button><button class="btn" onclick="indirGunlukPlanExcel('${jsq(dosyaAdi)}')">İndir (Excel)</button></div>`
       : belgeAracCubugu(dosyaAdi)}
   </div>
