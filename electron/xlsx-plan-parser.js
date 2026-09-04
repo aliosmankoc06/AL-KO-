@@ -55,12 +55,12 @@ function findHeaderRow(rows, requiredCols) {
   return null;
 }
 
-function sinifGrade(sinif) {
-  const m = /(\d{1,2})/.exec(sinif || "");
-  return m ? Number(m[1]) : null;
-}
 function sistemFromSinif(sinif) {
-  return sinifGrade(sinif) === 9 ? "maarif" : "eski";
+  // Excel'den içe aktarılan planlar her zaman "eski" (mevcut/reform öncesi)
+  // sistemde başlar — "Maarif Model" sınıflandırması artık sınıf seviyesinden
+  // otomatik çıkarılmıyor, kullanıcı ilgili sekmedeyken elle ekliyor/yüklüyor
+  // (bkz. views.js activePlanSistem, saveNewPlanEntry, importPlanFromExcel).
+  return "eski";
 }
 
 const SINAV_TARIHI_REGEX = /(\d)\.\s*Dönem\s*(\d)\.\s*Sınav\s*Tarihi/i;

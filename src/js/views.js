@@ -51,6 +51,7 @@ let activeTeacherId = S.teachers[0] ? S.teachers[0].id : null;
 let multiSelectMode = false;
 let selectedTeacherCells = new Set();
 let activeOffTeacherId = null;
+let activePlanSistem = "eski";
 let activePlanEntryId = { yillik: null, gunluk: null };
 
 /* ---- Sol Menü: kategori akordeonu ----
@@ -1032,8 +1033,15 @@ function belgeYazdirmaBasligi(altBaslik) {
 /* ---- Yıllık Plan / Günlük Plan (Eski Sistem / Maarif Model) ---- */
 function escHtml(s) { return String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
 function nlToBr(s) { return escHtml(s).replace(/\n/g, "<br>"); }
-function sinifGrade(sinif) { const m = /(\d{1,2})/.exec(sinif || ""); return m ? Number(m[1]) : null; }
 
+function setPlanSistem(id) { activePlanSistem = id; renderMain(); }
+function removeEskiSistem() {
+  if (!confirm("Eski Sistem sekmesi Yıllık Plan ve Günlük Plan'dan kalıcı olarak kaldırılacak, sadece Maarif Model kalacak. Devam etmeden önce Dosya menüsünden yedek almanızı öneririz. Devam edilsin mi?")) return;
+  S.eskiSistemKaldirildi = true;
+  activePlanSistem = "maarif";
+  save();
+  renderMain();
+}
 function selectPlanEntry(kind, id) { activePlanEntryId[kind] = id; renderMain(); }
 function updateYillikHaftaIcerik(id, haftaNo, field, value) {
   const p = S.yillikPlanlar.find(x => x.id === id);
@@ -1086,7 +1094,7 @@ function saveNewPlanEntry(kind) {
   if (!ders || !sinif) { alert("Ders adı ve sınıf girin."); return; }
   const alanDal = document.getElementById("ap-alandal").value.trim();
   const dersSaati = document.getElementById("ap-dershaat").value.trim();
-  const sistem = sinifGrade(sinif) === 9 ? "maarif" : "eski";
+  const sistem = activePlanSistem;
   if (kind === "yillik") {
     const p = { id: uid("yp"), ders, sinif, alanDal, dersSaati, sistem, haftaIcerik: {} };
     S.yillikPlanlar.push(p);
@@ -1131,7 +1139,6 @@ function saveEditedPlanEntry(kind, id) {
   p.sinif = sinif;
   p.alanDal = document.getElementById("ap-alandal").value.trim();
   p.dersSaati = document.getElementById("ap-dershaat").value.trim();
-  p.sistem = sinifGrade(sinif) === 9 ? "maarif" : "eski";
   if (kind === "gunluk") {
     p.ogretmen = document.getElementById("ap-ogretmen").value.trim();
     p.dersGunu = document.getElementById("ap-dersgunu").value.trim();
@@ -1157,18 +1164,23 @@ function planiYeniYilaKopyala(kind, id) {
   alert(mesaj);
 }
 function mergePlanImportResult(result) {
+  // İçe aktarılan bir ders zaten sistemde varsa sınıflandırması (Maarif
+  // Model / Eski Sistem) korunur, sadece içeriği güncellenir. Tamamen
+  // yeni bir ders ise şu an hangi sekmedeyseniz (activePlanSistem) o
+  // sisteme eklenir — yani "Maarif Model" sekmesindeyken yüklediğiniz
+  // yeni müfredat dosyası doğrudan Maarif Model'e yazılır.
   if (result.takvim) S.akademikTakvim = result.takvim;
   let yillik = 0, gunluk = 0;
   (result.yillikPlanlar || []).forEach(p => {
     const existing = S.yillikPlanlar.find(x => x.ders.toLowerCase() === p.ders.toLowerCase() && x.sinif.toLowerCase() === p.sinif.toLowerCase());
-    if (existing) Object.assign(existing, p);
-    else S.yillikPlanlar.push(Object.assign({ id: uid("yp") }, p));
+    if (existing) { const sistem = existing.sistem; Object.assign(existing, p); existing.sistem = sistem; }
+    else S.yillikPlanlar.push(Object.assign({ id: uid("yp") }, p, { sistem: activePlanSistem }));
     yillik++;
   });
   (result.gunlukPlanlar || []).forEach(p => {
     const existing = S.gunlukPlanlar.find(x => x.ders.toLowerCase() === p.ders.toLowerCase() && x.sinif.toLowerCase() === p.sinif.toLowerCase());
-    if (existing) Object.assign(existing, p);
-    else S.gunlukPlanlar.push(Object.assign({ id: uid("gp") }, p));
+    if (existing) { const sistem = existing.sistem; Object.assign(existing, p); existing.sistem = sistem; }
+    else S.gunlukPlanlar.push(Object.assign({ id: uid("gp") }, p, { sistem: activePlanSistem }));
     gunluk++;
   });
   return { yillik, gunluk };
@@ -1603,12 +1615,32 @@ function renderGunlukPlanTable(p) {
     </div>
   </div>`;
 }
+/* Maarif Model'e geçiş kademeli: sınıflar bir anda değil, MEB'in
+   takvimine göre teker teker geçiyor. "sistem" alanı artık sınıf
+   seviyesinden otomatik çıkarılmıyor — hangi sekim aktifken plan
+   eklenir/Excel yüklenirse o sisteme yazılıyor (bkz. activePlanSistem,
+   saveNewPlanEntry, importPlanFromExcel). Yeni müfredata geçildiğinde
+   "Maarif Model" sekimine geçip yeni planları oraya yükleyin/ekleyin;
+   eski planlar "Eski Sistem" sekmesinde olduğu gibi kalır. */
+function sistemTabBar() {
+  if (S.eskiSistemKaldirildi) activePlanSistem = "maarif";
+  const sistemler = S.eskiSistemKaldirildi ? ["maarif"] : ["eski", "maarif"];
+  const tabs = sistemler.map(id =>
+    `<button class="btn ${activePlanSistem === id ? 'primary' : ''}" onclick="setPlanSistem('${id}')">${CURRICULUM[id].label}</button>`
+  ).join(" ");
+  const eskiSistemButon = (activePlanSistem === "eski" && !S.eskiSistemKaldirildi)
+    ? `<button class="btn danger" style="margin-left:8px;" onclick="removeEskiSistem()">Eski Sistemi Kalıcı Olarak Kaldır</button>`
+    : "";
+  return `<div class="row no-print" style="margin-top:10px;">${tabs}${eskiSistemButon}</div>`;
+}
 function viewPlanModule() {
   const kind = "gunluk";
   const title = "Günlük Plan";
   const aciklama = "Her dersin konu/kazanım/giriş-gelişme-sonuç/yöntem/ölçme-değerlendirme detayları. Kendi Excel dosyanızı yükleyerek veya elle düzenleyerek doldurabilirsiniz.";
+  if (S.eskiSistemKaldirildi) activePlanSistem = "maarif";
 
-  const entries = S.gunlukPlanlar.slice().sort((a, b) => (a.sinif + a.ders).localeCompare(b.sinif + b.ders, "tr"));
+  const entries = S.gunlukPlanlar.filter(p => p.sistem === activePlanSistem)
+    .sort((a, b) => (a.sinif + a.ders).localeCompare(b.sinif + b.ders, "tr"));
   if (entries.length && !entries.some(e => e.id === activePlanEntryId[kind])) activePlanEntryId[kind] = entries[0].id;
   if (!entries.length) activePlanEntryId[kind] = null;
   const activeEntry = entries.find(e => e.id === activePlanEntryId[kind]) || null;
@@ -1621,7 +1653,7 @@ function viewPlanModule() {
     </div>`;
 
   const contentHtml = activeEntry ? renderGunlukPlanTable(activeEntry) : `<div class="card small no-print" style="text-align:center;padding:30px 20px;">
-      Henüz yüklenmiş bir günlük plan yok.
+      ${CURRICULUM[activePlanSistem].label} için henüz yüklenmiş bir günlük plan yok. "Excel Yükle" ile kendi dosyanızı yükleyebilir ya da "Yeni Ders Planı Ekle" ile elle oluşturabilirsiniz.
     </div>`;
 
   const dosyaAdi = activeEntry ? (title + " - " + activeEntry.sinif + " - " + activeEntry.ders) : title;
@@ -1630,6 +1662,8 @@ function viewPlanModule() {
   <div class="card no-print">
     <h2>${title}</h2>
     <p class="small">${aciklama}</p>
+    <p class="small">MEB müfredat reformu kademeli işliyor: sınıflar Maarif Model'e teker teker geçiyor. Yeni müfredata göre bir plan hazırladığınızda "Maarif Model" sekmesine geçip oradan ekleyin/yükleyin — eski planlar "Eski Sistem" sekmesinde olduğu gibi kalır.</p>
+    ${sistemTabBar()}
     <div class="row" style="margin-top:8px;">
       <button class="btn primary" onclick="addPlanEntry('${kind}')">Yeni Ders Planı Ekle</button>
       <button class="btn" onclick="importPlanFromExcel()">Excel Yükle</button>
@@ -1657,7 +1691,9 @@ function renderCalismaYiliTab() {
   ${renderAkademikTakvimKarti()}`;
 }
 function renderYillikPlanSecTab() {
-  const entries = S.yillikPlanlar.slice().sort((a, b) => (a.sinif + a.ders).localeCompare(b.sinif + b.ders, "tr"));
+  if (S.eskiSistemKaldirildi) activePlanSistem = "maarif";
+  const entries = S.yillikPlanlar.filter(p => p.sistem === activePlanSistem)
+    .sort((a, b) => (a.sinif + a.ders).localeCompare(b.sinif + b.ders, "tr"));
   if (entries.length && !entries.some(e => e.id === activePlanEntryId.yillik)) activePlanEntryId.yillik = entries[0].id;
   if (!entries.length) activePlanEntryId.yillik = null;
   const activeEntry = entries.find(e => e.id === activePlanEntryId.yillik) || null;
@@ -1670,12 +1706,19 @@ function renderYillikPlanSecTab() {
     </div>`;
 
   const contentHtml = activeEntry ? renderYillikPlanIcerik(activeEntry) : `<div class="card small no-print" style="text-align:center;padding:30px 20px;">
-      Henüz yüklenmiş bir yıllık plan yok.
+      ${CURRICULUM[activePlanSistem].label} için henüz yüklenmiş bir yıllık plan yok.
     </div>`;
 
   const dosyaAdi = activeEntry ? ("Yıllık Plan - " + activeEntry.sinif + " - " + activeEntry.ders) : "Yıllık Plan";
 
   return `
+  <div class="card no-print">
+    <p class="small">MEB müfredat reformu kademeli işliyor: sınıflar Maarif Model'e teker teker geçiyor. Yeni müfredata göre bir plan hazırladığınızda "Maarif Model" sekmesine geçip oradan ekleyin — eski planlar "Eski Sistem" sekmesinde olduğu gibi kalır.</p>
+    ${sistemTabBar()}
+    <div class="row no-print" style="margin-top:8px;">
+      <button class="btn" onclick="addPlanEntry('yillik')">Yeni Ders Planı Ekle</button>
+    </div>
+  </div>
   ${activeEntry ? `
   <div class="card no-print">
     <div class="row no-print">
