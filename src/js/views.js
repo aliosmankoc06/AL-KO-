@@ -1953,11 +1953,8 @@ function viewOgrenciListesi() {
     <p class="small">Her öğretim yılı başında e-Okul'dan aldığınız "Sınıf Listesi" raporunu (PDF veya Word) buraya yükleyin (birden fazla sınıf/şube aynı dosyada olabilir, hepsi tek seferde işlenir). Beceri Sınavı, Kalfalık/Ustalık Sınavı ve Norm Kadro gibi öğrenci listesine ihtiyaç duyan modüller bu listeyi buradan çeker — yıl değiştiğinde tek yapmanız gereken, yeni dosyayı buradan yüklemek.</p>
     <div class="row">
       <button class="btn primary" onclick="importOgrenciListesiFromPdf()">Sınıf Listesi PDF Yükle</button>
-      <button class="btn primary" onclick="importOgrenciListesiFromWord()">Sınıf Listesi Word Yükle</button>
-      ${activeOgrenciListesiSinif ? `<button class="btn" onclick="addOgrenci('${jsq(activeOgrenciListesiSinif)}')">Elle Öğrenci Ekle</button>` : ""}
     </div>
     ${sinifBar}
-    ${activeOgrenciListesiSinif ? belgeAracCubugu(dosyaAdi) : ""}
   </div>
   ${activeOgrenciListesiSinif ? `
   <div class="print-area">
