@@ -149,7 +149,16 @@ function parseTakvimSheet(ws, XLSX) {
   return haftalar.length ? { ogretimYili, haftalar, sinavTarihleri, onemliGunler } : null;
 }
 
-function parseGunlukSheet(ws, XLSX) {
+/* GÜNLÜK_PLANLAR.xlsx'te her ders sayfasında satır sırası hafta numarasıyla
+   birebir örtüşüyor: başlık satırından (TARİH/KONU/...) sonraki ilk satır
+   1. hafta, ikincisi 2. hafta... TAKVİM sayfasındaki 40 haftayla aynı sırada
+   (tatil haftaları da içerik satırı olarak yer alıyor, sadece tek bir
+   birleşik hücrede tatil adını gösteriyor — TARİH sütunu o satırlarda tek
+   bir güne değil tarih aralığına işaret ettiği için aşağıdaki DD.MM.YYYY
+   biçim kontrolünü geçemiyor ve otomatik atlanıyor). Bu yüzden hafta
+   numarasını satırın TARİH metnini takvimle eşleştirerek değil, doğrudan
+   satır sırasından çıkarıyoruz. */
+function parseGunlukSheet(ws, XLSX, sheetName) {
   const rows = XLSX.utils.sheet_to_json(ws, { header: 1, raw: false });
   const meta = sheetMeta(rows);
   const header = findHeaderRow(rows, ["TARİH", "KONU", "KAZANIM"]);
@@ -161,20 +170,22 @@ function parseGunlukSheet(ws, XLSX) {
     yontem: colIndex("YÖNTEM VE TEKNİKLER"), arac: colIndex("ARAÇ VE GEREÇLER"),
     olcme: colIndex("ÖLÇME-DEĞERLENDİRME")
   };
-  const kayitlar = [];
+  const haftaIcerik = {};
   for (let r = header.rowIndex + 1; r < rows.length; r++) {
     const row = rows[r] || [];
     const tarih = cellText(row[idx.tarih]);
-    if (!/^\d{1,2}\.\d{1,2}\.\d{4}/.test(tarih)) continue;
-    kayitlar.push({
-      tarih, konu: cellText(row[idx.konu]), kazanim: cellText(row[idx.kazanim]),
-      giris: cellText(row[idx.giris]), gelisme: cellText(row[idx.gelisme]), sonuc: cellText(row[idx.sonuc]),
-      yontem: cellText(row[idx.yontem]), arac: cellText(row[idx.arac]), olcme: cellText(row[idx.olcme])
-    });
+    if (!/^\d{1,2}\.\d{1,2}\.\d{4}/.test(tarih)) continue; // tatil satırı ya da boş — atla
+    const no = r - header.rowIndex;
+    const konu = cellText(row[idx.konu]), kazanim = cellText(row[idx.kazanim]),
+      giris = cellText(row[idx.giris]), gelisme = cellText(row[idx.gelisme]), sonuc = cellText(row[idx.sonuc]),
+      yontem = cellText(row[idx.yontem]), arac = cellText(row[idx.arac]), olcme = cellText(row[idx.olcme]);
+    if (!konu && !kazanim && !giris && !gelisme && !sonuc && !yontem && !arac && !olcme) continue;
+    haftaIcerik[no] = { konu, kazanim, giris, gelisme, sonuc, yontem, arac, olcme };
   }
-  if (!kayitlar.length) return null;
+  if (!Object.keys(haftaIcerik).length) return null;
   return { ders: meta.ders, sinif: meta.sinif || "", ogretmen: meta.ogretmen || "", alanDal: meta.alanDal || "",
-    dersSaati: meta.dersSaati || "", dersGunu: meta.dersGunu || "", sistem: sistemFromSinif(meta.sinif), kayitlar };
+    dersSaati: meta.dersSaati || "", dersGunu: meta.dersGunu || "", sistem: sistemFromSinif(meta.sinif),
+    haftaIcerik, kaynakSayfaAdi: sheetName || "" };
 }
 
 const YONTEM_BASLIK = "ÖĞRENME-ÖĞRETME\nYÖNTEM VE TEKNİKLERİ";
@@ -233,7 +244,7 @@ function parsePlanWorkbook(filePath, XLSX) {
   for (const sn of wb.SheetNames) {
     if (sn === takvimSheetName) continue;
     const ws = wb.Sheets[sn];
-    const g = parseGunlukSheet(ws, XLSX);
+    const g = parseGunlukSheet(ws, XLSX, sn);
     if (g) { result.gunlukPlanlar.push(g); continue; }
     const y = parseYillikSheet(ws, XLSX, takvimHaftalar, sn);
     if (y) { result.yillikPlanlar.push(y); continue; }

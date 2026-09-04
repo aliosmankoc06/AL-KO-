@@ -333,7 +333,71 @@ function normalizeState(s) {
       p.kaynakSayfaAdi = (eslesen && eslesen.kaynakSayfaAdi) || "";
     }
   });
-  s.gunlukPlanlar.forEach(p => { if (!p.id) p.id = uid("gp"); });
+  // Kullanıcının kendi GÜNLÜK_PLANLAR.xlsx dosyasından bir kez ayrıştırılıp
+  // gömülmüş varsayılan içerik — Yıllık Plan'la aynı mantık, sadece bu
+  // alanlar daha önce hiç doldurulmamışsa otomatik yüklenir. Takvim Yıllık
+  // Plan'la ortak (S.akademikTakvim) olduğu için burada tekrar yazılmıyor.
+  if (!s.seededGunlukPlanIcerik) {
+    s.seededGunlukPlanIcerik = true;
+    const varsayilan = (typeof GUNLUK_PLAN_VARSAYILAN_ICERIK !== "undefined") ? GUNLUK_PLAN_VARSAYILAN_ICERIK : null;
+    if (varsayilan) {
+      (varsayilan.gunlukPlanlar || []).forEach(p => {
+        const varMi = s.gunlukPlanlar.some(x =>
+          (x.ders || "").toLocaleLowerCase("tr-TR") === p.ders.toLocaleLowerCase("tr-TR") &&
+          (x.sinif || "").toLocaleLowerCase("tr-TR") === p.sinif.toLocaleLowerCase("tr-TR"));
+        if (!varMi) s.gunlukPlanlar.push(Object.assign({ id: uid("gp") }, JSON.parse(JSON.stringify(p))));
+      });
+    }
+  }
+  s.gunlukPlanlar.forEach(p => {
+    if (!p.id) p.id = uid("gp");
+    // Eski sürümde her günlük plan "kayitlar" adında, tarihi elle girilen
+    // bağımsız bir dizi tutuyordu. Artık Yıllık Plan'daki gibi tarih HER
+    // ZAMAN S.akademikTakvim.haftalar + dersGunu'ndan canlı hesaplanıyor;
+    // içerik hafta NUMARASINA göre saklanıyor. Eski kayıtlar sırayla
+    // (1. kayıt = 1. hafta) yeni yapıya taşınıyor — içerik kaybolmuyor.
+    if (!p.haftaIcerik || typeof p.haftaIcerik !== "object") {
+      p.haftaIcerik = {};
+      if (Array.isArray(p.kayitlar)) {
+        p.kayitlar.forEach((k, i) => {
+          const hasContent = k.konu || k.kazanim || k.giris || k.gelisme || k.sonuc || k.yontem || k.arac || k.olcme;
+          if (!hasContent) return;
+          p.haftaIcerik[i + 1] = {
+            konu: k.konu || "", kazanim: k.kazanim || "", giris: k.giris || "", gelisme: k.gelisme || "",
+            sonuc: k.sonuc || "", yontem: k.yontem || "", arac: k.arac || "", olcme: k.olcme || ""
+          };
+        });
+      }
+    }
+    delete p.kayitlar;
+    if (typeof p.dersGunu !== "string") p.dersGunu = "";
+    // Excel İndir de Yıllık Plan gibi kullanıcının orijinal dosyasını şablon
+    // olarak kullanıyor — hangi sayfadan geldiğini bilmesi gerekiyor.
+    if (typeof p.kaynakSayfaAdi !== "string") {
+      const varsayilan = (typeof GUNLUK_PLAN_VARSAYILAN_ICERIK !== "undefined") ? GUNLUK_PLAN_VARSAYILAN_ICERIK : null;
+      const eslesen = varsayilan && (varsayilan.gunlukPlanlar || []).find(v =>
+        (v.ders || "").toLocaleLowerCase("tr-TR") === (p.ders || "").toLocaleLowerCase("tr-TR") &&
+        (v.sinif || "").toLocaleLowerCase("tr-TR") === (p.sinif || "").toLocaleLowerCase("tr-TR"));
+      p.kaynakSayfaAdi = (eslesen && eslesen.kaynakSayfaAdi) || "";
+    }
+  });
+  // Günlük Plan, her haftanın Pazartesi tarihine (+ seçilen Ders Günü'ne)
+  // göre kendi tarihini hesaplıyor. Yıllık Plan'ın kendi Excel'inden içe
+  // aktarılan haftalarda bu sütun hiç yoktu (sadece "Tarih Aralığı" metni
+  // vardı) — eksikse, öğretim yılının başlangıcından (aynı MEB kuralıyla:
+  // 14 Eylül'e en yakın Pazartesi) hesaplayıp geriye dönük tamamlıyoruz.
+  if (s.akademikTakvim && s.akademikTakvim.ogretimYili && Array.isArray(s.akademikTakvim.haftalar)
+    && s.akademikTakvim.haftalar.some(h => !h.pazartesi) && typeof ogretimYiliBaslangicPazartesi === "function") {
+    const baslangic = ogretimYiliBaslangicPazartesi(s.akademikTakvim.ogretimYili);
+    if (baslangic) {
+      s.akademikTakvim.haftalar.forEach(h => {
+        if (h.pazartesi) return;
+        const pzt = new Date(baslangic);
+        pzt.setDate(pzt.getDate() + (h.no - 1) * 7);
+        h.pazartesi = formatTrTarih(pzt);
+      });
+    }
+  }
   if (!s.normKadro || typeof s.normKadro !== "object") s.normKadro = {};
   if (!s.normKadro.ogrenciSayilari || typeof s.normKadro.ogrenciSayilari !== "object") s.normKadro.ogrenciSayilari = {};
   if (!Array.isArray(s.normKadro.koordinatorlukSatirlari)) s.normKadro.koordinatorlukSatirlari = [];

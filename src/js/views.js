@@ -1050,9 +1050,17 @@ function updateYillikHaftaIcerik(id, haftaNo, field, value) {
   if (!p.haftaIcerik[haftaNo]) p.haftaIcerik[haftaNo] = { kazanimlar: "", konular: "", yontem: "", arac: "", degerlendirme: "" };
   p.haftaIcerik[haftaNo][field] = value;
 }
-function updateGunlukKayit(id, idx, field, value) {
+function updateGunlukHaftaIcerik(id, haftaNo, field, value) {
   const p = S.gunlukPlanlar.find(x => x.id === id);
-  if (p && p.kayitlar[idx]) p.kayitlar[idx][field] = value;
+  if (!p) return;
+  if (!p.haftaIcerik[haftaNo]) p.haftaIcerik[haftaNo] = { konu: "", kazanim: "", giris: "", gelisme: "", sonuc: "", yontem: "", arac: "", olcme: "" };
+  p.haftaIcerik[haftaNo][field] = value;
+}
+function setGunlukDersGunu(id, value) {
+  const p = S.gunlukPlanlar.find(x => x.id === id);
+  if (!p) return;
+  p.dersGunu = value;
+  save(); renderMain();
 }
 function deletePlanEntry(kind, id) {
   if (!confirm("Bu plan silinsin mi? Bu işlem geri alınamaz.")) return;
@@ -1061,19 +1069,6 @@ function deletePlanEntry(kind, id) {
   if (activePlanEntryId[kind] === id) activePlanEntryId[kind] = null;
   save();
   renderMain();
-}
-function addGunlukKayit(id) {
-  const p = S.gunlukPlanlar.find(x => x.id === id);
-  if (!p) return;
-  p.kayitlar.push({ tarih: "", konu: "", kazanim: "", giris: "", gelisme: "", sonuc: "", yontem: "", arac: "", olcme: "" });
-  save(); renderMain();
-}
-function removeGunlukKayit(id, idx) {
-  if (!confirm("Bu ders kaydı silinsin mi?")) return;
-  const p = S.gunlukPlanlar.find(x => x.id === id);
-  if (!p) return;
-  p.kayitlar.splice(idx, 1);
-  save(); renderMain();
 }
 function addPlanEntry(kind) {
   const root = document.getElementById("modal-root");
@@ -1086,7 +1081,7 @@ function addPlanEntry(kind) {
         <label class="small">Alan/Dal</label><input type="text" id="ap-alandal" value="Makine ve Tasarım Teknolojisi Alanı" style="width:100%">
         <label class="small">Ders Saati</label><input type="text" id="ap-dershaat" style="width:100%">
         ${kind === 'gunluk' ? `<label class="small">Öğretmen</label><input type="text" id="ap-ogretmen" style="width:100%">
-        <label class="small">Ders Günü</label><input type="text" id="ap-dersgunu" style="width:100%">` : ''}
+        <label class="small">Ders Günü</label>${gunlukDersGunuSecici("ap-dersgunu", "")}` : ''}
         <div class="row">
           <button class="btn primary" onclick="saveNewPlanEntry('${kind}')">Ekle</button>
           <button class="btn" onclick="closeModal()">İptal</button>
@@ -1108,7 +1103,7 @@ function saveNewPlanEntry(kind) {
   } else {
     const ogretmen = document.getElementById("ap-ogretmen").value.trim();
     const dersGunu = document.getElementById("ap-dersgunu").value.trim();
-    const p = { id: uid("gp"), ders, sinif, ogretmen, alanDal, dersSaati, dersGunu, sistem, kayitlar: [] };
+    const p = { id: uid("gp"), ders, sinif, ogretmen, alanDal, dersSaati, dersGunu, sistem, haftaIcerik: {} };
     S.gunlukPlanlar.push(p);
     activePlanEntryId.gunluk = p.id;
   }
@@ -1128,7 +1123,7 @@ function editPlanEntryMeta(kind, id) {
         <label class="small">Alan/Dal</label><input type="text" id="ap-alandal" value="${escHtml(p.alanDal || '')}" style="width:100%">
         <label class="small">Ders Saati</label><input type="text" id="ap-dershaat" value="${escHtml(p.dersSaati || '')}" style="width:100%">
         ${kind === 'gunluk' ? `<label class="small">Öğretmen</label><input type="text" id="ap-ogretmen" value="${escHtml(p.ogretmen || '')}" style="width:100%">
-        <label class="small">Ders Günü</label><input type="text" id="ap-dersgunu" value="${escHtml(p.dersGunu || '')}" style="width:100%">` : ''}
+        <label class="small">Ders Günü</label>${gunlukDersGunuSecici("ap-dersgunu", p.dersGunu || "")}` : ''}
         <div class="row">
           <button class="btn primary" onclick="saveEditedPlanEntry('${kind}','${id}')">Kaydet</button>
           <button class="btn" onclick="closeModal()">İptal</button>
@@ -1164,9 +1159,8 @@ function planiYeniYilaKopyala(kind, id) {
     S.yillikPlanlar.push(kopya);
     mesaj = "Plan kopyalandı. Tarihler her zaman Çalışma Yılı sekmesindeki güncel haftalardan otomatik geliyor, ayrıca bir şey yapmanıza gerek yok — kazanım/konu/yöntem içeriği aynen korundu, gerekirse gözden geçirin.";
   } else {
-    kopya.kayitlar = kopya.kayitlar.map(k => Object.assign({}, k, { tarih: "" }));
     S.gunlukPlanlar.push(kopya);
-    mesaj = "Plan kopyalandı, içerik aynı kaldı — tarihleri elle güncelleyin.";
+    mesaj = "Plan kopyalandı. Tarihler her zaman Çalışma Yılı sekmesindeki güncel haftalardan ve Ders Günü seçiminden otomatik geliyor, ayrıca bir şey yapmanıza gerek yok — içerik aynen korundu, gerekirse gözden geçirin.";
   }
   activePlanEntryId[kind] = kopya.id;
   save();
@@ -1491,25 +1485,104 @@ async function indirYillikPlanExcel(dosyaAdi) {
   const path = await window.desktop.exportYillikPlanExcel(guvenliDosyaAdi(dosyaAdi) + ".xlsx", payload);
   if (path) alert("Excel olarak kaydedildi:\n" + path);
 }
-function renderGunlukPlanTable(p) {
+// Günlük Plan'ın Excel çıktısı — Yıllık Plan'la aynı yöntem: kullanıcının
+// kendi GÜNLÜK_PLANLAR.xlsx dosyası şablon olarak açılıp sadece değişen
+// hücreler güncelleniyor (bkz. electron/main.js fillGunlukPlan*).
+function extractGunlukPlanForExcel(p) {
+  const t = S.akademikTakvim || {};
+  const ogretimYili = t.ogretimYili || "";
+  const haftalar = (Array.isArray(t.haftalar) ? t.haftalar : []).map(h => {
+    if (h.tatilMi) return { tatilMi: true, tatilAdi: h.tatilAdi || "TATİL" };
+    const ic = p.haftaIcerik[h.no] || {};
+    return {
+      tatilMi: false, konu: ic.konu || "", kazanim: ic.kazanim || "", giris: ic.giris || "",
+      gelisme: ic.gelisme || "", sonuc: ic.sonuc || "", yontem: ic.yontem || "", arac: ic.arac || "", olcme: ic.olcme || ""
+    };
+  });
+  return {
+    kaynakSayfaAdi: p.kaynakSayfaAdi || "",
+    meta: {
+      ogretimYili, ders: p.ders, sinif: p.sinif, ogretmen: p.ogretmen || "",
+      alanDal: p.alanDal || "", dersSaati: p.dersSaati || "", dersGunu: p.dersGunu || ""
+    },
+    haftalar,
+    mudurAdi: S.kurumBilgileri.mudurAdi || ""
+  };
+}
+async function indirGunlukPlanExcel(dosyaAdi) {
+  if (!window.desktop || !window.desktop.isElectron) { alert("Excel olarak indirme sadece masaüstü uygulamasında çalışır."); return; }
+  const p = S.gunlukPlanlar.find(x => x.id === activePlanEntryId.gunluk);
+  if (!p) { alert("Önce bir ders seçin."); return; }
+  if (!p.dersGunu) { alert("Önce 'Bilgileri Düzenle' ile bu dersin haftada hangi gün işlendiğini seçin."); return; }
+  const payload = extractGunlukPlanForExcel(p);
+  try {
+    const path = await window.desktop.exportGunlukPlanExcel(guvenliDosyaAdi(dosyaAdi) + ".xlsx", payload);
+    if (path) alert("Excel olarak kaydedildi:\n" + path);
+  } catch (e) {
+    alert("Bu ders, orijinal Excel şablonundaki 19 dersten biri değil — henüz Excel'e aktarılamıyor. (" + e.message + ")");
+  }
+}
+// Ders Günü Seç — orijinal dosyada bu 5 gün dışında bir değer formülü
+// bozar (#YOK hatası verir), o yüzden serbest metin yerine sabit liste.
+const GUNLUK_GUNLER_SIRASI = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma"];
+function gunlukDersGunuSecici(id, secili, onchange) {
+  return `<select id="${id}" ${onchange ? `onchange="${onchange}"` : ""}><option value="">Seçin</option>${GUNLUK_GUNLER_SIRASI.map(g =>
+    `<option value="${g}" ${g === secili ? "selected" : ""}>${g}</option>`).join("")}</select>`;
+}
+// Bir haftanın Pazartesi'sinden, seçilen ders gününe karşılık gelen tarihi
+// hesaplar — orijinal dosyadaki =TAKVİM!$B$xx+(MATCH(dersGunu,...)-1)
+// formülüyle birebir aynı mantık.
+function gunlukTarihHesapla(pazartesiStr, dersGunu) {
+  const pzt = parseTrTarih(pazartesiStr);
+  const idx = GUNLUK_GUNLER_SIRASI.indexOf(dersGunu);
+  if (!pzt || idx < 0) return "";
+  const d = new Date(pzt);
+  d.setDate(d.getDate() + idx);
+  return formatTrTarih(d) + " (" + dersGunu + ")";
+}
+function renderGunlukHaftaTablosu(p) {
+  const haftalar = (S.akademikTakvim && Array.isArray(S.akademikTakvim.haftalar)) ? S.akademikTakvim.haftalar : [];
+  if (!haftalar.length) {
+    return `<div class="card small no-print" style="text-align:center;padding:24px 16px;">
+      Önce <b>Yıllık Plan → Çalışma Yılı</b> sekmesinden haftalık ders takvimini oluşturun — bu tablo oradaki haftaları otomatik kullanacak.
+    </div>`;
+  }
   const alanlar = [
     ["konu", "Konu"], ["kazanim", "Kazanım"], ["giris", "Giriş"], ["gelisme", "Gelişme"],
     ["sonuc", "Sonuç"], ["yontem", "Yöntem ve Teknikler"], ["arac", "Araç ve Gereçler"], ["olcme", "Ölçme-Değerlendirme"]
   ];
-  const kayitlarHtml = p.kayitlar.map((k, i) => `
-    <div class="card" style="page-break-inside:avoid;">
-      <div class="row small" style="justify-content:space-between;align-items:center;">
-        <input class="no-print" type="text" value="${escHtml(k.tarih)}" style="font-weight:600;border:1px solid var(--line);border-radius:4px;padding:3px 6px;" onchange="updateGunlukKayit('${p.id}',${i},'tarih',this.value); renderMain();">
-        <b class="print-only-inline">${escHtml(k.tarih)}</b>
-        <button class="btn danger no-print" onclick="removeGunlukKayit('${p.id}',${i})">Sil</button>
+  const alan = (h, field) => {
+    const ic = p.haftaIcerik[h.no] || {};
+    return `<td><textarea class="no-print" rows="3" style="width:100%;border:none;resize:vertical;font-family:inherit;font-size:11.5px;" oninput="updateGunlukHaftaIcerik('${p.id}',${h.no},'${field}',this.value)" onblur="save()">${escHtml(ic[field] || "")}</textarea><div class="print-only">${nlToBr(ic[field] || "")}</div></td>`;
+  };
+  const rows = haftalar.map(h => {
+    if (h.tatilMi) {
+      return `<tr>
+        <td style="white-space:nowrap;">${escHtml(h.tarihAraligi)}</td>
+        <td colspan="${alanlar.length}" style="text-align:center;font-weight:600;background:var(--panel-2);">${escHtml(h.tatilAdi || "TATİL")}</td>
+      </tr>`;
+    }
+    return `<tr>
+      <td style="white-space:nowrap;">${escHtml(gunlukTarihHesapla(h.pazartesi, p.dersGunu))}</td>
+      ${alanlar.map(([field]) => alan(h, field)).join("")}
+    </tr>`;
+  }).join("");
+  return `<div class="card" style="overflow-x:auto;">
+    <table style="width:100%;"><thead><tr><th style="width:110px;">Tarih</th>${alanlar.map(([, label]) => `<th>${label}</th>`).join("")}</tr></thead>
+    <tbody>${rows}</tbody></table>
+  </div>`;
+}
+function renderGunlukPlanTable(p) {
+  if (!p.dersGunu) {
+    return `<div class="card no-print">
+      <div class="row small" style="flex-wrap:wrap;gap:14px;align-items:center;">
+        <span><b>Ders:</b> ${escHtml(p.ders)}</span>
+        <span><b>Sınıf:</b> ${escHtml(p.sinif)}</span>
+        <button class="btn" onclick="editPlanEntryMeta('gunluk','${p.id}')">Bilgileri Düzenle</button>
       </div>
-      ${alanlar.map(([field, label]) => `
-        <div style="margin-top:6px;">
-          <div class="small" style="font-weight:600;">${label}</div>
-          <textarea class="no-print" rows="${field === "konu" || field === "kazanim" ? 2 : 3}" style="width:100%;border:1px solid var(--line);border-radius:4px;padding:4px;resize:vertical;font-family:inherit;font-size:11.5px;" oninput="updateGunlukKayit('${p.id}',${i},'${field}',this.value)" onblur="save()">${escHtml(k[field])}</textarea>
-          <div class="print-only" style="font-size:10.5px;">${nlToBr(k[field])}</div>
-        </div>`).join("")}
-    </div>`).join("");
+      <p class="small" style="margin-top:10px;">Önce bu dersin haftada hangi gün işlendiğini seçin ("Bilgileri Düzenle") — tarihler ondan sonra otomatik hesaplanacak.</p>
+    </div>`;
+  }
   return `
   <div class="card no-print">
     <div class="row small" style="flex-wrap:wrap;gap:14px;align-items:center;">
@@ -1518,20 +1591,19 @@ function renderGunlukPlanTable(p) {
       <span><b>Sınıf:</b> ${escHtml(p.sinif)}</span>
       <span><b>Öğretmen:</b> ${escHtml(p.ogretmen || "-")}</span>
       <span><b>Ders Saati:</b> ${escHtml(p.dersSaati || "-")}</span>
-      <span><b>Ders Günü:</b> ${escHtml(p.dersGunu || "-")}</span>
+      <span><b>Ders Günü:</b> ${gunlukDersGunuSecici("gp-dersgunu-" + p.id, p.dersGunu, `setGunlukDersGunu('${jsq(p.id)}',this.value)`)}</span>
       <button class="btn" onclick="editPlanEntryMeta('gunluk','${p.id}')">Bilgileri Düzenle</button>
     </div>
   </div>
   <div class="print-only" style="margin-bottom:10px;">
     <b>Ders:</b> ${escHtml(p.ders)} · <b>Alan/Dal:</b> ${escHtml(p.alanDal || "-")} · <b>Sınıf:</b> ${escHtml(p.sinif)} · <b>Öğretmen:</b> ${escHtml(p.ogretmen || "-")} · <b>Ders Saati:</b> ${escHtml(p.dersSaati || "-")} · <b>Ders Günü:</b> ${escHtml(p.dersGunu || "-")}
   </div>
-  ${kayitlarHtml}
-  <div class="row no-print"><button class="btn" onclick="addGunlukKayit('${p.id}')">Ders Kaydı Ekle</button></div>
+  ${renderGunlukHaftaTablosu(p)}
   <div class="card">
     <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:20px;">
       <div>
         <div>.../…/....</div>
-        <div style="margin-top:24px;font-weight:600;">${escHtml(S.kurumBilgileri.alanSefiAdi || "")}</div>
+        <div style="margin-top:24px;font-weight:600;">${escHtml(p.ogretmen || "")}</div>
         <div>Alan Şefi / Öğretmen</div>
       </div>
       <div style="text-align:right;">
@@ -1605,7 +1677,9 @@ function viewPlanModule() {
       <button class="btn" onclick="importPlanFromExcel()">Excel Yükle</button>
       ${activeEntry ? `<button class="btn" onclick="planiYeniYilaKopyala('${kind}','${activeEntry.id}')">Yeni Öğretim Yılı İçin Kopyala</button><button class="btn danger" onclick="deletePlanEntry('${kind}','${activeEntry.id}')">Bu Planı Sil</button>` : ""}
     </div>
-    ${belgeAracCubugu(dosyaAdi)}
+    ${kind === "gunluk" && activeEntry
+      ? `<div class="row no-print" style="margin-top:8px;"><button class="btn primary" onclick="printCurrentView(true)">Yazdır</button><button class="btn" onclick="indirGunlukPlanExcel('${jsq(dosyaAdi)}')">İndir (Excel)</button></div>`
+      : belgeAracCubugu(dosyaAdi)}
   </div>
   ${listHtml}
   <div class="print-area">

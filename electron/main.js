@@ -719,6 +719,88 @@ function fillYillikPlanDersSayfasi(ws, payload) {
   ws.getCell("A92").value = payload.mudurAdi || "";
 }
 
+/* Günlük Plan'ın Excel çıktısı — Yıllık Plan'la birebir aynı yöntem:
+   kullanıcının kendi GÜNLÜK_PLANLAR.xlsx dosyası (electron/templates/)
+   şablon olarak açılıp SADECE değişen hücreler güncelleniyor. TARİH
+   sütunu her zaman TAKVİM'e ve seçilen Ders Günü'ne bağlı canlı formül
+   olarak kalıyor (=TAKVİM!$B$xx+(MATCH($G$5,...)-1)) — dokunulmuyor. */
+ipcMain.handle("export:gunluk-plan-excel", async (evt, defaultName, payload) => {
+  const result = await dialog.showSaveDialog(mainWindow, {
+    title: "Excel Olarak Kaydet",
+    defaultPath: defaultName,
+    filters: [{ name: "Excel Dosyası", extensions: ["xlsx"] }]
+  });
+  if (result.canceled || !result.filePath) return null;
+
+  const templatePath = path.join(__dirname, "templates", "GUNLUK_PLANLAR.xlsx");
+  if (payload.kaynakSayfaAdi && fs.existsSync(templatePath)) {
+    try {
+      const twb = new ExcelJS.Workbook();
+      await twb.xlsx.readFile(templatePath);
+      const takvimWs = twb.getWorksheet("TAKVİM");
+      const dersWs = twb.getWorksheet(payload.kaynakSayfaAdi);
+      if (takvimWs && dersWs) {
+        twb.calcProperties.fullCalcOnLoad = true;
+        twb.worksheets.slice().forEach(sh => {
+          if (sh !== takvimWs && sh !== dersWs) twb.removeWorksheet(sh.id);
+        });
+        fillGunlukPlanTakvimSayfasi(takvimWs, payload);
+        fillGunlukPlanDersSayfasi(dersWs, payload);
+        await twb.xlsx.writeFile(result.filePath);
+        return result.filePath;
+      }
+    } catch (e) {
+      console.error("Şablon tabanlı Günlük Plan exportu başarısız:", e);
+    }
+  }
+  throw new Error("Bu ders için şablon dosyasında karşılık gelen bir sayfa bulunamadı.");
+});
+
+function fillGunlukPlanTakvimSayfasi(ws, payload) {
+  const meta = payload.meta || {};
+  ws.getCell("B4").value = meta.ogretimYili || "";
+  (payload.haftalar || []).forEach((h, i) => {
+    const row = 10 + i; // TAKVİM'de 40 haftalık tablo 10. satırdan başlıyor
+    ws.getCell("D" + row).value = h.tatilMi ? "EVET" : "HAYIR";
+    ws.getCell("E" + row).value = h.tatilMi ? (h.tatilAdi || "") : "";
+  });
+}
+
+function fillGunlukPlanDersSayfasi(ws, payload) {
+  const meta = payload.meta || {};
+  ws.getCell("B3").value = meta.ders || "";
+  ws.getCell("B4").value = meta.sinif || "";
+  ws.getCell("B5").value = meta.ogretmen || "";
+  ws.getCell("G3").value = meta.alanDal || "";
+  ws.getCell("G4").value = meta.dersSaati || "";
+  ws.getCell("G5").value = meta.dersGunu || "";
+
+  (payload.haftalar || []).forEach((h, i) => {
+    const row = 8 + i; // haftalık tablo 8. satırdan başlıyor (7+haftaNo)
+    try { ws.unMergeCells(row, 2, row, 9); } catch (e) { /* zaten ayrık hücrelerdi */ }
+    // A sütunu (TARİH) =TAKVİM!$B$xx+(MATCH($G$5,...)-1) formülüyle zaten
+    // bağlı — dokunmuyoruz, TAKVİM ve G5 güncellenince kendisi değişiyor.
+    if (h.tatilMi) {
+      ws.mergeCells(row, 2, row, 9);
+      const cell = ws.getCell(row, 2);
+      cell.value = h.tatilAdi || "TATİL";
+      cell.alignment = { horizontal: "center", vertical: "center", wrapText: true };
+    } else {
+      ws.getCell(row, 2).value = h.konu || "";
+      ws.getCell(row, 3).value = h.kazanim || "";
+      ws.getCell(row, 4).value = h.giris || "";
+      ws.getCell(row, 5).value = h.gelisme || "";
+      ws.getCell(row, 6).value = h.sonuc || "";
+      ws.getCell(row, 7).value = h.yontem || "";
+      ws.getCell(row, 8).value = h.arac || "";
+      ws.getCell(row, 9).value = h.olcme || "";
+    }
+  });
+
+  ws.getCell("A51").value = meta.ogretmen || "";
+  ws.getCell("F51").value = payload.mudurAdi || "";
+}
+
 // Norm Kadro Excel çıktısı — okulun kendi resmi MAKİNE NORM 2026_2027.xlsx
 // dosyası ham XML'den hücre hücre okunarak birebir eşleştirildi: sütun
 // genişlikleri (A=4, B=9, C=12, D=38.86, E=13, F=12, G=14, H=24.14),
